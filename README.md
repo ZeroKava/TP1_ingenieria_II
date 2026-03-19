@@ -24,7 +24,7 @@ Este sistema permite a los miembros de un espacio de coworking reservar salas y 
 ---
 
 ## Enlaces de Gestión
-**Tablero Kanban:** [Acceder a GitHub Projects](PEGAR_ACA_LINK_A_TU_PROJECT) 
+**Tablero Kanban:** [https://github.com/users/octavioleogarcia-png/projects/1) 
 
 **Reporte Semanal (S1):** [Enlace al campus/Moodle](PEGAR_ACA_LINK_A_MOODLE) 
 
