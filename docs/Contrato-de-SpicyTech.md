@@ -9,6 +9,7 @@ Seleccionamos el sistema de reservas para un espacio de Coworking debido a la ne
 Implementaremos el marco de trabajo Scrum debido a su enfoque iterativo e incremental, lo cual es fundamental para cumplir con las entregas de la cátedra. Esta metodología nos permite dividir el sistema en Sprints, asegurando que las funcionalidades críticas (como el motor de reservas) se validen tempranamente. La estructura de roles facilitará una división de tareas clara y una responsabilidad compartida sobre la calidad del producto final. Utilizaremos ceremonias de inspección y adaptación para ajustar el alcance del MVP según el progreso del equipo. El uso de Scrum garantiza una trazabilidad total mediante el tablero Kanban y el control de versiones en GitHub.
 
 3. Roles asignados
+4. 
 **Scrum Master: [Octavio García]
 
 **Dev Leader: [Calamari Santino]
