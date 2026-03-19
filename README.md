@@ -13,9 +13,10 @@ Este sistema permite a los miembros de un espacio de coworking reservar salas y 
 ## Integrantes y Roles
 | Nombre | Rol | GitHub |
 | :--- | :--- | :--- |
+
 | **Octavio García** | **Scrum Master** | @octavioleogarcia-png |
 | **Calamari Santino** | Dev Leader | @[Usuario] |
-| **Polcowñuk Matias** | Dev Leader | @[Usuario] |
+| **Polcowñuk Matias** | Dev Leader | @ZeroKava] |
 | **De Olivera Jesus** | QA Lead | @[Usuario] |
 | **Manrique Santiago** | UX Lead | @[Usuario] |
 
@@ -24,6 +25,7 @@ Este sistema permite a los miembros de un espacio de coworking reservar salas y 
 
 ## Enlaces de Gestión
 **Tablero Kanban:** [Acceder a GitHub Projects](PEGAR_ACA_LINK_A_TU_PROJECT) 
+
 **Reporte Semanal (S1):** [Enlace al campus/Moodle](PEGAR_ACA_LINK_A_MOODLE) 
 
 ---
@@ -31,7 +33,10 @@ Este sistema permite a los miembros de un espacio de coworking reservar salas y 
 ## Estructura del Repositorio
 Organización de archivos según los lineamientos de la cátedra: 
 
-**docs/**: Documentación oficial (Contrato, Matriz de Riesgos y AI_LOG). 
+**docs/**: Documentación oficial (Contrato, Matriz de Riesgos y AI_LOG).
+
 **design/**: Prototipos y mockups del sistema. 
+
 **src/**: Código fuente del proyecto. 
+
 **tests/**: Casos de prueba y validaciones.
