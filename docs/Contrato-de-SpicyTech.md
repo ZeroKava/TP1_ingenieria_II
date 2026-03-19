@@ -10,9 +10,14 @@ Implementaremos el marco de trabajo Scrum debido a su enfoque iterativo e increm
 
 3. Roles asignados
 **Scrum Master: [Octavio García]
+
 **Dev Leader: [Calamari Santino]
+
 **Dev Leader: [Polcowñuk Matias]
+
 **QA Lead: [De Olivera Jesus]
+
 **UX Lead: [Manrique Santiago]
+
 4. Acuerdos de trabajo del equipo
 El equipo se reunirá de forma sincrónica todos los días habiles de la sena a las [09:00 hs] vía Discord para coordinar avances. Se establece una frecuencia de commits mínima de tres veces por semana para asegurar la integración continua. Para que una tarea pase a "Done", el código debe estar testeado y revisado por al menos un compañero (Tester). La comunicación oficial será por vía WhatsApp, con un tiempo de respuesta esperado menor a 2 horas. Cualquier impedimento técnico debe ser comunicado de inmediato al Scrum Master para su gestión.
