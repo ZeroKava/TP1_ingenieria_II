@@ -14,7 +14,7 @@ Este sistema permite a los miembros de un espacio de coworking reservar salas y 
 | Nombre | Rol | GitHub |
 | :--- | :--- | :--- |
 | **Octavio García** | **Scrum Master** | @octavioleogarcia-png |
-| **Calamari Santino** | Dev Leader + QA Lead | @[Usuario] |
+| **Calamari Santino** | Dev Leader + QA Lead | @Barriletecosmicok |
 | **Polcowñuk Matias** | Dev Leader | @ZeroKava |
 | **De Olivera Jesus** | QA Lead | @JesusDeOlivera |
 | **Manrique Santiago** | UX Lead | @[Usuario] |
