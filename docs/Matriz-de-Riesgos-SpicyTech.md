@@ -19,3 +19,6 @@ Esta matriz identifica los eventos que podrían afectar el desarrollo del proyec
 ### Clasificación de Impacto y Probabilidad:
 * **Impacto:** Bajo, Medio, Alto.
 * **Probabilidad:** Baja, Media, Alta.
+
+Link Matriz de Riesgos: 
+* *https://docs.google.com/spreadsheets/d/1bPwzebiWE9hzDd_x-WYpD3IV3m0wTm6Z/edit?gid=1337718220#gid=1337718220
