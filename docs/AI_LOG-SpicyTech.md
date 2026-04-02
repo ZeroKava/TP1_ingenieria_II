@@ -23,3 +23,27 @@ La justificación técnica de la metodología Scrum y la estructura de la Matriz
 
 **¿Qué descartamos y por qué?**
 Decidimos enfocarnos solo en el núcleo de reservas para no exceder el alcance del cuatrimestre y asegurar la calidad de las funcionalidades básicas.
+
+## Entrada 002 — Semana 3
+
+**Fecha:** 02/04/2026
+**Herramienta:** Claude
+**Responsable:** Dev Lead — Matías Polcowñuk
+**Eje temático:** Eje 1
+
+**¿Para qué se usó?**
+Para crear el Back End del sistema en general.
+
+**¿Qué generó la IA?**
+1. La carpeta api.py, para combinar back end con front end.
+2. La carpeta auth.py para autentificar al usuario en el login.
+3. La carpeta tests.py pruebas del código.
+
+**¿Qué aceptamos tal cual?**
+El código base del Back End.
+**¿Qué modificamos y por qué?**
+- **Front End:** Vamos a agregarlo para su correcto funcionamiento.
+- **Base de Datos:** Fusionarlo con el código.
+
+**¿Qué descartamos y por qué?**
+Por el momento el código funciona correctamente, así que no es necesario el descarte de nada.
