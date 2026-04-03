@@ -47,3 +47,25 @@ El código base del Back End.
 
 **¿Qué descartamos y por qué?**
 Por el momento el código funciona correctamente, así que no es necesario el descarte de nada.
+
+### Entrada 003 — Semana 3
+
+- **Fecha:** 03/04/2026
+- **Herramienta:** Gemini
+- **Responsable:** QA Lead — Jesus Emanuel De Olivera
+- **Eje temático:** Eje 2 / Integración y Pruebas
+
+**¿Para qué se usó?**
+Integrar el Front y Back, aplicar seguridad (Bcrypt/JWT) y asegurar que las pruebas (`tests.py`) pasen sin errores.
+
+**¿Qué generó la IA?**
+Un backend seguro (`auth.py`, `api.py`), el JS necesario para consumir la API y un entorno 100% compatible con nuestros tests.
+
+**¿Qué aceptamos tal cual?**
+La lógica de encriptación (Bcrypt), el manejo de sesiones (JWT) y el formato de respuesta JSON.
+
+**¿Qué modificamos y por qué?**
+Bloqueamos los cambios de diseño. Forzamos a la IA a mantener nuestro código HTML/CSS original, inyectando únicamente el JS necesario para conectar ambas partes y no perder nuestro trabajo.
+
+**¿Qué descartamos y por qué?**
+Descartamos la interfaz visual que propuso la IA y su idea de validar contraseñas solo en el backend (decidimos mantener nuestra validación visual en tiempo real en el frontend para mejorar la UX).
