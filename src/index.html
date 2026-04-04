@@ -1,400 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Nexo Coworking · Acceso seguro</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
 
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #1D9E75;
+      --brand-dark: #0F6E56;
+      --brand-light: #E1F5EE;
+      --accent: #D85A30;
+      --surface: #ffffff;
+      --surface2: #f8fafc;
+      --border: #e2e8f0;
+      --border2: #cbd5e1;
+      --txt: #0f172a;
+      --txt2: #475569;
+      --txt3: #94a3b8;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --success-txt: #166534;
+      --success-bg: #dcfce7;
+      --r: 20px;
+      --rm: 12px;
+    }
 
-  :root {
-    --brand: #1D9E75;
-    --brand-dark: #0F6E56;
-    --brand-light: #E1F5EE;
-    --accent: #D85A30;
-    --surface: var(--color-background-primary);
-    --surface2: var(--color-background-secondary);
-    --border: var(--color-border-tertiary);
-    --border2: var(--color-border-secondary);
-    --txt: var(--color-text-primary);
-    --txt2: var(--color-text-secondary);
-    --txt3: var(--color-text-tertiary);
-    --danger: var(--color-text-danger);
-    --danger-bg: var(--color-background-danger);
-    --success-bg: var(--color-background-success);
-    --success-txt: var(--color-text-success);
-    --r: var(--border-radius-lg);
-    --rm: var(--border-radius-md);
-  }
+    body {
+      background: linear-gradient(135deg, #f1f5f9 0%, #e6edf4 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      font-family: 'DM Sans', sans-serif;
+    }
 
-  #cw-root {
-    font-family: 'DM Sans', sans-serif;
-    min-height: 600px;
-    display: flex;
-    align-items: stretch;
-  }
+    #cw-root {
+      max-width: 1200px;
+      width: 100%;
+      background: var(--surface);
+      border-radius: var(--r);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-wrap: wrap;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
 
-  /* ── PANEL IZQUIERDO ── */
-  .side-panel {
-    width: 280px;
-    min-width: 280px;
-    background: #085041;
-    padding: 2.5rem 2rem;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--r) 0 0 var(--r);
-  }
+    /* ── PANEL IZQUIERDO ── */
+    .side-panel {
+      width: 300px;
+      background: #085041;
+      padding: 2rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      color: white;
+    }
 
-  .side-panel::before {
-    content: '';
-    position: absolute;
-    top: -80px; right: -80px;
-    width: 260px; height: 260px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-  }
-  .side-panel::after {
-    content: '';
-    position: absolute;
-    bottom: -60px; left: -60px;
-    width: 220px; height: 220px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-  }
+    .side-panel::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .side-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -60px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 2.5rem;
-    position: relative; z-index: 1;
-  }
-  .logo-mark {
-    width: 36px; height: 36px;
-    background: #1D9E75;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .logo-mark svg { width: 20px; height: 20px; fill: #fff; }
-  .logo-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 18px;
-    color: #fff;
-    letter-spacing: -0.3px;
-  }
-  .logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2.5rem;
+      position: relative; z-index: 1;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: #1D9E75;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { width: 20px; height: 20px; fill: #fff; }
+    .logo-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
 
-  .side-tagline {
-    font-family: 'DM Serif Display', serif;
-    font-size: 28px;
-    line-height: 1.25;
-    color: #fff;
-    margin-bottom: 1.25rem;
-    position: relative; z-index: 1;
-  }
-  .side-tagline em { font-style: italic; color: #5DCAA5; }
+    .side-tagline {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      line-height: 1.25;
+      color: #fff;
+      margin-bottom: 1.25rem;
+      position: relative; z-index: 1;
+    }
+    .side-tagline em { font-style: italic; color: #5DCAA5; }
 
-  .side-desc {
-    font-size: 13px;
-    color: rgba(255,255,255,0.55);
-    line-height: 1.7;
-    margin-bottom: 2rem;
-    position: relative; z-index: 1;
-  }
+    .side-desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      position: relative; z-index: 1;
+    }
 
-  .side-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: relative; z-index: 1;
-  }
-  .side-features li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.7);
-  }
-  .feat-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #1D9E75;
-    flex-shrink: 0;
-  }
+    .side-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative; z-index: 1;
+    }
+    .side-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+    }
+    .feat-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #1D9E75;
+      flex-shrink: 0;
+    }
 
-  .side-footer {
-    margin-top: auto;
-    font-size: 11px;
-    color: rgba(255,255,255,0.3);
-    position: relative; z-index: 1;
-  }
+    .side-footer {
+      margin-top: auto;
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      position: relative; z-index: 1;
+    }
 
-  /* ── PANEL DERECHO ── */
-  .main-panel {
-    flex: 1;
-    background: var(--surface);
-    border-radius: 0 var(--r) var(--r) 0;
-    border: 0.5px solid var(--border);
-    border-left: none;
-    padding: 2.5rem 2.5rem 2rem;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
+    /* ── PANEL DERECHO ── */
+    .main-panel {
+      flex: 1;
+      background: var(--surface);
+      padding: 2rem 2rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      min-width: 280px;
+    }
 
-  /* ── TABS ── */
-  .tab-bar {
-    display: flex;
-    gap: 4px;
-    background: var(--surface2);
-    border-radius: var(--rm);
-    padding: 4px;
-    margin-bottom: 2rem;
-    border: 0.5px solid var(--border);
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--txt2);
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-  .tab-btn.active {
-    background: var(--surface);
-    color: var(--txt);
-    border: 0.5px solid var(--border2);
-  }
+    /* ── TABS ── */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: var(--rm);
+      padding: 4px;
+      margin-bottom: 2rem;
+      border: 0.5px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--txt2);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--txt);
+      border: 0.5px solid var(--border2);
+    }
 
-  /* ── FORM HEADER ── */
-  .form-header { margin-bottom: 1.5rem; }
-  .form-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 24px;
-    color: var(--txt);
-    margin-bottom: 4px;
-  }
-  .form-subtitle { font-size: 13px; color: var(--txt2); line-height: 1.5; }
+    /* ── FORM HEADER ── */
+    .form-header { margin-bottom: 1.5rem; }
+    .form-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+    .form-subtitle { font-size: 13px; color: var(--txt2); line-height: 1.5; }
 
-  /* ── FORM FIELDS ── */
-  .field { margin-bottom: 1rem; }
-  .field-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--txt2);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .field-wrap { position: relative; }
-  .field-input {
-    width: 100%;
-    height: 40px;
-    padding: 0 12px 0 36px;
-    border: 0.5px solid var(--border2);
-    border-radius: var(--rm);
-    background: var(--surface);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--txt);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .field-input:focus { border-color: var(--brand); border-width: 1px; }
-  .field-input.error { border-color: var(--color-border-danger); }
-  .field-icon {
-    position: absolute;
-    left: 10px; top: 50%;
-    transform: translateY(-50%);
-    width: 16px; height: 16px;
-    color: var(--txt3);
-    pointer-events: none;
-  }
-  .field-error {
-    font-size: 11.5px;
-    color: var(--danger);
-    margin-top: 4px;
-    display: none;
-  }
-  .field-error.show { display: block; }
+    /* ── FORM FIELDS ── */
+    .field { margin-bottom: 1rem; }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--txt2);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .field-wrap { position: relative; }
+    .field-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px 0 36px;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--rm);
+      background: var(--surface);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--txt);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: var(--brand); border-width: 1px; }
+    .field-input.error { border-color: var(--danger); }
+    .field-icon {
+      position: absolute;
+      left: 10px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--txt3);
+      pointer-events: none;
+    }
+    .field-error {
+      font-size: 11.5px;
+      color: var(--danger);
+      margin-top: 4px;
+      display: none;
+    }
+    .field-error.show { display: block; }
 
-  /* ── PASSWORD STRENGTH ── */
-  .pw-strength {
-    margin-top: 8px;
-    display: none;
-  }
-  .pw-strength.show { display: block; }
-  .pw-bars {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 4px;
-  }
-  .pw-bar {
-    flex: 1; height: 3px;
-    border-radius: 2px;
-    background: var(--border2);
-    transition: background 0.2s;
-  }
-  .pw-bar.fill-weak   { background: #E24B4A; }
-  .pw-bar.fill-fair   { background: #EF9F27; }
-  .pw-bar.fill-strong { background: #1D9E75; }
-  .pw-label { font-size: 11px; color: var(--txt3); }
+    /* ── PASSWORD STRENGTH ── */
+    .pw-strength {
+      margin-top: 8px;
+      display: none;
+    }
+    .pw-strength.show { display: block; }
+    .pw-bars {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .pw-bar {
+      flex: 1; height: 3px;
+      border-radius: 2px;
+      background: var(--border2);
+      transition: background 0.2s;
+    }
+    .pw-bar.fill-weak   { background: #E24B4A; }
+    .pw-bar.fill-fair   { background: #EF9F27; }
+    .pw-bar.fill-strong { background: #1D9E75; }
+    .pw-label { font-size: 11px; color: var(--txt3); }
 
-  /* ── RULES CHECK ── */
-  .pw-rules {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 8px;
-  }
-  .rule {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11.5px;
-    color: var(--txt3);
-    transition: color 0.15s;
-  }
-  .rule.ok { color: var(--success-txt); }
-  .rule-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
-  }
+    /* ── RULES CHECK ── */
+    .pw-rules {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--txt3);
+      transition: color 0.15s;
+    }
+    .rule.ok { color: var(--success-txt); }
+    .rule-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
 
-  /* ── ALERT ── */
-  .alert {
-    padding: 10px 14px;
-    border-radius: var(--rm);
-    font-size: 13px;
-    margin-bottom: 1rem;
-    display: none;
-  }
-  .alert.show { display: block; }
-  .alert.err { background: var(--danger-bg); color: var(--danger); }
-  .alert.ok  { background: var(--success-bg); color: var(--success-txt); }
+    /* ── ALERT ── */
+    .alert {
+      padding: 10px 14px;
+      border-radius: var(--rm);
+      font-size: 13px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert.err { background: var(--danger-bg); color: var(--danger); }
+    .alert.ok  { background: var(--success-bg); color: var(--success-txt); }
 
-  /* ── SUBMIT BTN ── */
-  .btn-submit {
-    width: 100%;
-    height: 42px;
-    border: none;
-    border-radius: var(--rm);
-    background: #085041;
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 0.25rem;
-    transition: background 0.15s, transform 0.1s;
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-submit:hover { background: #0F6E56; }
-  .btn-submit:active { transform: scale(0.99); }
-  .btn-submit.loading { pointer-events: none; opacity: 0.7; }
+    /* ── SUBMIT BTN ── */
+    .btn-submit {
+      width: 100%;
+      height: 42px;
+      border: none;
+      border-radius: var(--rm);
+      background: #085041;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 0.25rem;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-submit:hover { background: #0F6E56; }
+    .btn-submit:active { transform: scale(0.99); }
+    .btn-submit.loading { pointer-events: none; opacity: 0.7; }
 
-  /* ── ROLE SELECTOR ── */
-  .role-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
-  .role-card {
-    padding: 10px 8px;
-    border: 0.5px solid var(--border2);
-    border-radius: var(--rm);
-    cursor: pointer;
-    text-align: center;
-    transition: border-color 0.15s, background 0.15s;
-    background: var(--surface);
-  }
-  .role-card:hover { background: var(--surface2); }
-  .role-card.selected {
-    border-color: var(--brand);
-    border-width: 1.5px;
-    background: var(--brand-light);
-  }
-  .role-card input { display: none; }
-  .role-icon { font-size: 18px; margin-bottom: 4px; display: block; }
-  .role-name { font-size: 12px; font-weight: 500; color: var(--txt); }
-  .role-desc { font-size: 10px; color: var(--txt2); margin-top: 2px; }
+    /* ── ROLE SELECTOR ── */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    .role-card {
+      padding: 10px 8px;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--rm);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      background: var(--surface);
+    }
+    .role-card:hover { background: var(--surface2); }
+    .role-card.selected {
+      border-color: var(--brand);
+      border-width: 1.5px;
+      background: var(--brand-light);
+    }
+    .role-card input { display: none; }
+    .role-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+    .role-name { font-size: 12px; font-weight: 500; color: var(--txt); }
+    .role-desc { font-size: 10px; color: var(--txt2); margin-top: 2px; }
 
-  /* ── DIVIDER ── */
-  .divider {
-    display: flex; align-items: center; gap: 12px;
-    margin: 1.25rem 0;
-    font-size: 12px; color: var(--txt3);
-  }
-  .divider::before, .divider::after {
-    content: ''; flex: 1;
-    height: 0.5px; background: var(--border);
-  }
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 1.25rem 0;
+      font-size: 12px; color: var(--txt3);
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1;
+      height: 0.5px; background: var(--border);
+    }
 
-  /* ── PANEL HIDDEN ── */
-  .form-panel { display: none; }
-  .form-panel.active { display: block; }
+    /* ── PANEL HIDDEN ── */
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
 
-  /* ── SUCCESS STATE ── */
-  .success-screen {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 2rem;
-    flex: 1;
-  }
-  .success-screen.show { display: flex; }
-  .success-icon {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: var(--success-bg);
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 1.25rem;
-  }
-  .success-icon svg { width: 32px; height: 32px; stroke: var(--success-txt); }
-  .success-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px; color: var(--txt);
-    margin-bottom: 8px;
-  }
-  .success-msg { font-size: 13px; color: var(--txt2); line-height: 1.6; max-width: 280px; }
-  .success-user {
-    margin-top: 1.5rem;
-    padding: 12px 20px;
-    background: var(--surface2);
-    border-radius: var(--rm);
-    border: 0.5px solid var(--border);
-    font-size: 13px; color: var(--txt2);
-  }
-  .success-user strong { color: var(--txt); font-weight: 500; }
-  .btn-back {
-    margin-top: 1.5rem;
-    padding: 9px 24px;
-    background: transparent;
-    border: 0.5px solid var(--border2);
-    border-radius: var(--rm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: var(--txt);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .btn-back:hover { background: var(--surface2); }
-</style>
+    /* ── SUCCESS STATE ── */
+    .success-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      flex: 1;
+    }
+    .success-screen.show { display: flex; }
+    .success-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--success-bg);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+    .success-icon svg { width: 32px; height: 32px; stroke: var(--success-txt); }
+    .success-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px; color: var(--txt);
+      margin-bottom: 8px;
+    }
+    .success-msg { font-size: 13px; color: var(--txt2); line-height: 1.6; max-width: 280px; }
+    .success-user {
+      margin-top: 1.5rem;
+      padding: 12px 20px;
+      background: var(--surface2);
+      border-radius: var(--rm);
+      border: 0.5px solid var(--border);
+      font-size: 13px; color: var(--txt2);
+    }
+    .success-user strong { color: var(--txt); font-weight: 500; }
+    .btn-back {
+      margin-top: 1.5rem;
+      padding: 9px 24px;
+      background: transparent;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--rm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--txt);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-back:hover { background: var(--surface2); }
 
+    @media (max-width: 700px) {
+      #cw-root { flex-direction: column; }
+      .side-panel { width: 100%; text-align: center; }
+      .side-features { align-items: center; }
+      .main-panel { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
 <div id="cw-root">
-
   <div class="side-panel">
     <div class="logo">
       <div class="logo-mark">
@@ -405,22 +426,18 @@
         <div class="logo-sub">Coworking Space</div>
       </div>
     </div>
-
     <p class="side-tagline">Tu espacio,<br><em>tu ritmo</em></p>
     <p class="side-desc">Reserva salas de reuniones, escritorios y espacios privados en minutos desde cualquier dispositivo.</p>
-
     <ul class="side-features">
       <li><span class="feat-dot"></span>Reservas en tiempo real</li>
       <li><span class="feat-dot"></span>Gestión de accesos</li>
       <li><span class="feat-dot"></span>Historial de uso</li>
       <li><span class="feat-dot"></span>Notificaciones automáticas</li>
     </ul>
-
     <div class="side-footer">© 2025 Nexo Coworking</div>
   </div>
 
   <div class="main-panel" id="main-panel">
-
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Iniciar sesión</button>
       <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">Crear cuenta</button>
@@ -432,9 +449,7 @@
         <h2 class="form-title">Bienvenido de vuelta</h2>
         <p class="form-subtitle">Ingresa tus credenciales para acceder al sistema de reservas.</p>
       </div>
-
       <div class="alert" id="login-alert"></div>
-
       <div class="field">
         <label class="field-label">Nombre de usuario</label>
         <div class="field-wrap">
@@ -443,7 +458,6 @@
         </div>
         <span class="field-error" id="login-username-err"></span>
       </div>
-
       <div class="field">
         <label class="field-label">Contraseña</label>
         <div class="field-wrap">
@@ -452,9 +466,7 @@
         </div>
         <span class="field-error" id="login-password-err"></span>
       </div>
-
       <button class="btn-submit" id="btn-login" onclick="doLogin()">Iniciar sesión</button>
-
       <div class="divider">o</div>
       <p style="text-align:center; font-size: 13px; color: var(--txt2);">
         ¿No tenés cuenta? <a href="#" onclick="switchTab('signup'); return false;" style="color: var(--brand); text-decoration: none; font-weight: 500;">Registrate</a>
@@ -467,9 +479,7 @@
         <h2 class="form-title">Creá tu cuenta</h2>
         <p class="form-subtitle">Elegí tu tipo de acceso y completá los datos.</p>
       </div>
-
       <div class="alert" id="signup-alert"></div>
-
       <label class="field-label" style="display:block; margin-bottom: 8px;">Tipo de cuenta</label>
       <div class="role-grid">
         <label class="role-card selected" id="role-member">
@@ -545,7 +555,6 @@
       </div>
 
       <button class="btn-submit" id="btn-signup" onclick="doSignup()">Crear cuenta</button>
-
       <div class="divider">o</div>
       <p style="text-align:center; font-size: 13px; color: var(--txt2);">
         ¿Ya tenés cuenta? <a href="#" onclick="switchTab('login'); return false;" style="color: var(--brand); text-decoration: none; font-weight: 500;">Iniciá sesión</a>
@@ -562,230 +571,219 @@
       <div class="success-user" id="success-user"></div>
       <button class="btn-back" onclick="backToForm()">Volver al inicio</button>
     </div>
-
   </div>
 </div>
 
 <script>
-const API = 'http://localhost:5000/api/auth';
+  const API = 'http://localhost:5000/api/auth';
 
-function switchTab(tab) {
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-  document.getElementById('panel-login').classList.toggle('active', tab === 'login');
-  document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
-  clearAlerts();
-}
+  // Almacenar token JWT
+  function storeToken(token) {
+    if (token) {
+      localStorage.setItem('nexo_token', token);
+      console.log('✅ Token JWT guardado');
+    }
+  }
 
-function clearAlerts() {
-  ['login-alert','signup-alert'].forEach(id => {
+  // Cambio de pestañas
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+    clearAlerts();
+  }
+
+  function clearAlerts() {
+    ['login-alert','signup-alert'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.className = 'alert'; el.textContent = ''; }
+    });
+  }
+
+  function showAlert(id, msg, type) {
     const el = document.getElementById(id);
-    el.className = 'alert'; el.textContent = '';
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `alert show ${type}`;
+  }
+
+  function setFieldError(fieldId, errId, msg) {
+    const inp = document.getElementById(fieldId);
+    const err = document.getElementById(errId);
+    if (!inp || !err) return;
+    if (msg) { inp.classList.add('error'); err.textContent = msg; err.classList.add('show'); }
+    else { inp.classList.remove('error'); err.textContent = ''; err.classList.remove('show'); }
+  }
+
+  // Validaciones inline
+  function validateUsernameField() {
+    const v = document.getElementById('su-username')?.value.trim() || '';
+    if (v.length > 0 && v.length < 3) setFieldError('su-username','su-username-err','Mínimo 3 caracteres');
+    else if (v.length > 0 && !/^[a-zA-Z0-9_]+$/.test(v)) setFieldError('su-username','su-username-err','Solo letras, números y _');
+    else setFieldError('su-username','su-username-err','');
+  }
+
+  function validateEmailField() {
+    const v = document.getElementById('su-email')?.value.trim() || '';
+    if (v.length > 0 && !/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(v))
+      setFieldError('su-email','su-email-err','Email inválido');
+    else setFieldError('su-email','su-email-err','');
+  }
+
+  function validateConfirmField() {
+    const pw = document.getElementById('su-password')?.value || '';
+    const cf = document.getElementById('su-confirm')?.value || '';
+    if (cf.length > 0 && pw !== cf) setFieldError('su-confirm','su-confirm-err','Las contraseñas no coinciden');
+    else setFieldError('su-confirm','su-confirm-err','');
+  }
+
+  function onPasswordInput() {
+    const pw = document.getElementById('su-password')?.value || '';
+    const strengthDiv = document.getElementById('pw-strength');
+    if (strengthDiv) strengthDiv.classList.toggle('show', pw.length > 0);
+
+    const rules = {
+      'r-len':     pw.length >= 8,
+      'r-upper':   /[A-Z]/.test(pw),
+      'r-lower':   /[a-z]/.test(pw),
+      'r-num':     /\d/.test(pw),
+      'r-special': /[!@#$%^&*(),.?":{}|<>]/.test(pw),
+    };
+    Object.entries(rules).forEach(([id, ok]) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('ok', ok);
+    });
+
+    const score = Object.values(rules).filter(Boolean).length;
+    const bars = [document.getElementById('b1'),document.getElementById('b2'),document.getElementById('b3'),document.getElementById('b4')];
+    const label = document.getElementById('pw-label');
+    if (!bars[0] || !label) return;
+    bars.forEach(b => b.className = 'pw-bar');
+    if (score <= 2) {
+      bars[0]?.classList.add('fill-weak');
+      label.textContent = 'Débil'; label.style.color = '#E24B4A';
+    } else if (score <= 3) {
+      bars[0]?.classList.add('fill-fair'); bars[1]?.classList.add('fill-fair');
+      label.textContent = 'Regular'; label.style.color = '#EF9F27';
+    } else if (score === 4) {
+      [0,1,2].forEach(i => bars[i]?.classList.add('fill-strong'));
+      label.textContent = 'Buena'; label.style.color = '#1D9E75';
+    } else {
+      bars.forEach(b => b?.classList.add('fill-strong'));
+      label.textContent = 'Excelente'; label.style.color = '#1D9E75';
+    }
+    if (document.getElementById('su-confirm')?.value) validateConfirmField();
+  }
+
+  // Role cards interactivas
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+    });
   });
-}
 
-function showAlert(id, msg, type) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'alert show ' + type;
-}
+  // Llamadas a la API real
+  async function doLogin() {
+    const btn = document.getElementById('btn-login');
+    if (!btn) return;
+    btn.classList.add('loading'); btn.textContent = 'Verificando…';
 
-function setFieldError(fieldId, errId, msg) {
-  const inp = document.getElementById(fieldId);
-  const err = document.getElementById(errId);
-  if (msg) { inp.classList.add('error'); err.textContent = msg; err.classList.add('show'); }
-  else { inp.classList.remove('error'); err.textContent = ''; err.classList.remove('show'); }
-}
+    const username = document.getElementById('login-username')?.value.trim() || '';
+    const password = document.getElementById('login-password')?.value || '';
 
-// ── Validaciones inline ──────────────────────────────────────
+    try {
+      const response = await fetch(API + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const result = await response.json();
 
-function validateUsernameField() {
-  const v = document.getElementById('su-username').value.trim();
-  if (v.length > 0 && v.length < 3) setFieldError('su-username','su-username-err','Mínimo 3 caracteres');
-  else if (v.length > 0 && !/^[a-zA-Z0-9_]+$/.test(v)) setFieldError('su-username','su-username-err','Solo letras, números y _');
-  else setFieldError('su-username','su-username-err','');
-}
+      if (result.success && result.data) {
+        if (result.data.token) storeToken(result.data.token);
+        showSuccess('¡Bienvenido!',
+          'Has iniciado sesión exitosamente en el sistema de reservas.',
+          `Conectado como <strong>${result.data.username}</strong> · ${result.data.role}`
+        );
+      } else {
+        showAlert('login-alert', result.message || 'Credenciales inválidas', 'err');
+      }
+    } catch (error) {
+      console.error(error);
+      showAlert('login-alert', 'Error de conexión con el servidor (¿Flask corriendo en puerto 5000?)', 'err');
+    } finally {
+      btn.classList.remove('loading'); btn.textContent = 'Iniciar sesión';
+    }
+  }
 
-function validateEmailField() {
-  const v = document.getElementById('su-email').value.trim();
-  if (v.length > 0 && !/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(v))
-    setFieldError('su-email','su-email-err','Email inválido');
-  else setFieldError('su-email','su-email-err','');
-}
+  async function doSignup() {
+    const btn = document.getElementById('btn-signup');
+    if (!btn) return;
+    btn.classList.add('loading'); btn.textContent = 'Creando cuenta…';
 
-function validateConfirmField() {
-  const pw = document.getElementById('su-password').value;
-  const cf = document.getElementById('su-confirm').value;
-  if (cf.length > 0 && pw !== cf) setFieldError('su-confirm','su-confirm-err','Las contraseñas no coinciden');
-  else setFieldError('su-confirm','su-confirm-err','');
-}
+    const username = document.getElementById('su-username')?.value.trim() || '';
+    const email    = document.getElementById('su-email')?.value.trim().toLowerCase() || '';
+    const password = document.getElementById('su-password')?.value || '';
+    const confirm  = document.getElementById('su-confirm')?.value || '';
+    const roleRadio = document.querySelector('input[name="role"]:checked');
+    const role = roleRadio ? roleRadio.value : 'member';
 
-function onPasswordInput() {
-  const pw = document.getElementById('su-password').value;
-  document.getElementById('pw-strength').classList.toggle('show', pw.length > 0);
+    try {
+      const response = await fetch(API + '/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, confirm_password: confirm, role })
+      });
+      const result = await response.json();
 
-  const rules = {
-    'r-len':     pw.length >= 8,
-    'r-upper':   /[A-Z]/.test(pw),
-    'r-lower':   /[a-z]/.test(pw),
-    'r-num':     /\d/.test(pw),
-    'r-special': /[!@#$%^&*(),.?":{}|<>]/.test(pw),
+      if (result.success) {
+        showSuccess('¡Cuenta creada!',
+          'Tu cuenta fue registrada exitosamente. Ya podés iniciar sesión.',
+          `<strong>${result.data.username}</strong> · ${result.data.email} · ${result.data.role}`
+        );
+      } else {
+        const errorMsg = (result.errors && result.errors.length) ? result.errors.join(' ') : (result.message || 'Error al crear la cuenta');
+        showAlert('signup-alert', errorMsg, 'err');
+      }
+    } catch (error) {
+      console.error(error);
+      showAlert('signup-alert', 'Error de conexión con el servidor', 'err');
+    } finally {
+      btn.classList.remove('loading'); btn.textContent = 'Crear cuenta';
+    }
+  }
+
+  function showSuccess(title, msg, userInfo) {
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    const tabBar = document.querySelector('.tab-bar');
+    if (tabBar) tabBar.style.display = 'none';
+    const successTitle = document.getElementById('success-title');
+    const successMsg = document.getElementById('success-msg');
+    const successUser = document.getElementById('success-user');
+    if (successTitle) successTitle.textContent = title;
+    if (successMsg) successMsg.textContent = msg;
+    if (successUser) successUser.innerHTML = userInfo;
+    const successScreen = document.getElementById('success-screen');
+    if (successScreen) successScreen.classList.add('show');
+  }
+
+  function backToForm() {
+    const successScreen = document.getElementById('success-screen');
+    if (successScreen) successScreen.classList.remove('show');
+    const tabBar = document.querySelector('.tab-bar');
+    if (tabBar) tabBar.style.display = '';
+    switchTab('login');
+  }
+
+  // Inicialización: si ya hay token, se podría redirigir, pero dejamos que el usuario decida.
+  window.onload = () => {
+    const token = localStorage.getItem('nexo_token');
+    if (token) console.log('🟢 Token existente, sesión potencialmente activa');
   };
-  Object.entries(rules).forEach(([id, ok]) =>
-    document.getElementById(id).classList.toggle('ok', ok)
-  );
-
-  const score = Object.values(rules).filter(Boolean).length;
-  const bars = [document.getElementById('b1'),document.getElementById('b2'),
-                document.getElementById('b3'),document.getElementById('b4')];
-  const label = document.getElementById('pw-label');
-  bars.forEach(b => b.className = 'pw-bar');
-
-  if (score <= 2) {
-    bars[0].classList.add('fill-weak');
-    label.textContent = 'Débil'; label.style.color = '#E24B4A';
-  } else if (score <= 3) {
-    bars[0].classList.add('fill-fair'); bars[1].classList.add('fill-fair');
-    label.textContent = 'Regular'; label.style.color = '#EF9F27';
-  } else if (score === 4) {
-    [0,1,2].forEach(i => bars[i].classList.add('fill-strong'));
-    label.textContent = 'Buena'; label.style.color = '#1D9E75';
-  } else {
-    bars.forEach(b => b.classList.add('fill-strong'));
-    label.textContent = 'Excelente'; label.style.color = '#1D9E75';
-  }
-
-  if (document.getElementById('su-confirm').value)
-    validateConfirmField();
-}
-
-// ── Role cards ───────────────────────────────────────────────
-document.querySelectorAll('.role-card').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-  });
-});
-
-// ── Simulated API calls ──────────────────────────────────────
-
-async function callAPI(endpoint, body) {
-  try {
-    const res = await fetch(API + endpoint, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
-    });
-    return await res.json();
-  } catch {
-    return {success: false, message: 'No se pudo conectar con el servidor (localhost:5000).', errors: []};
-  }
-}
-
-function simulateLogin(username, password) {
-  if (!username) return {success: false, message: 'Ingresá tu nombre de usuario.', errors: []};
-  if (!password) return {success: false, message: 'Ingresá tu contraseña.', errors: []};
-  if (username === 'demo' && password === 'Demo1234!') {
-    return {success: true, message: 'Inicio de sesión exitoso.', data: {username: 'demo', role: 'member', email: 'demo@nexo.com'}};
-  }
-  return {success: false, message: 'Credenciales inválidas. Probá con demo / Demo1234!', errors: []};
-}
-
-function simulateSignup(data) {
-  const {username, email, password, confirm_password, role} = data;
-  const errors = [];
-  if (!username || username.length < 3) errors.push('Usuario muy corto');
-  if (!/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(email)) errors.push('Email inválido');
-  if (password !== confirm_password) errors.push('Las contraseñas no coinciden');
-  if (password.length < 8) errors.push('Contraseña muy corta');
-  if (!/[A-Z]/.test(password)) errors.push('Falta mayúscula');
-  if (!/\d/.test(password)) errors.push('Falta número');
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('Falta carácter especial');
-  if (errors.length) return {success: false, message: errors[0], errors};
-  return {success: true, message: 'Cuenta creada.', data: {username, email, role}};
-}
-
-async function doLogin() {
-  const btn = document.getElementById('btn-login');
-  btn.classList.add('loading'); btn.textContent = 'Verificando…';
-
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value;
-
-  await new Promise(r => setTimeout(r, 700));
-
-  let result;
-  try {
-    const res = await fetch(API + '/login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username, password})
-    });
-    result = await res.json();
-  } catch {
-    result = simulateLogin(username, password);
-  }
-
-  btn.classList.remove('loading'); btn.textContent = 'Iniciar sesión';
-
-  if (result.success) {
-    showSuccess('¡Bienvenido!',
-      'Has iniciado sesión exitosamente en el sistema de reservas.',
-      `Conectado como <strong>${result.data.username}</strong> · ${result.data.role}`
-    );
-  } else {
-    showAlert('login-alert', result.message || 'Error al iniciar sesión.', 'err');
-  }
-}
-
-async function doSignup() {
-  const btn = document.getElementById('btn-signup');
-  btn.classList.add('loading'); btn.textContent = 'Creando cuenta…';
-
-  const username = document.getElementById('su-username').value.trim();
-  const email    = document.getElementById('su-email').value.trim().toLowerCase();
-  const password = document.getElementById('su-password').value;
-  const confirm  = document.getElementById('su-confirm').value;
-  const role     = document.querySelector('input[name="role"]:checked').value;
-
-  await new Promise(r => setTimeout(r, 800));
-
-  let result;
-  try {
-    const res = await fetch(API + '/signup', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username, email, password, confirm_password: confirm, role})
-    });
-    result = await res.json();
-  } catch {
-    result = simulateSignup({username, email, password, confirm_password: confirm, role});
-  }
-
-  btn.classList.remove('loading'); btn.textContent = 'Crear cuenta';
-
-  if (result.success) {
-    showSuccess('¡Cuenta creada!',
-      'Tu cuenta fue registrada exitosamente. Ya podés iniciar sesión.',
-      `<strong>${result.data.username}</strong> · ${result.data.email} · ${result.data.role}`
-    );
-  } else {
-    showAlert('signup-alert', result.message || 'Error al crear la cuenta.', 'err');
-  }
-}
-
-function showSuccess(title, msg, userInfo) {
-  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector('.tab-bar').style.display = 'none';
-  document.getElementById('success-title').textContent = title;
-  document.getElementById('success-msg').textContent = msg;
-  document.getElementById('success-user').innerHTML = userInfo;
-  document.getElementById('success-screen').classList.add('show');
-}
-
-function backToForm() {
-  document.getElementById('success-screen').classList.remove('show');
-  document.querySelector('.tab-bar').style.display = '';
-  switchTab('login');
-}
 </script>
+</body>
+</html>
