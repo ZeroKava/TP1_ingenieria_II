@@ -120,7 +120,3 @@ Ambos patrones trabajan en conjunto para lograr un flujo de registro limpio:
 1. El `AuthService` recibe los datos y le pide al **Factory Method** que construya el usuario correcto según su rol. 
 2. Una vez guardado en memoria, el `AuthService` utiliza el **Observer** para emitir el evento `USER_REGISTERED`, disparando las acciones secundarias (como logs y emails) sin interrumpir el flujo principal de respuesta hacia el Frontend.
 
-# Uso dinámico en el registro para instanciar el tipo correcto en AuthService
-factory = UserFactoryRegistry.get(role) # Devuelve la fábrica correcta según el string del rol
-user = factory.build(username, email, password_hash)
-```
