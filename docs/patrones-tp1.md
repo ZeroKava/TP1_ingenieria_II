@@ -1,4 +1,8 @@
-# Documentación de Patrones de Diseño - Nexo Coworking
+# Documentación de Patrones de Diseño - TP1 (Nexo Coworking)
+
+Este documento detalla los patrones de diseño aplicados en el módulo de autenticación (`src/auth.py`) del sistema de reservas Nexo Coworking, justificando su uso para resolver problemas específicos de arquitectura.
+
+---
 
 ## 1. Patrón: Observer (Comportamiento)
 
@@ -8,9 +12,10 @@
 Durante el proceso de autenticación (como registrar un usuario, fallar un inicio de sesión o bloquear una cuenta), el sistema necesita ejecutar múltiples acciones secundarias (ej: registrar un log en la consola, enviar un correo de bienvenida, o guardar un registro en la base de datos de auditoría). Si el servicio de autenticación (`AuthService`) llamara directamente a estas funciones, terminaría fuertemente acoplado a servicios externos, violando el Principio de Responsabilidad Única (SRP).
 
 **Justificación de la elección:**
-Se eligió el patrón Observer mediante la implementación de un `AuthEventBus`. Esto permite que el `AuthService` simplemente "publique" un evento (ej. `LOGIN_SUCCESS`) sin importarle quién lo está escuchando. Esto cumple con el Principio Abierto/Cerrado (OCP), ya que el día de mañana podemos agregar un nuevo observador (como un `EmailNotifier`) sin tener que modificar ni una sola línea de código del `AuthService`.
+Se eligió el patrón Observer mediante la implementación de un `AuthEventBus`. Esto permite que el `AuthService` simplemente "publique" un evento (ej. `LOGIN_SUCCESS`) sin importarle quién lo está escuchando. Esto cumple con el Principio Abierto/Cerrado (OCP), ya que el día de mañana podemos agregar un nuevo observador (como un `EmailNotifier` o `DatabaseObserver`) sin tener que modificar ni una sola línea de código del `AuthService`.
 
 **Ejemplo en el código (`src/auth.py`):**
+
 ```python
 # El Subject (Event Bus) notifica a los observers
 class AuthEventBus:
@@ -23,36 +28,41 @@ class ConsoleLogger(AuthObserver):
     def update(self, event: AuthEvent) -> None:
         print(f"[LOG] {event.timestamp} | {event.event_type} | {event.payload}")
 
-# Uso en la lógica de negocio (AuthService)
+# Uso en la lógica de negocio (AuthService) para notificar sin acoplarse
 self._event_bus.publish(AuthEvent(
     AuthEvent.USER_REGISTERED,
     {"user_id": user.user_id, "username": username, "email": email, "role": role},
 ))
-## Patrón: Factory Method (Creacional)
+```
+
+---
+
+## 2. Patrón: Factory Method (Creacional)
 
 **Intención:**
-[cite_start]Define una interfaz para crear un objeto, pero deja que las subclases decidan qué clase instanciar[cite: 4, 13]. [cite_start]Permite que una clase delegue la responsabilidad de la instanciación a subclases específicas[cite: 13].
+Define una interfaz para crear un objeto, pero deja que las subclases decidan qué clase instanciar. Permite que una clase delegue la responsabilidad de la instanciación a subclases específicas.
 
 **Problema que resuelve en el sistema:**
-[cite_start]En el sistema de Nexo Coworking existen diferentes perfiles de usuario: **Miembro**, **Administrador** e **Invitado**[cite: 4, 13]. [cite_start]Cada uno de estos perfiles tiene atributos o comportamientos iniciales distintos[cite: 4, 13]. [cite_start]Sin este patrón, el servicio de autenticación (`AuthService`) tendría que contener bloques lógicos complejos (`if/else` o `switch`) para decidir qué tipo de objeto crear, lo que dificultaría el mantenimiento y la escalabilidad del código al agregar nuevos roles[cite: 4, 13].
+En el sistema de Nexo Coworking existen diferentes perfiles de usuario: **Miembro**, **Administrador** e **Invitado**. Cada uno de estos perfiles requiere ser instanciado a partir de una clase distinta (`MemberUser`, `AdminUser`, `GuestUser`) porque a futuro manejarán permisos, atributos o comportamientos iniciales distintos. Sin este patrón, el servicio de autenticación (`AuthService`) tendría que contener bloques lógicos complejos (`if/else` o `switch`) para decidir qué tipo de objeto crear al registrar un usuario, lo que dificultaría el mantenimiento y la escalabilidad del código al agregar nuevos roles.
 
 **Justificación de la elección:**
-[cite_start]Se implementó mediante un registro de fábricas (`UserFactoryRegistry`) y creadores concretos como `MemberFactory` y `AdminFactory`[cite: 4, 13]. [cite_start]Esta elección permite que el proceso de registro (`sign_up`) sea agnóstico al tipo de usuario que se está creando[cite: 4, 13]. [cite_start]Si en el futuro se requiere un nuevo tipo de usuario (ej. "Empresa"), solo se debe añadir una nueva fábrica al registro sin modificar la lógica central del servicio[cite: 13].
+Se implementó mediante un registro de fábricas (`UserFactoryRegistry`) y creadores concretos como `MemberFactory` y `AdminFactory`. Esta elección permite que el proceso de registro (`sign_up`) sea totalmente agnóstico al tipo de usuario que se está creando. Si en el futuro se requiere un nuevo tipo de usuario (ej. "Empresa"), solo se debe añadir una nueva fábrica al registro sin modificar la lógica central del servicio.
 
 **Ejemplo en el código (`src/auth.py`):**
 
 ```python
-# [cite_start]Creador abstracto que define el método de fábrica [cite: 4, 13]
+# Creador abstracto que define el método de fábrica
 class UserFactory(ABC):
     @abstractmethod
     def create_user(self, user_id, username, email, password_hash) -> User:
         ...
 
-# [cite_start]Creador concreto para usuarios administradores [cite: 4, 13]
+# Creador concreto para usuarios administradores
 class AdminFactory(UserFactory):
     def create_user(self, user_id, username, email, password_hash) -> AdminUser:
         return AdminUser(user_id, username, email, password_hash)
 
-# [cite_start]Uso dinámico en el registro para instanciar el tipo correcto [cite: 4, 13]
-factory = UserFactoryRegistry.get(role)
+# Uso dinámico en el registro para instanciar el tipo correcto en AuthService
+factory = UserFactoryRegistry.get(role) # Devuelve la fábrica correcta según el string del rol
 user = factory.build(username, email, password_hash)
+```
