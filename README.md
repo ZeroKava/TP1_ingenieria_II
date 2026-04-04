@@ -28,7 +28,7 @@ Este sistema permite a los miembros de un espacio de coworking reservar salas y 
 
 **Reporte Semanal (S1):** [Enlace al campus/Moodle](PEGAR_ACA_LINK_A_MOODLE)
 
-**Diagrama Casos de Uso:** [https://github.com/users/ZeroKava/projects/2/views/1](https://miro.com/welcomeonboard/T29CeXUwaE5YRHU2aUE5MGV5UVAwc1NDbEJlMXR3UlY4dUdGQW9HZmRkWUtJQXRuQU0yN2xET2JvdzVPbVVUdklCVk1kQlZEeHJwamdRTkhXY25DK3g3c3RzWUZSTU5kN3hJUlo2UlRYbGl6ZTdlemZVTVlNV0UvSkhMSGJBUmxBd044SHFHaVlWYWk0d3NxeHNmeG9BPT0hdjE=?share_link_id=11270933247)
+**Diagrama Casos de Uso:** https://miro.com/welcomeonboard/T29CeXUwaE5YRHU2aUE5MGV5UVAwc1NDbEJlMXR3UlY4dUdGQW9HZmRkWUtJQXRuQU0yN2xET2JvdzVPbVVUdklCVk1kQlZEeHJwamdRTkhXY25DK3g3c3RzWUZSTU5kN3hJUlo2UlRYbGd4MDBjVHhleHVJZlZPSHYzTzVTU01nbHpza3F6REdEcmNpNEFOMmJXWXBBPT0hdjE=?share_link_id=557559127714
 
 ---
 
