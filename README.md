@@ -47,5 +47,5 @@ Organización de archivos según los lineamientos de la cátedra:
 **Patrones de Diseño Seleccionados:**
 Factory Method y Observer  
 
-**Caso de Usos:** 
+**Diagrama Entidad-Relación:** 
 <img width="1600" height="1227" alt="image" src="https://github.com/user-attachments/assets/6f81b8a5-1bc9-4bb6-904e-3347d843c557" />
