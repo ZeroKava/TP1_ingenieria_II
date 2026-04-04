@@ -28,3 +28,31 @@ self._event_bus.publish(AuthEvent(
     AuthEvent.USER_REGISTERED,
     {"user_id": user.user_id, "username": username, "email": email, "role": role},
 ))
+## Patrón: Factory Method (Creacional)
+
+**Intención:**
+[cite_start]Define una interfaz para crear un objeto, pero deja que las subclases decidan qué clase instanciar[cite: 4, 13]. [cite_start]Permite que una clase delegue la responsabilidad de la instanciación a subclases específicas[cite: 13].
+
+**Problema que resuelve en el sistema:**
+[cite_start]En el sistema de Nexo Coworking existen diferentes perfiles de usuario: **Miembro**, **Administrador** e **Invitado**[cite: 4, 13]. [cite_start]Cada uno de estos perfiles tiene atributos o comportamientos iniciales distintos[cite: 4, 13]. [cite_start]Sin este patrón, el servicio de autenticación (`AuthService`) tendría que contener bloques lógicos complejos (`if/else` o `switch`) para decidir qué tipo de objeto crear, lo que dificultaría el mantenimiento y la escalabilidad del código al agregar nuevos roles[cite: 4, 13].
+
+**Justificación de la elección:**
+[cite_start]Se implementó mediante un registro de fábricas (`UserFactoryRegistry`) y creadores concretos como `MemberFactory` y `AdminFactory`[cite: 4, 13]. [cite_start]Esta elección permite que el proceso de registro (`sign_up`) sea agnóstico al tipo de usuario que se está creando[cite: 4, 13]. [cite_start]Si en el futuro se requiere un nuevo tipo de usuario (ej. "Empresa"), solo se debe añadir una nueva fábrica al registro sin modificar la lógica central del servicio[cite: 13].
+
+**Ejemplo en el código (`src/auth.py`):**
+
+```python
+# [cite_start]Creador abstracto que define el método de fábrica [cite: 4, 13]
+class UserFactory(ABC):
+    @abstractmethod
+    def create_user(self, user_id, username, email, password_hash) -> User:
+        ...
+
+# [cite_start]Creador concreto para usuarios administradores [cite: 4, 13]
+class AdminFactory(UserFactory):
+    def create_user(self, user_id, username, email, password_hash) -> AdminUser:
+        return AdminUser(user_id, username, email, password_hash)
+
+# [cite_start]Uso dinámico en el registro para instanciar el tipo correcto [cite: 4, 13]
+factory = UserFactoryRegistry.get(role)
+user = factory.build(username, email, password_hash)
