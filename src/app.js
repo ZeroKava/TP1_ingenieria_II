@@ -1,5 +1,13 @@
 const API_URL = "http://127.0.0.1:5000/api/auth";
 
+// Guardar token
+function storeToken(token) {
+  if (token) {
+    localStorage.setItem('nexo_token', token);
+    console.log('Token guardado:', token);
+  }
+}
+
 // Intercambio entre Login y Sign Up
 function toggleAuth() {
     const loginForm = document.getElementById('login-form');
@@ -20,7 +28,6 @@ function toggleAuth() {
     }
 }
 
-// Función para mostrar mensajes de la API
 function showMessage(text, isError = true) {
     const msgDiv = document.getElementById('api-message');
     msgDiv.innerText = text;
@@ -28,7 +35,7 @@ function showMessage(text, isError = true) {
     msgDiv.style.display = 'block';
 }
 
-// Manejo de Login
+// Login
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('login-username').value;
@@ -43,8 +50,9 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         const result = await response.json();
         
         if (result.success) {
+            if (result.data && result.data.token) storeToken(result.data.token);
             showMessage(`¡Bienvenido de nuevo, ${result.data.username}!`, false);
-            // Aquí podrías redirigir al dashboard: window.location.href = "/dashboard";
+            // Aquí podrías redirigir al dashboard
         } else {
             showMessage(result.message);
         }
@@ -53,7 +61,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
 });
 
-// Manejo de Sign Up
+// Sign Up
 document.getElementById('signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -76,7 +84,6 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
             showMessage("Cuenta creada. ¡Ya puedes iniciar sesión!", false);
             setTimeout(toggleAuth, 2000);
         } else {
-            // Si hay errores de validación de auth.py, los mostramos todos
             const errorText = result.errors.length > 0 ? result.errors.join(" ") : result.message;
             showMessage(errorText);
         }
