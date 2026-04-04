@@ -48,12 +48,12 @@ El código base del Back End.
 **¿Qué descartamos y por qué?**
 Por el momento el código funciona correctamente, así que no es necesario el descarte de nada.
 
-### Entrada 003 — Semana 3
+## Entrada 003 — Semana 3
 
-- **Fecha:** 03/04/2026
-- **Herramienta:** Gemini
-- **Responsable:** QA Lead — Jesus Emanuel De Olivera
-- **Eje temático:** Eje 2 / Integración y Pruebas
+**Fecha:** 03/04/2026
+**Herramienta:** Gemini
+**Responsable:** QA Lead — Jesus Emanuel De Olivera
+**Eje temático:** Eje 2 / Integración y Pruebas
 
 **¿Para qué se usó?**
 Integrar el Front y Back, aplicar seguridad (Bcrypt/JWT) y asegurar que las pruebas (`tests.py`) pasen sin errores.
