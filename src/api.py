@@ -10,24 +10,24 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from auth import (
-    AuthService,
     AuthEventBus,
     ConsoleLogger,
     DatabaseObserver,
     EmailNotifier,
-    InMemoryUserRepository,
+    SQLiteUserRepository,
+    AuthService,
 )
 
 app = Flask(__name__)
 CORS(app)
 
-# Composición del sistema
+# Composición del sistema con SQLite
 event_bus = AuthEventBus()
 event_bus.subscribe(ConsoleLogger())
 event_bus.subscribe(DatabaseObserver())
 event_bus.subscribe(EmailNotifier())
 
-repository = InMemoryUserRepository()
+repository = SQLiteUserRepository()          # ← persiste en coworking_auth.db
 auth_service = AuthService(repository=repository, event_bus=event_bus)
 
 

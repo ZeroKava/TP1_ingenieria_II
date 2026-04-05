@@ -3,7 +3,7 @@
   COWORKING SPACE — Authentication Backend
   Módulo: auth.py
   Patrones: Observer, Factory Method
-  + JWT + bcrypt
+  + JWT + bcrypt + SQLite
 =============================================================
 """
 
@@ -13,7 +13,9 @@ from abc import abstractmethod
 import bcrypt
 import jwt
 import re
+import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -21,9 +23,57 @@ from typing import Any
 JWT_SECRET = "nexo_coworking_super_secret_key_2025"
 JWT_EXPIRATION_HOURS = 2
 
+# ---------- Base de datos SQLite ----------
+DATABASE_PATH = "coworking_auth.db"
+
 
 # ═══════════════════════════════════════════════════════════════
-# SECCIÓN 1 ─ OBSERVER PATTERN (igual que tu versión)
+# SECCIÓN 0 ─ INICIALIZACIÓN DE LA BASE DE DATOS
+# ═══════════════════════════════════════════════════════════════
+
+def init_db(db_path: str = DATABASE_PATH) -> None:
+    """Crea las tablas si no existen."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id       TEXT PRIMARY KEY,
+                username      TEXT UNIQUE NOT NULL,
+                email         TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role          TEXT NOT NULL DEFAULT 'member',
+                is_active     INTEGER NOT NULL DEFAULT 1,
+                failed_attempts INTEGER NOT NULL DEFAULT 0,
+                created_at    TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS auth_events (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                payload    TEXT NOT NULL,
+                timestamp  TEXT NOT NULL
+            )
+        """)
+        conn.commit()
+
+
+@contextmanager
+def get_connection(db_path: str = DATABASE_PATH):
+    """Context manager para obtener una conexión con row_factory."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+# ═══════════════════════════════════════════════════════════════
+# SECCIÓN 1 ─ OBSERVER PATTERN
 # ═══════════════════════════════════════════════════════════════
 
 class AuthEvent:
@@ -69,9 +119,21 @@ class ConsoleLogger(AuthObserver):
 
 
 class DatabaseObserver(AuthObserver):
+    """Persiste cada evento de autenticación en la tabla auth_events."""
+
+    def __init__(self, db_path: str = DATABASE_PATH):
+        self._db_path = db_path
+
     def update(self, event: AuthEvent) -> None:
-        # ── INTEGRAR BD ──
-        pass
+        import json
+        try:
+            with get_connection(self._db_path) as conn:
+                conn.execute(
+                    "INSERT INTO auth_events (event_type, payload, timestamp) VALUES (?, ?, ?)",
+                    (event.event_type, json.dumps(event.payload), event.timestamp),
+                )
+        except Exception as exc:
+            print(f"[DatabaseObserver] Error al guardar evento: {exc}")
 
 
 class EmailNotifier(AuthObserver):
@@ -191,6 +253,8 @@ class UserRepository:
 
 
 class InMemoryUserRepository(UserRepository):
+    """Repositorio en memoria (útil para tests)."""
+
     def __init__(self):
         self._store: dict[str, User] = {}
 
@@ -206,6 +270,93 @@ class InMemoryUserRepository(UserRepository):
     def update(self, user: User) -> None:
         if user.username in self._store:
             self._store[user.username] = user
+
+
+class SQLiteUserRepository(UserRepository):
+    """Repositorio persistente usando SQLite."""
+
+    def __init__(self, db_path: str = DATABASE_PATH):
+        self._db_path = db_path
+        init_db(db_path)
+
+    # ── helpers privados ────────────────────────────────────────
+
+    def _row_to_user(self, row: sqlite3.Row) -> User:
+        """Convierte una fila de SQLite en el objeto User correcto según su rol."""
+        role = row["role"]
+        constructors = {
+            "member": MemberUser,
+            "admin":  AdminUser,
+            "guest":  GuestUser,
+        }
+        cls = constructors.get(role, MemberUser)
+        user = cls(
+            user_id       = row["user_id"],
+            username      = row["username"],
+            email         = row["email"],
+            password_hash = row["password_hash"],
+        )
+        user.is_active       = bool(row["is_active"])
+        user.failed_attempts = row["failed_attempts"]
+        user.created_at      = row["created_at"]
+        return user
+
+    # ── interfaz pública ────────────────────────────────────────
+
+    def save(self, user: User) -> None:
+        with get_connection(self._db_path) as conn:
+            conn.execute(
+                """
+                INSERT INTO users
+                    (user_id, username, email, password_hash, role,
+                     is_active, failed_attempts, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    user.user_id,
+                    user.username,
+                    user.email,
+                    user.password_hash,
+                    user.role,
+                    int(user.is_active),
+                    user.failed_attempts,
+                    user.created_at,
+                ),
+            )
+
+    def find_by_username(self, username: str) -> User | None:
+        with get_connection(self._db_path) as conn:
+            row = conn.execute(
+                "SELECT * FROM users WHERE username = ?", (username,)
+            ).fetchone()
+        return self._row_to_user(row) if row else None
+
+    def find_by_email(self, email: str) -> User | None:
+        with get_connection(self._db_path) as conn:
+            row = conn.execute(
+                "SELECT * FROM users WHERE email = ?", (email,)
+            ).fetchone()
+        return self._row_to_user(row) if row else None
+
+    def update(self, user: User) -> None:
+        with get_connection(self._db_path) as conn:
+            conn.execute(
+                """
+                UPDATE users
+                SET email           = ?,
+                    password_hash   = ?,
+                    is_active       = ?,
+                    failed_attempts = ?
+                WHERE username = ?
+                """,
+                (
+                    user.email,
+                    user.password_hash,
+                    int(user.is_active),
+                    user.failed_attempts,
+                    user.username,
+                ),
+            )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -378,13 +529,12 @@ class AuthService:
         user.failed_attempts = 0
         self._repo.update(user)
 
-        # Crear token JWT
         payload = {
-            "user_id": user.user_id,
+            "user_id":  user.user_id,
             "username": user.username,
-            "email": user.email,
-            "role": user.role,
-            "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+            "email":    user.email,
+            "role":     user.role,
+            "exp":      datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
         }
         token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
@@ -393,7 +543,25 @@ class AuthService:
             {"user_id": user.user_id, "username": username, "role": user.role},
         ))
 
-        # Incluir token y datos del usuario en la respuesta
         user_data = user.to_dict()
         user_data["token"] = token
         return AuthResult(True, "Inicio de sesión exitoso.", data=user_data)
+
+
+# ═══════════════════════════════════════════════════════════════
+# SECCIÓN 9 ─ FACTORY DE INFRAESTRUCTURA
+# ═══════════════════════════════════════════════════════════════
+
+def create_auth_service(db_path: str = DATABASE_PATH) -> AuthService:
+    """
+    Construye un AuthService listo para usar con SQLite.
+    Uso:
+        auth = create_auth_service()
+        result = auth.sign_up("ana", "ana@mail.com", "Pass1!", "Pass1!", "member")
+    """
+    repo      = SQLiteUserRepository(db_path)
+    event_bus = AuthEventBus()
+    event_bus.subscribe(ConsoleLogger())
+    event_bus.subscribe(DatabaseObserver(db_path))
+    event_bus.subscribe(EmailNotifier())
+    return AuthService(repo, event_bus)
