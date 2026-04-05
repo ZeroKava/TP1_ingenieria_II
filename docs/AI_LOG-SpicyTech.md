@@ -88,5 +88,6 @@ El cambio en el modulo de BD.
 
 **¿Qué modificamos y por qué?**
 Anteriormente era todo local y no se guardaban los nuevos usuarios, si se quiere completar el caso de uso de Login es un paso necesario. Además de agregar el iniciador de la BD.
+
 **¿Qué descartamos y por qué?**
 Descartamos "InMemoryUserRepository", porque no funcionaba de manera correcta.
