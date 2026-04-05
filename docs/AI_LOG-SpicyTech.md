@@ -79,10 +79,13 @@ Descartamos la interfaz visual que propuso la IA y su idea de validar contraseñ
 
 **¿Para qué se usó?**
 Para agregar una base de datos al proyecto.
+
 **¿Qué generó la IA?**
 Una base de datos en SQlite que puede usarse desde manera remota al iniciarse.
+
 **¿Qué aceptamos tal cual?**
 El cambio en el modulo de BD.
+
 **¿Qué modificamos y por qué?**
 Anteriormente era todo local y no se guardaban los nuevos usuarios, si se quiere completar el caso de uso de Login es un paso necesario. Además de agregar el iniciador de la BD.
 **¿Qué descartamos y por qué?**
