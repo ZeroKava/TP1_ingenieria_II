@@ -91,3 +91,24 @@ Anteriormente era todo local y no se guardaban los nuevos usuarios, si se quiere
 
 **¿Qué descartamos y por qué?**
 Descartamos "InMemoryUserRepository", porque no funcionaba de manera correcta.
+
+## Entrada 005 — Semana 3
+
+**Fecha:** 06/04/2026
+**Herramienta:** Gemini
+**Responsable:** UX Dev — Santiago Manrique
+**Eje temático:** Eje 1 / Desarrollo Front End
+
+¿Para qué se usó?
+Maquetar la interfaz principal y armar el index.html pasándole todo el contexto del proyecto a la IA para que no tire fruta.
+
+**¿Qué generó la IA?**
+
+El código base del index.html.
+
+La estructura de los bloques principales para el coworking.
+
+La organización de los contenedores para que después sea fácil conectar el JS.
+
+**¿Qué aceptamos tal cual?**
+La estructura de las etiquetas y el orden general de las secciones en el HTML.
