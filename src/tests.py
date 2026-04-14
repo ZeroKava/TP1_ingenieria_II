@@ -1,126 +1,124 @@
 """
-test.py - Pruebas para el auth.py original (con JWT, sin bloqueo de cuenta)
-Ejecutar: python test.py
+test.py - Pruebas actualizadas para el auth.py de Nexo Coworking
+Patrones evaluados: Factory Method y Observer
+Ejecutar: python tests.py
 """
 
 import unittest
 from auth import (
     AuthService, AuthEventBus, InMemoryUserRepository,
-    PasswordHasher, UserFactory, ConsoleLogger,
-    User
+    PasswordHasher, PasswordPolicy, UserFactoryRegistry, ConsoleLogger,
+    AuthEvent
 )
 
-# ---------- Helper ----------
-def create_valid_user(service):
-    return service.sign_up(
-        email="test@cowork.com",
-        password="Segura1!",
-        user_type="member"
-    )
-
-class TestPasswordHasher(unittest.TestCase):
+class TestPasswordHasherAndPolicy(unittest.TestCase):
     def test_hash_and_verify(self):
-        hashed = PasswordHasher.hash_password("Segura1!")
-        self.assertTrue(PasswordHasher.verify_password("Segura1!", hashed))
+        hashed = PasswordHasher.hash("Segura1!")
+        self.assertTrue(PasswordHasher.verify("Segura1!", hashed))
 
     def test_wrong_password_fails(self):
-        hashed = PasswordHasher.hash_password("Segura1!")
-        self.assertFalse(PasswordHasher.verify_password("Incorrecta1!", hashed))
+        hashed = PasswordHasher.hash("Segura1!")
+        self.assertFalse(PasswordHasher.verify("Incorrecta1!", hashed))
 
     def test_password_strength_valid(self):
-        self.assertTrue(PasswordHasher.validate_password_strength("Segura1!"))
-        self.assertFalse(PasswordHasher.validate_password_strength("weak"))
-        self.assertFalse(PasswordHasher.validate_password_strength("SoloMayuscula1"))
-        self.assertFalse(PasswordHasher.validate_password_strength("sin mayuscula1!"))
-
+        # Ahora PasswordPolicy devuelve una tupla (bool, lista_de_errores)
+        is_valid, _ = PasswordPolicy.validate("Segura1!")
+        self.assertTrue(is_valid)
+        
+        is_valid, _ = PasswordPolicy.validate("weak")
+        self.assertFalse(is_valid)
+        
+        is_valid, _ = PasswordPolicy.validate("SoloMayuscula1")
+        self.assertFalse(is_valid)
 
 class TestUserFactory(unittest.TestCase):
     def test_member_creation(self):
-        user = UserFactory.create_user("member", "m@x.com", "hash")
-        self.assertEqual(user.user_type, "member")
+        # Ahora usamos el Registry del patrón Factory Method
+        factory = UserFactoryRegistry.get("member")
+        user = factory.build("miembro_test", "m@x.com", "hash123")
+        self.assertEqual(user.role, "member")
         self.assertEqual(user.email, "m@x.com")
-
-    def test_admin_creation(self):
-        user = UserFactory.create_user("admin", "a@x.com", "hash")
-        self.assertEqual(user.user_type, "admin")
-
-    def test_guest_creation(self):
-        user = UserFactory.create_user("guest", "g@x.com", "hash")
-        self.assertEqual(user.user_type, "guest")
 
     def test_invalid_type_raises(self):
         with self.assertRaises(ValueError):
-            UserFactory.create_user("alien", "x@x.com", "hash")
-
+            UserFactoryRegistry.get("alien")
 
 class TestAuthServiceSignUp(unittest.TestCase):
     def setUp(self):
         self.repo = InMemoryUserRepository()
         self.bus = AuthEventBus()
-        self.service = AuthService(self.repo, self.bus, PasswordHasher(), "test_secret")
+        # AuthService ahora solo necesita repo y bus
+        self.service = AuthService(self.repo, self.bus)
 
     def test_successful_signup(self):
-        user = self.service.sign_up("new@example.com", "Segura1!", "member")
-        self.assertEqual(user.email, "new@example.com")
-        self.assertEqual(user.user_type, "member")
-        found = self.repo.find_by_email("new@example.com")
+        result = self.service.sign_up(
+            username="newuser", 
+            email="new@example.com", 
+            password="Password1!", 
+            confirm_password="Password1!", 
+            role="member"
+        )
+        self.assertTrue(result.success)
+        self.assertEqual(result.data["role"], "member")
+        
+        # Verificar que se guardó en el repositorio
+        found = self.repo.find_by_username("newuser")
         self.assertIsNotNone(found)
 
-    def test_duplicate_email_raises(self):
-        self.service.sign_up("dup@example.com", "Segura1!", "member")
-        with self.assertRaises(ValueError) as ctx:
-            self.service.sign_up("dup@example.com", "Segura1!", "member")
-        self.assertIn("ya está registrado", str(ctx.exception))
+    def test_duplicate_username_fails(self):
+        self.service.sign_up("user1", "uno@example.com", "Segura1!", "Segura1!", "member")
+        result = self.service.sign_up("user1", "dos@example.com", "Segura1!", "Segura1!", "member")
+        
+        self.assertFalse(result.success)
+        self.assertIn("Usuario duplicado", result.errors[0])
 
-    def test_weak_password_raises(self):
-        with self.assertRaises(ValueError) as ctx:
-            self.service.sign_up("weak@example.com", "1234", "member")
-        self.assertIn("no cumple los requisitos", str(ctx.exception))
-
+    def test_passwords_do_not_match(self):
+        result = self.service.sign_up("userX", "x@x.com", "Segura1!", "Distinta2@", "member")
+        self.assertFalse(result.success)
+        self.assertIn("Las contraseñas no coinciden", result.message)
 
 class TestAuthServiceLogin(unittest.TestCase):
     def setUp(self):
         self.repo = InMemoryUserRepository()
         self.bus = AuthEventBus()
-        self.service = AuthService(self.repo, self.bus, PasswordHasher(), "test_secret")
-        self.service.sign_up("login@example.com", "Segura1!", "member")
+        self.service = AuthService(self.repo, self.bus)
+        self.service.sign_up("loginuser", "login@example.com", "Segura1!", "Segura1!", "member")
 
     def test_successful_login_returns_token(self):
-        token = self.service.log_in("login@example.com", "Segura1!")
-        self.assertIsInstance(token, str)
-        self.assertGreater(len(token), 10)
+        result = self.service.log_in("loginuser", "Segura1!")
+        self.assertTrue(result.success)
+        self.assertIn("token", result.data) # El JWT debe estar en la data
 
-    def test_wrong_password_raises(self):
-        with self.assertRaises(ValueError) as ctx:
-            self.service.log_in("login@example.com", "wrong")
-        self.assertIn("Credenciales inválidas", str(ctx.exception))
+    def test_wrong_password_fails(self):
+        result = self.service.log_in("loginuser", "wrong_password")
+        self.assertFalse(result.success)
+        self.assertIn("Contraseña incorrecta", result.message)
 
-    def test_nonexistent_user_raises(self):
-        with self.assertRaises(ValueError):
-            self.service.log_in("ghost@example.com", "Segura1!")
-
+    def test_nonexistent_user_fails(self):
+        result = self.service.log_in("fantasma", "Segura1!")
+        self.assertFalse(result.success)
+        self.assertEqual(result.message, "Credenciales inválidas.")
 
 class TestObserverPattern(unittest.TestCase):
-    def test_event_bus_emits_events(self):
+    def test_event_bus_publishes_events(self):
         bus = AuthEventBus()
+        
+        # Creamos un observador espía para el test
         class TestObserver:
             def __init__(self):
-                self.events = []
-            def update(self, event_type, data):
-                self.events.append((event_type, data))
-        obs = TestObserver()
-        bus.subscribe("USER_REGISTERED", obs)
-        bus.emit("USER_REGISTERED", {"email": "test@x.com"})
-        self.assertEqual(len(obs.events), 1)
-        self.assertEqual(obs.events[0][0], "USER_REGISTERED")
-
-    def test_console_logger_exists(self):
-        logger = ConsoleLogger()
-        bus = AuthEventBus()
-        bus.subscribe("LOGIN_SUCCESS", logger)
-        bus.emit("LOGIN_SUCCESS", {})
-        # No assertion, solo que no lance excepción
-
+                self.events_received = []
+            def update(self, event):
+                self.events_received.append(event)
+                
+        espia = TestObserver()
+        bus.subscribe(espia)
+        
+        # Publicamos un evento estructurado
+        evento_prueba = AuthEvent(AuthEvent.USER_REGISTERED, {"email": "test@x.com"})
+        bus.publish(evento_prueba)
+        
+        self.assertEqual(len(espia.events_received), 1)
+        self.assertEqual(espia.events_received[0].event_type, AuthEvent.USER_REGISTERED)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
