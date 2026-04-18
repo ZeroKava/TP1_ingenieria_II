@@ -1,4 +1,4 @@
-# Análisis de Estándares - SpicyTech 
+# Análisis de Estándares ISO - SpicyTech 
 
 Este documento analiza los estándares de ingeniería de software y su aplicabilidad al sistema de gestión de reservas del proyecto Spicy Coworking, evaluando su impacto en la arquitectura y el diseño.
 
