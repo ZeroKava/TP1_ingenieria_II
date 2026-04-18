@@ -109,7 +109,7 @@ Maquetar la interfaz principal y armar el index.html pasándole todo el contexto
 
 **Fecha:** 18/04/2026
 **Herramienta:** Gemini/ISO - International Organization for Standardization
-**Responsable:** QA Lead — Santino Manrique 
+**Responsable:** QA Lead — Santino Calamari
 **Eje temático:** Eje 1 / Desarrollo Front End
 
 **¿Para qué se usó?**
