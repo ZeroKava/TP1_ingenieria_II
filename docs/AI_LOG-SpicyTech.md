@@ -122,4 +122,26 @@ Analizamos nuestro sistema en base a los estándares históricos centrados en la
 
 Luego de investigar personalmente usamos la ia para que analice nuestro sistema en conjunto con el fin de obtener una conclusión acerca de que normas se ven reflejadas en nuestro sistema y cuales pulir más.
 
+## Entrada 004 — Semana 4
 
+**Fecha:** 18/04/2026
+**Herramienta:** Gemini
+**Responsable:** QA Lead — Jesus Emanuel De Olivera
+**Eje temático:** Eje 1
+
+**¿Para qué se usó?**
+Estructurar el entregable `ANALISIS_ESTANDARES.md` requerido por la cátedra, integrando el análisis propio del equipo (basado en un PDF) sobre normas ISO y completando los requisitos faltantes de la consigna.
+
+**¿Qué generó la IA?**
+1. Una tabla comparativa en formato Markdown.
+2. La redacción técnica y justificación de dos estándares adicionales (ISO/IEC 25010 de Calidad e ISO/IEC/IEEE 29119 de Testing) para cumplir con el mínimo de 5 normas exigidas por el profesor.
+3. Un párrafo de conclusión técnica que vincula el cumplimiento de la norma de seguridad (ISO 27001) con los patrones de diseño implementados en el TP1 (Observer y Factory Method).
+
+**¿Qué aceptamos tal cual?**
+El formato de la tabla, la justificación de las dos normas agregadas (25010 y 29119) y la conclusión que enlaza los patrones de diseño con la arquitectura segura, ya que aporta mucho valor técnico para el coloquio.
+
+**¿Qué modificamos y por qué?**
+Restringimos la autonomía de la IA proporcionándole un archivo PDF (`ISO's Spycytech .pdf`) con nuestro propio análisis previo de 3 normas (ISO 9241-11, ISO 13407, ISO 27001). Forzamos a la IA a usar nuestras justificaciones y no inventar contenido nuevo para esos puntos, manteniendo la autoría intelectual del equipo.
+
+**¿Qué descartamos y por qué?**
+No fue necesario descartar nada, ya que la salida se configuró para cumplir estrictamente con los puntos solicitados en la rúbrica de la entrega.
