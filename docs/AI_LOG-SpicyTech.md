@@ -105,7 +105,19 @@ Maquetar la interfaz principal y armar el index.html pasándole todo el contexto
 
 **¿Qué generó la IA?**
 
-El código base del index.html, inicio de sesion y registrarse en el login
+## Entrada 006 — Semana 4
 
-**¿Qué aceptamos tal cual?**
-La estructura de las etiquetas y el orden general de las secciones en el HTML.
+**Fecha:** 18/04/2026
+**Herramienta:** Gemini/ISO - International Organization for Standardization
+**Responsable:** QA Lead — Santino Manrique 
+**Eje temático:** Eje 1 / Desarrollo Front End
+
+**¿Para qué se usó?**
+
+Analizamos nuestro sistema en base a los estándares históricos centrados en la interacción persona‑ordenador(ISO 9241‑11 e ISO 13407) y los tres estándares actuales para sistemas críticos (ISO/IEC 27001, ISA/IEC 62443, ISO 9001)
+
+**¿Qué generó la IA?**
+
+Luego de investigar personalmente usamos la ia para que analice nuestro sistema en conjunto con el fin de obtener una conclusión acerca de que normas se ven reflejadas en nuestro sistema y cuales pulir más.
+
+
