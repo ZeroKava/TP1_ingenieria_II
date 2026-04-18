@@ -113,8 +113,7 @@ Maquetar la interfaz principal y armar el index.html pasándole todo el contexto
 
 **Responsable:** QA Lead — Santino Calamari
 
-**Eje temático:** Eje 1 / Desarrollo Front End
-
+**Eje temático:** Eje 2 / Diseño Orientado a Objetos
 **¿Para qué se usó?**
 
 Analizamos nuestro sistema en base a los estándares históricos centrados en la interacción persona‑ordenador(ISO 9241‑11 e ISO 13407) y los tres estándares actuales para sistemas críticos (ISO/IEC 27001, ISA/IEC 62443, ISO 9001)
