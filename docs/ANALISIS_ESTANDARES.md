@@ -14,4 +14,11 @@ Este documento analiza los estándares de ingeniería de software y su aplicabil
 
 ## 2. Conclusión y Relación con la Arquitectura (TP1)
 
-Si tuviéramos que certificar nuestro sistema hoy, elegiríamos **ISO/IEC 27001 (Seguridad de la Información)** por el nivel crítico de los datos personales y bancarios que gestionamos. Cumplir con esto nos obligaría a robustecer nuestra arquitectura actual añadiendo capas de encriptación en reposo y rotación automatizada de tokens JWT. Afortunadamente, nuestras decisiones de diseño del TP1 facilitan este camino: el patrón **Observer** implementado en la autenticación nos permite agregar un `DatabaseObserver` para registrar logs de auditoría inmutables (vitales para la ISO 27001) cada vez que alguien inicia sesión, sin acoplar ni alterar el flujo principal de seguridad; mientras que el patrón **Factory Method** centraliza y blinda la creación de roles, mitigando riesgos de escalamiento de privilegios de manera estandarizada.
+Si tuviéramos que certificar nuestro sistema hoy, elegiríamos **ISO/IEC 27001 (Seguridad de la Información)** por el nivel crítico de los datos personales y bancarios que gestionamos. Cumplir con esto nos obligaría a robustecer nuestra arquitectura actual añadiendo capas de encriptación en reposo y rotación automatizada de tokens JWT. Afortunadamente, nuestras decisiones de diseño del TP1 facilitan este camino: 
+
+## 3. Conclusión y Relación con la Arquitectura
+
+El patrón **Observer** implementado en la autenticación nos permite agregar un `DatabaseObserver` para registrar logs de auditoría inmutables (vitales para la ISO 27001) cada vez que alguien inicia sesión, sin acoplar ni alterar el flujo principal de seguridad; mientras que el patrón **Factory Method** centraliza y blinda la creación de roles, mitigando riesgos de escalamiento de privilegios de manera estandarizada.
+
+
+ 
