@@ -155,7 +155,8 @@ No fue necesario descartar nada, ya que la salida se configuró para cumplir est
 
 **¿Para qué se usó?** Definir la estrategia integral de pruebas del sistema Nexo Coworking y redactar el contrato formal de desarrollo para el equipo SpicyTech, asegurando que todos los requisitos técnicos y administrativos de la cátedra se cumplan bajo estándares profesionales.
 
-**¿Qué generó la IA?** 1. **Estrategia de Testing:** Una planificación completa dividida en niveles (Unitarias, Integración, E2E y Estrés). Se definieron casos de prueba específicos para el motor de reservas, clases de equivalencia para horarios laborales (08:00 a 20:00) y el plan de mocks para aislar la base de datos.  
+**¿Qué generó la IA?** 
+1. **Estrategia de Testing:** Una planificación completa dividida en niveles (Unitarias, Integración, E2E y Estrés). Se definieron casos de prueba específicos para el motor de reservas, clases de equivalencia para horarios laborales (08:00 a 20:00) y el plan de mocks para aislar la base de datos.  
 2. **Stack de Automatización:** Selección justificada de herramientas gratuitas: **pytest** (unitarias), **Cypress** (E2E) y **Locust** (estrés), alineadas con el stack tecnológico del proyecto (Python/Flask/Vanilla JS).  
 3. **Contrato de Software:** Un documento formal en Markdown que consolida los roles del equipo (Scrum Master, Dev Leaders, QA, UX), los acuerdos de trabajo (SLA), las reglas de negocio críticas y los admins predefinidos.  
 
