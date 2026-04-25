@@ -34,11 +34,11 @@ Para garantizar la excelencia operativa, el equipo suscribe los siguientes acuer
 El sistema deberá cumplir estrictamente con las siguientes lógicas operativas definidas:
 * **Seguridad de Acceso:** La autenticación se basará en estándares industriales (JWT y Bcrypt). Se eliminan los roles de "Invitado", permitiendo únicamente perfiles de "Miembro" y "Administrador".
 * **Administración Predefinida:** El sistema contará con cinco (5) cuentas de administrador de origen, asignadas a los creadores del proyecto: 
-    1. **JesusDO** (Contraseña: 200326)
-    2. **MatiasP** (Contraseña: 1234)
-    3. **SantinoC** (Contraseña: sexo12)
-    4. **OctavioG** (Contraseña: shagy217)
-    5. **SantiagoM** (Contraseña: admin123)
+    1. **JesusDO** 
+    2. **MatiasP** 
+    3. **SantinoC** 
+    4. **OctavioG** 
+    5. **SantiagoM** 
 * **Modelo de Reserva:** El catálogo de espacios será de acceso público (sin login previo). Sin embargo, el inicio de la reserva requerirá autenticación obligatoria.
 * **Flujo de Confirmación:** Toda reserva solicitada por un miembro nacerá en estado "Pendiente" y requerirá la validación explícita de un Administrador para ser confirmada. El usuario podrá visualizar sus reservas y el administrador dispondrá de un panel para gestionarlas.
 * **Integración de Datos:** No se permitirá el uso de datos sintéticos o falsos; la disponibilidad se calculará en base a la concurrencia real y el horario laboral establecido (08:00 a 20:00 hs).
