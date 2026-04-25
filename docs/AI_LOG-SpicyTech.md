@@ -122,7 +122,7 @@ Analizamos nuestro sistema en base a los estándares históricos centrados en la
 
 Luego de investigar personalmente usamos la ia para que analice nuestro sistema en conjunto con el fin de obtener una conclusión acerca de que normas se ven reflejadas en nuestro sistema y cuales pulir más.
 
-## Entrada 004 — Semana 4
+## Entrada 007 — Semana 4
 
 **Fecha:** 18/04/2026
 **Herramienta:** Gemini
@@ -146,7 +146,7 @@ Restringimos la autonomía de la IA proporcionándole un archivo PDF con nuestro
 **¿Qué descartamos y por qué?**
 No fue necesario descartar nada, ya que la salida se configuró para cumplir estrictamente con los puntos solicitados en la rúbrica de la entrega.
 
-## Entrada 005 — Semana 5 
+## Entrada 008 — Semana 5 
 
 **Fecha:** 25/04/2026  
 **Herramienta:** Gemini  
