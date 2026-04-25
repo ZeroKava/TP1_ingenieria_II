@@ -1,7 +1,7 @@
-# Trabajo Práctico: Estrategia de Testing y Calidad
+# Estrategia de Testing y Calidad
 
 **Proyecto:** SpicyTech Coworking 
-**Materia:** Ingeniería de Software II
+
 
 ---
 
