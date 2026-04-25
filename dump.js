@@ -60,8 +60,8 @@ const targetPath = path.join(__dirname, '.');
 const tree = generateTree(targetPath);
 const files = walk(targetPath);
 
-const markdown = `# 📁 Estructura del Proyecto\n\n\`\`\`\n${tree}\`\`\`\n\n# 📄 Contenido de Archivos\n\n${files.join('\n')}`;
+const markdown = `# Estructura del Proyecto\n\n\`\`\`\n${tree}\`\`\`\n\n# Contenido de Archivos\n\n${files.join('\n')}`;
 
 // Guarda el archivo
 fs.writeFileSync(path.join(__dirname, 'project_dump.md'), markdown);
-console.log('✅ Contexto generado con éxito: project_dump.md');
+console.log('Contexto generado con éxito: project_dump.md');
