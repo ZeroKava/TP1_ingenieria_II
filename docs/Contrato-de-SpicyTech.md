@@ -1,4 +1,4 @@
-# Contrato de Desarrollo de Software: Proyecto Nexo Coworking
+# Contrato de Desarrollo de Software: Proyecto SpicyTech Coworking
 
 **Entre:** La Cátedra de Ingeniería de Software II (UCP)  
 **Y:** El Equipo de Desarrollo "SpicyTech"  
