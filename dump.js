@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// 1. Adaptado para Nexo Coworking (Python, Web, Markdown)
+// 1. Adaptado para Spicy Coworking (Python, Web, Markdown)
 const allowedExtensions = ['.py', '.js', '.html', '.css', '.md'];
 
 // 2. Carpetas prohibidas (¡Para que no colapse la IA!)
