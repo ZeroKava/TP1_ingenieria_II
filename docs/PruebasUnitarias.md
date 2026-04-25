@@ -1,6 +1,6 @@
 # Trabajo Práctico: Estrategia de Testing y Calidad
 
-**Proyecto:** Nexo Coworking (SpicyTech)
+**Proyecto:** SpicyTech Coworking 
 **Materia:** Ingeniería de Software II
 
 ---
