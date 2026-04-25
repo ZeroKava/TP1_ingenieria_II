@@ -145,3 +145,22 @@ Restringimos la autonomía de la IA proporcionándole un archivo PDF con nuestro
 
 **¿Qué descartamos y por qué?**
 No fue necesario descartar nada, ya que la salida se configuró para cumplir estrictamente con los puntos solicitados en la rúbrica de la entrega.
+
+## Entrada 005 — Semana 5 
+
+**Fecha:** 25/04/2026  
+**Herramienta:** Gemini  
+**Responsable:** QA Lead — Jesus Emanuel De Olivera  
+**Eje temático:** Gestión de Proyecto / Calidad y Testing  
+
+**¿Para qué se usó?** Definir la estrategia integral de pruebas del sistema Nexo Coworking y redactar el contrato formal de desarrollo para el equipo SpicyTech, asegurando que todos los requisitos técnicos y administrativos de la cátedra se cumplan bajo estándares profesionales.
+
+**¿Qué generó la IA?** 1. **Estrategia de Testing:** Una planificación completa dividida en niveles (Unitarias, Integración, E2E y Estrés). Se definieron casos de prueba específicos para el motor de reservas, clases de equivalencia para horarios laborales (08:00 a 20:00) y el plan de mocks para aislar la base de datos.  
+2. **Stack de Automatización:** Selección justificada de herramientas gratuitas: **pytest** (unitarias), **Cypress** (E2E) y **Locust** (estrés), alineadas con el stack tecnológico del proyecto (Python/Flask/Vanilla JS).  
+3. **Contrato de Software:** Un documento formal en Markdown que consolida los roles del equipo (Scrum Master, Dev Leaders, QA, UX), los acuerdos de trabajo (SLA), las reglas de negocio críticas y los admins predefinidos.  
+
+**¿Qué aceptamos tal cual?** El stack tecnológico de pruebas y la justificación técnica de las herramientas, ya que se adaptan perfectamente a nuestra arquitectura actual. También se aceptó la estructura del contrato y la redacción de las cláusulas de seguridad y cumplimiento de estándares ISO.
+
+**¿Qué modificamos y por qué?** Se ajustaron manualmente los parámetros de los casos de prueba unitaria para que reflejen exactamente las reglas de negocio de nuestro coworking (como el margen de error en horarios y la imposibilidad de auto-confirmación de reservas). Se verificó que las contraseñas de los administradores en el contrato coincidieran con los requerimientos de complejidad definidos previamente.
+
+**¿Qué descartamos y por qué?** Se descartaron sugerencias iniciales de usar herramientas de testing pagas o de alta complejidad (como Selenium o JMeter) en favor de opciones más ágiles y modernas como Cypress y Locust, priorizando la facilidad de mantenimiento y la curva de aprendizaje del equipo.
