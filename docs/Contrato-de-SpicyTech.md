@@ -7,7 +7,7 @@
 ---
 
 ## 1. Declaración del Proyecto y Objetivos
-El presente contrato rige el desarrollo del sistema **Nexo Coworking**, una solución integral para la gestión de reservas de espacios físicos. El objetivo primordial es resolver la problemática actual de conflictos de disponibilidad y falta de visibilidad en tiempo real mediante una plataforma centralizada que gestione escritorios, salas de reuniones y oficinas de manera automatizada.
+El presente contrato rige el desarrollo del sistema **SpicyTech Coworking**, una solución integral para la gestión de reservas de espacios físicos. El objetivo primordial es resolver la problemática actual de conflictos de disponibilidad y falta de visibilidad en tiempo real mediante una plataforma centralizada que gestione escritorios, salas de reuniones y oficinas de manera automatizada.
 
 ## 2. Marco Metodológico (Scrum)
 El equipo se compromete a la implementación rigurosa del marco de trabajo **Scrum** bajo un enfoque iterativo e incremental:
