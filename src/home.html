@@ -980,7 +980,6 @@
   <ul class="nav-links" id="nav-links">
     <li><a href="#features">Servicios</a></li>
     <li><a href="spaces.html">Espacios</a></li>
-    <li id="nav-reservas" style="display:none;"><a href="spaces.html">Mis Reservas</a></li>
     <li><a href="#pricing">Precios</a></li>
     <li><a href="#contact">Contacto</a></li>
     <li id="nav-admin" style="display:none;"><a href="dashboard.html" style="color:var(--red);font-weight:600;">⚙️ Admin</a></li>
@@ -1412,33 +1411,32 @@
   }
 
   if (valid && role) {
-    // Ocultar botones de login/registro y mostrar usuario + logout
     const actions = document.getElementById('nav-actions');
-    actions.innerHTML = `
-      <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
-      <button onclick="doLogout()" class="btn-ghost" style="cursor:pointer;">Cerrar sesión</button>
-    `;
-
-    // Habilitar "Mis Reservas" para member y guest
-    if (role === 'member' || role === 'guest') {
-      document.getElementById('nav-reservas').style.display = '';
-    }
-
-    // Mostrar acceso admin
     if (role === 'admin') {
-      document.getElementById('nav-reservas').style.display = '';
-      document.getElementById('nav-admin').style.display = '';
+      actions.innerHTML = `
+        <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
+        <a href="dashboard.html" class="btn-primary" style="font-size:13px;">⚙️ Admin</a>
+        <button onclick="doLogout()" class="btn-ghost" style="cursor:pointer;">Cerrar sesión</button>
+      `;
+    } else {
+      actions.innerHTML = `
+        <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
+        <a href="mis-reservas.html" class="btn-ghost" style="font-size:13px;">Mis reservas</a>
+        <button onclick="doLogout()" class="btn-ghost" style="cursor:pointer;">Cerrar sesión</button>
+      `;
     }
 
-    // Banner de bienvenida personalizado en el hero
+    // Mostrar acceso admin en nav-links si existe
+    const navAdmin = document.getElementById('nav-admin');
+    if (navAdmin && role === 'admin') navAdmin.style.display = '';
+
+    // Banner de bienvenida personalizado
     window.addEventListener('DOMContentLoaded', () => {
       const eyebrow = document.querySelector('.hero-eyebrow');
       if (eyebrow) {
-        const roleLabel = role === 'admin' ? '⚙️ Administrador' : role === 'guest' ? '👁️ Invitado' : '🪑 Miembro';
+        const roleLabel = role === 'admin' ? '⚙️ Administrador' : '🪑 Miembro';
         eyebrow.innerHTML = `<span class="eyebrow-dot"></span>Bienvenido, <strong>${username}</strong> · ${roleLabel}`;
       }
-
-      // Si es admin, añadir chip visible en el hero
       if (role === 'admin') {
         const heroStats = document.querySelector('.hero-stats');
         if (heroStats) {
