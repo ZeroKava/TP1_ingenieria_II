@@ -219,10 +219,10 @@
       <!-- OVERVIEW -->
       <div class="view active" id="view-overview">
         <div class="stats-row">
-          <div class="stat-card"><div class="s-icon" style="background:var(--red-pale)">📅</div><div><div class="s-num">18</div><div class="s-label">Reservas activas</div><div class="s-delta up">↑ 4 vs semana anterior</div></div></div>
-          <div class="stat-card"><div class="s-icon" style="background:var(--green-pale)">👥</div><div><div class="s-num">42</div><div class="s-label">Usuarios registrados</div><div class="s-delta up">↑ 6 este mes</div></div></div>
-          <div class="stat-card"><div class="s-icon" style="background:var(--amber-pale)">🏢</div><div><div class="s-num">6/8</div><div class="s-label">Espacios en uso hoy</div><div class="s-delta dn">↓ 2 disponibles</div></div></div>
-          <div class="stat-card"><div class="s-icon" style="background:#EEF2FF">💰</div><div><div class="s-num">$84k</div><div class="s-label">Ingresos este mes</div><div class="s-delta up">↑ 12% vs mes anterior</div></div></div>
+          <div class="stat-card"><div class="s-icon" style="background:var(--red-pale)">📅</div><div><div class="s-num" id="stat-res-active">0</div><div class="s-label">Reservas confirmadas</div></div></div>
+          <div class="stat-card"><div class="s-icon" style="background:var(--green-pale)">👥</div><div><div class="s-num" id="stat-users">0</div><div class="s-label">Usuarios registrados</div></div></div>
+          <div class="stat-card"><div class="s-icon" style="background:var(--amber-pale)">⏳</div><div><div class="s-num" id="stat-pending-n">0</div><div class="s-label">Pendientes de aprobación</div></div></div>
+          <div class="stat-card"><div class="s-icon" style="background:#EEF2FF">🏢</div><div><div class="s-num">${SPACES_INFO ? SPACES_INFO.length : 6}</div><div class="s-label">Espacios disponibles</div></div></div>
         </div>
         <div class="g2">
           <div class="card">
@@ -254,9 +254,9 @@
         <div class="g2">
           <div class="card">
             <div class="card-hd"><div class="card-title">Alertas del sistema</div></div>
-            <div class="alert-chip ac-warn"><span style="font-size:18px">⚠️</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--amber)">3 reservas pendientes de confirmación</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Requieren aprobación manual.</div></div><button class="btn-xs btn-xs-ghost" onclick="go('reservations')">Revisar</button></div>
-            <div class="alert-chip ac-ok"><span style="font-size:18px">✅</span><div><div style="font-size:13px;font-weight:600;color:var(--green)">Backup realizado</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Hace 2 horas · Todo OK</div></div></div>
-            <div class="alert-chip ac-err"><span style="font-size:18px">🔒</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--red)">Cuenta bloqueada por intentos</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Usuario "jsmith" — 5 intentos fallidos.</div></div><button class="btn-xs btn-xs-ghost" onclick="go('users')">Ver</button></div>
+            <div class="alert-chip ac-warn" id="alert-pending"><span style="font-size:18px">⚠️</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--amber)" class="ac-count">Cargando…</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Requieren aprobación manual.</div></div><button class="btn-xs btn-xs-ghost" onclick="go('reservations')">Revisar</button></div>
+            <div class="alert-chip ac-err" id="alert-conflicts" style="display:none"><span style="font-size:18px">⚠️</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--red)" class="cc-count">Conflictos detectados</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Reservas simultáneas del mismo espacio/horario. Requieren resolución.</div></div><button class="btn-xs btn-xs-ghost" onclick="go('reservations')">Ver</button></div>
+            <div class="alert-chip ac-ok"><span style="font-size:18px">✅</span><div><div style="font-size:13px;font-weight:600;color:var(--green)">Sistema operativo</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Datos guardados en localStorage · Todo OK</div></div></div>
           </div>
           <div class="card">
             <div class="card-hd"><div class="card-title">Acciones rápidas</div></div>
@@ -376,7 +376,9 @@
 <div class="toast" id="toast-el"></div>
 
 <script>
-/* AUTH GUARD: solo admin */
+/* ══════════════════════════════════════════════
+   AUTH GUARD: solo admin
+══════════════════════════════════════════════ */
 (function(){
   const token = localStorage.getItem('nexo_token');
   const raw   = localStorage.getItem('nexo_user');
@@ -392,134 +394,390 @@
 
 function doLogout(){localStorage.removeItem('nexo_token');localStorage.removeItem('nexo_user');window.location.href='login.html';}
 
-/* DATA */
-const RES=[
-  {id:'R-001',user:'maria_g',    space:'Sala A',            date:'20 Abr',time:'10:00–12:00',total:'$1.600',status:'confirmed'},
-  {id:'R-002',user:'polcownuk',  space:'Oficina Privada B',  date:'21 Abr',time:'Todo el día', total:'$5.500',status:'pending'},
-  {id:'R-003',user:'jesus_dev',  space:'Sala Capacitación',  date:'22 Abr',time:'14:00–18:00',total:'$4.800',status:'confirmed'},
-  {id:'R-004',user:'santiago_m', space:'Espacio Compartido', date:'22 Abr',time:'Todo el día', total:'$300',  status:'pending'},
-  {id:'R-005',user:'octavio_g',  space:'Sala B',             date:'23 Abr',time:'09:00–11:00',total:'$1.600',status:'cancelled'},
-  {id:'R-006',user:'calamari_s', space:'Sala A',             date:'24 Abr',time:'15:00–17:00',total:'$1.600',status:'confirmed'},
-  {id:'R-007',user:'jsmith',     space:'Oficina Privada A',  date:'25 Abr',time:'Todo el día', total:'$5.500',status:'pending'},
-];
-const SPS=[
-  {id:'S-01',name:'Sala de Reuniones A',  type:'sala',         cap:'8 personas',     price:'$800/hora',   status:'partial',bookings:22},
-  {id:'S-02',name:'Sala de Reuniones B',  type:'sala',         cap:'6 personas',     price:'$800/hora',   status:'avail',  bookings:18},
-  {id:'S-03',name:'Oficina Privada A',    type:'privada',      cap:'5 personas',     price:'$5.500/mes',  status:'full',   bookings:1},
-  {id:'S-04',name:'Oficina Privada B',    type:'privada',      cap:'4 personas',     price:'$5.500/mes',  status:'avail',  bookings:2},
-  {id:'S-05',name:'Sala de Capacitación', type:'capacitacion', cap:'20 personas',    price:'$1.200/hora', status:'full',   bookings:8},
-  {id:'S-06',name:'Espacio Compartido',   type:'compartido',   cap:'12 escritorios', price:'$300/día',    status:'avail',  bookings:45},
-];
-const USRS=[
-  {username:'octavio_g', email:'octavio@mail.com', role:'admin', bookings:4,  created:'10 Mar 2026',active:true},
-  {username:'polcownuk', email:'matias@mail.com',  role:'member',bookings:7,  created:'10 Mar 2026',active:true},
-  {username:'jesus_dev', email:'jesus@mail.com',   role:'member',bookings:5,  created:'10 Mar 2026',active:true},
-  {username:'calamari_s',email:'santino@mail.com', role:'member',bookings:3,  created:'10 Mar 2026',active:true},
-  {username:'santiago_m',email:'santiago@mail.com',role:'member',bookings:6,  created:'10 Mar 2026',active:true},
-  {username:'maria_g',   email:'maria@mail.com',   role:'member',bookings:12, created:'15 Mar 2026',active:true},
-  {username:'jsmith',    email:'j.smith@mail.com', role:'member',bookings:2,  created:'01 Abr 2026',active:false},
-  {username:'invitado1', email:'guest@mail.com',   role:'guest', bookings:0,  created:'05 Abr 2026',active:true},
+/* ══════════════════════════════════════════════
+   DATA — desde localStorage (reservas reales)
+══════════════════════════════════════════════ */
+function getAllReservations() {
+  try { return JSON.parse(localStorage.getItem('nexo_reservations') || '[]'); } catch { return []; }
+}
+function saveReservations(r) { localStorage.setItem('nexo_reservations', JSON.stringify(r)); }
+function getAllUsers() {
+  try { return JSON.parse(localStorage.getItem('nexo_users') || '[]'); } catch { return []; }
+}
+function saveUsers(u) { localStorage.setItem('nexo_users', JSON.stringify(u)); }
+
+const SPACES_INFO = [
+  {id:'A1', name:'Sala Roja A1',       type:'sala',         cap:'12 personas',    price:'$800/hora'},
+  {id:'B2', name:'Sala Crema B2',      type:'sala',         cap:'8 personas',     price:'$600/hora'},
+  {id:'C1', name:'Oficina Privada C1', type:'privada',      cap:'5 personas',     price:'$5.500/mes'},
+  {id:'D3', name:'Aula Magna D3',      type:'capacitacion', cap:'25 personas',    price:'$1.200/hora'},
+  {id:'E2', name:'Oficina Suite E2',   type:'privada',      cap:'8 personas',     price:'$9.500/mes'},
+  {id:'F1', name:'Sala Focus F1',      type:'sala',         cap:'4 personas',     price:'$400/hora'},
 ];
 
-const avc=u=>{const c=['#C0392B','#2C7A5C','#4338CA','#B45309','#7A3B8C','#1E6B8C'];return c[u.charCodeAt(0)%c.length];};
-const bRes=s=>({confirmed:'<span class="b b-ok">✓ Confirmada</span>',pending:'<span class="b b-warn">⏳ Pendiente</span>',cancelled:'<span class="b b-off">✗ Cancelada</span>'}[s]||s);
-const bRole=r=>({admin:'<span class="b b-adm">⚙️ Admin</span>',member:'<span class="b b-mem">🪑 Miembro</span>',guest:'<span class="b b-gst">👁️ Invitado</span>'}[r]||r);
-const bSp=s=>({avail:'<span class="b b-avail">Disponible</span>',partial:'<span class="b b-part">Parcial</span>',full:'<span class="b b-full">Ocupada</span>'}[s]||s);
+/* ══════════════════════════════════════════════
+   RENDER HELPERS
+══════════════════════════════════════════════ */
+const avc = u => {const c=['#C0392B','#2C7A5C','#4338CA','#B45309','#7A3B8C','#1E6B8C'];return c[(u||'?').charCodeAt(0)%c.length];};
+const bRes = s => ({
+  confirmed: '<span class="b b-ok">✓ Confirmada</span>',
+  pending:   '<span class="b b-warn">⏳ Pendiente</span>',
+  cancelled: '<span class="b b-off">✗ Cancelada</span>'
+}[s] || s);
+const bRole = r => ({
+  admin:  '<span class="b b-adm">⚙️ Admin</span>',
+  member: '<span class="b b-mem">🪑 Miembro</span>',
+  guest:  '<span class="b b-gst">👁️ Invitado</span>'
+}[r] || r);
+const bSp = s => ({
+  avail:   '<span class="b b-avail">Disponible</span>',
+  partial: '<span class="b b-part">Parcial</span>',
+  full:    '<span class="b b-full">Ocupada</span>'
+}[s] || s);
 
-/* RENDER */
-function renderRes(list){
-  document.getElementById('res-tbody').innerHTML=list.map(r=>`
-    <tr><td style="padding-left:20px;font-size:12px;color:var(--txt3);font-weight:600">${r.id}</td>
-    <td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="background:${avc(r.user)};font-size:11px">${r.user[0].toUpperCase()}</div><span style="font-weight:500">${r.user}</span></div></td>
-    <td>${r.space}</td><td style="font-size:13px;color:var(--txt2)">${r.date}</td>
-    <td style="font-size:12.5px;color:var(--txt3)">${r.time}</td>
-    <td style="font-weight:700">${r.total}</td><td>${bRes(r.status)}</td>
-    <td><div style="display:flex;gap:4px">
-      ${r.status==='pending'?`<button class="btn-xs btn-xs-green" onclick="confirmRes('${r.id}')">✓</button>`:''}
-      ${r.status!=='cancelled'?`<button class="btn-xs btn-xs-danger" onclick="cancelRes('${r.id}')">✗</button>`:''}
-    </div></td></tr>`).join('');
-}
-function renderSp(list){
-  document.getElementById('sp-tbody').innerHTML=list.map(s=>`
-    <tr><td style="padding-left:20px;font-weight:600;color:var(--dark)">${s.name}</td>
-    <td style="font-size:12.5px;color:var(--txt2)">${s.type}</td>
-    <td>${s.cap}</td><td style="font-weight:600;color:var(--red)">${s.price}</td>
-    <td>${bSp(s.status)}</td><td style="font-weight:600">${s.bookings}</td>
-    <td><div style="display:flex;gap:4px">
-      <button class="btn-xs btn-xs-ghost" onclick="toast('Editando ${s.name}…','ok')">Editar</button>
-      <button class="btn-xs btn-xs-danger" onclick="toast('Espacio ${s.id} desactivado.','ok')">✗</button>
-    </div></td></tr>`).join('');
-}
-function renderUsr(list){
-  document.getElementById('usr-tbody').innerHTML=list.map(u=>`
-    <tr><td style="padding-left:20px"><div style="display:flex;align-items:center;gap:8px"><div class="av" style="background:${avc(u.username)};font-size:11px">${u.username[0].toUpperCase()}</div><span style="font-weight:500">${u.username}</span></div></td>
-    <td style="font-size:13px;color:var(--txt2)">${u.email}</td>
-    <td>${bRole(u.role)}</td><td style="font-weight:600">${u.bookings}</td>
-    <td style="font-size:12px;color:var(--txt3)">${u.created}</td>
-    <td>${u.active?'<span class="b b-avail">Activo</span>':'<span class="b b-off">Bloqueado</span>'}</td>
-    <td><div style="display:flex;gap:4px">
-      ${!u.active?`<button class="btn-xs btn-xs-green" onclick="toggleUsr('${u.username}',true)">Activar</button>`:`<button class="btn-xs btn-xs-danger" onclick="toggleUsr('${u.username}',false)">Bloquear</button>`}
-    </div></td></tr>`).join('');
-}
-function renderOv(){
-  document.getElementById('ov-rows').innerHTML=RES.slice(0,5).map(r=>`
-    <tr><td style="padding-left:20px;font-weight:500">${r.user}</td><td style="font-size:13px">${r.space}</td>
-    <td style="font-size:12px;color:var(--txt3)">${r.date}</td><td>${bRes(r.status)}</td></tr>`).join('');
+function fmtDate(iso) {
+  if (!iso) return '—';
+  if (iso.includes('T')) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-AR', {day:'numeric', month:'short', year:'numeric'});
+  }
+  // yyyy-mm-dd
+  const [y,m,d] = iso.split('-');
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
 }
 
-/* NAV */
-const TITLES={overview:'Resumen general',reservations:'Gestión de Reservas',spaces:'Gestión de Espacios',users:'Gestión de Usuarios',stats:'Estadísticas'};
-function go(v){
-  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.sb-nav a[id^="n-"]').forEach(a=>a.classList.remove('active'));
+function fmtSlots(slots) {
+  if (!slots || slots.length === 0) return 'Reserva mensual';
+  if (slots.length === 1) return slots[0] + ' hs';
+  return slots[0] + '–' + slots[slots.length-1] + ' hs';
+}
+
+/* ══════════════════════════════════════════════
+   STATS en tiempo real
+══════════════════════════════════════════════ */
+function updateStats() {
+  const res   = getAllReservations();
+  const users = getAllUsers();
+  const pending = res.filter(r => r.status === 'pending').length;
+  const confirmed = res.filter(r => r.status === 'confirmed').length;
+  const total = res.filter(r => r.status !== 'cancelled').length;
+
+  // Stat cards overview
+  document.getElementById('stat-res-active').textContent = confirmed;
+  document.getElementById('stat-users').textContent      = users.filter(u => u.role === 'member').length;
+  document.getElementById('stat-pending-n').textContent  = pending;
+
+  // Alerta de pendientes
+  const alertChip = document.getElementById('alert-pending');
+  if (alertChip) {
+    alertChip.querySelector('.ac-count').textContent = pending + ' reserva' + (pending!==1?'s':'') + ' pendiente' + (pending!==1?'s':'') + ' de confirmación';
+  }
+
+  // Conflictos
+  const conflicts = res.filter(r => r.hasConflict && r.status === 'pending');
+  const conflictChip = document.getElementById('alert-conflicts');
+  if (conflictChip) {
+    conflictChip.style.display = conflicts.length ? '' : 'none';
+    const cc = conflictChip.querySelector('.cc-count');
+    if (cc) cc.textContent = conflicts.length + ' conflicto' + (conflicts.length!==1?'s':'') + ' de horario detectado' + (conflicts.length!==1?'s':'');
+  }
+
+  // Badge sidebar
+  updBadge();
+}
+
+function updBadge() {
+  const res = getAllReservations();
+  const p = res.filter(r => r.status === 'pending').length;
+  const b = document.getElementById('badge-p');
+  if (b) { b.textContent = p; b.style.display = p ? '' : 'none'; }
+}
+
+/* ══════════════════════════════════════════════
+   RENDER RESERVAS
+══════════════════════════════════════════════ */
+let _rSt = 'all';
+function renderRes(list) {
+  const tbody = document.getElementById('res-tbody');
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--txt3);font-size:13px;">No hay reservas para mostrar.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(r => {
+    const conflictBadge = r.hasConflict && r.status === 'pending'
+      ? '<span class="b" style="background:#FEF9C3;color:#854D0E;margin-left:6px;" title="Hay otra reserva simultánea para este espacio/horario">⚠️ Conflicto</span>'
+      : '';
+    return `
+    <tr>
+      <td style="padding-left:20px;font-size:12px;color:var(--txt3);font-weight:600">${r.id.slice(-6)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="av" style="background:${avc(r.username||r.nombre)};font-size:11px">${(r.username||r.nombre||'?')[0].toUpperCase()}</div>
+          <div>
+            <div style="font-weight:500">${r.username||'—'}</div>
+            <div style="font-size:11px;color:var(--txt3)">${r.nombre||''}</div>
+          </div>
+        </div>
+      </td>
+      <td>${r.spaceName||r.spaceId}</td>
+      <td style="font-size:13px;color:var(--txt2)">${fmtDate(r.date)}</td>
+      <td style="font-size:12.5px;color:var(--txt3)">${fmtSlots(r.slots)}</td>
+      <td style="font-weight:700">${r.total}</td>
+      <td>${bRes(r.status)}${conflictBadge}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          ${r.status==='pending'?`<button class="btn-xs btn-xs-green" onclick="confirmRes('${r.id}')">✓ Confirmar</button>`:''}
+          ${r.status!=='cancelled'?`<button class="btn-xs btn-xs-danger" onclick="cancelRes('${r.id}')">✗ Cancelar</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════
+   RENDER SPACES
+══════════════════════════════════════════════ */
+function renderSp(list) {
+  const res = getAllReservations();
+  document.getElementById('sp-tbody').innerHTML = list.map(s => {
+    const bookings = res.filter(r => r.spaceId === s.id && r.status !== 'cancelled').length;
+    // estado: si tiene reserva confirmada hoy = full, si pendiente = partial, si no = avail
+    const today = new Date().toISOString().split('T')[0];
+    const todayRes = res.filter(r => r.spaceId === s.id && r.date === today && r.status !== 'cancelled');
+    const st = todayRes.some(r => r.status === 'confirmed') ? 'full' : todayRes.length > 0 ? 'partial' : 'avail';
+    return `
+    <tr>
+      <td style="padding-left:20px;font-weight:600;color:var(--dark)">${s.name}</td>
+      <td style="font-size:12.5px;color:var(--txt2)">${s.type}</td>
+      <td>${s.cap}</td>
+      <td style="font-weight:600;color:var(--red)">${s.price}</td>
+      <td>${bSp(st)}</td>
+      <td style="font-weight:600">${bookings}</td>
+      <td><button class="btn-xs btn-xs-ghost" onclick="toast('Espacio: ${s.name}','ok')">Ver</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════
+   RENDER USERS
+══════════════════════════════════════════════ */
+let _uRole = 'all';
+function renderUsr(list) {
+  const res = getAllReservations();
+  document.getElementById('usr-tbody').innerHTML = list.map(u => {
+    const bookings = res.filter(r => r.username === u.username).length;
+    return `
+    <tr>
+      <td style="padding-left:20px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="av" style="background:${avc(u.username)};font-size:11px">${u.username[0].toUpperCase()}</div>
+          <span style="font-weight:500">${u.username}</span>
+        </div>
+      </td>
+      <td style="font-size:13px;color:var(--txt2)">${u.email}</td>
+      <td>${bRole(u.role)}</td>
+      <td style="font-weight:600">${bookings}</td>
+      <td style="font-size:12px;color:var(--txt3)">${u.created||'—'}</td>
+      <td>${u.active!==false?'<span class="b b-avail">Activo</span>':'<span class="b b-off">Bloqueado</span>'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          ${u.active!==false
+            ? `<button class="btn-xs btn-xs-danger" onclick="toggleUsr('${u.username}',false)">Bloquear</button>`
+            : `<button class="btn-xs btn-xs-green" onclick="toggleUsr('${u.username}',true)">Activar</button>`}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════
+   RENDER OVERVIEW
+══════════════════════════════════════════════ */
+function renderOv() {
+  const res = getAllReservations();
+  const last5 = [...res].reverse().slice(0,5);
+  document.getElementById('ov-rows').innerHTML = last5.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--txt3);font-size:12px;">Sin reservas aún.</td></tr>'
+    : last5.map(r => `
+    <tr>
+      <td style="padding-left:20px;font-weight:500">${r.username||'—'}</td>
+      <td style="font-size:13px">${r.spaceName||r.spaceId}</td>
+      <td style="font-size:12px;color:var(--txt3)">${fmtDate(r.date)}</td>
+      <td>${bRes(r.status)}</td>
+    </tr>`).join('');
+}
+
+/* ══════════════════════════════════════════════
+   NAV
+══════════════════════════════════════════════ */
+const TITLES = {overview:'Resumen general',reservations:'Gestión de Reservas',spaces:'Gestión de Espacios',users:'Gestión de Usuarios',stats:'Estadísticas'};
+function go(v) {
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.sb-nav a[id^="n-"]').forEach(a => a.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('n-'+v).classList.add('active');
-  document.getElementById('tb-title').textContent=TITLES[v]||v;
+  document.getElementById('tb-title').textContent = TITLES[v]||v;
+  refreshAll();
 }
 
-/* ACTIONS */
-let _rSt='all', _uRole='all';
-function fResSt(s,btn){_rSt=s;document.querySelectorAll('#view-reservations .fpill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderRes(s==='all'?RES:RES.filter(r=>r.status===s));}
-function fRes(q){const ql=q.toLowerCase();renderRes(RES.filter(r=>r.user.includes(ql)||r.space.toLowerCase().includes(ql)||r.id.includes(ql)));}
-function fUsrRole(r,btn){_uRole=r;document.querySelectorAll('#view-users .fpill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderUsr(r==='all'?USRS:USRS.filter(u=>u.role===r));}
-function fUsr(q){const ql=q.toLowerCase();renderUsr(USRS.filter(u=>u.username.includes(ql)||u.email.includes(ql)));}
-function fSp(q){renderSp(SPS.filter(s=>s.name.toLowerCase().includes(q.toLowerCase())));}
+/* ══════════════════════════════════════════════
+   ACTIONS
+══════════════════════════════════════════════ */
+function fResSt(s, btn) {
+  _rSt = s;
+  document.querySelectorAll('#view-reservations .fpill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const res = getAllReservations();
+  renderRes(s === 'all' ? res : res.filter(r => r.status === s));
+}
+function fRes(q) {
+  const ql = q.toLowerCase();
+  const res = getAllReservations();
+  renderRes(res.filter(r => (r.username||'').includes(ql) || (r.spaceName||'').toLowerCase().includes(ql) || r.id.includes(ql)));
+}
+function fUsrRole(r, btn) {
+  _uRole = r;
+  document.querySelectorAll('#view-users .fpill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const users = getAllUsers();
+  renderUsr(r === 'all' ? users : users.filter(u => u.role === r));
+}
+function fUsr(q) {
+  const ql = q.toLowerCase();
+  const users = getAllUsers();
+  renderUsr(users.filter(u => u.username.includes(ql) || u.email.includes(ql)));
+}
+function fSp(q) {
+  renderSp(SPACES_INFO.filter(s => s.name.toLowerCase().includes(q.toLowerCase())));
+}
 
-function confirmRes(id){const r=RES.find(x=>x.id===id);if(r){r.status='confirmed';renderRes(RES);renderOv();updBadge();toast(`✓ Reserva ${id} confirmada.`,'ok');}}
-function cancelRes(id){const r=RES.find(x=>x.id===id);if(r){r.status='cancelled';renderRes(RES);renderOv();updBadge();toast(`Reserva ${id} cancelada.`,'ok');}}
-function updBadge(){const p=RES.filter(r=>r.status==='pending').length;const b=document.getElementById('badge-p');if(b){b.textContent=p;b.style.display=p?'':'none';}}
-function toggleUsr(un,act){const u=USRS.find(x=>x.username===un);if(u){u.active=act;renderUsr(_uRole==='all'?USRS:USRS.filter(x=>x.role===_uRole));toast(`Usuario ${un} ${act?'activado':'bloqueado'}.`,'ok');}}
+function confirmRes(id) {
+  const res = getAllReservations();
+  const r = res.find(x => x.id === id);
+  if (!r) return;
+  r.status = 'confirmed';
+  r.hasConflict = false;
+  saveReservations(res);
+  refreshAll();
+  toast(`✓ Reserva de ${r.username} confirmada.`, 'ok');
+}
 
-/* MODALS */
-const MTPL={
-  'new-reservation':`<div class="mtitle">Nueva reserva</div><div class="msub">Creá una reserva manualmente en nombre de un usuario.</div>
-    <div class="mfield"><label class="mlabel">Usuario</label><input class="minput" placeholder="Nombre de usuario"></div>
-    <div class="mfield"><label class="mlabel">Espacio</label><select class="mselect"><option>Sala de Reuniones A</option><option>Sala de Reuniones B</option><option>Oficina Privada A</option><option>Oficina Privada B</option><option>Sala de Capacitación</option><option>Espacio Compartido</option></select></div>
-    <div class="mfield"><label class="mlabel">Fecha</label><input class="minput" type="date"></div>
-    <div class="mfield"><label class="mlabel">Horario</label><select class="mselect"><option>Todo el día</option><option>08:00–10:00</option><option>10:00–12:00</option><option>14:00–16:00</option><option>16:00–18:00</option></select></div>
-    <div class="mactions"><button class="mbtn-c" onclick="closeModal()">Cancelar</button><button class="mbtn-p" onclick="closeModal();toast('Reserva creada exitosamente.','ok')">Crear reserva</button></div>`,
-  'new-space':`<div class="mtitle">Agregar espacio</div><div class="msub">Completá los datos del nuevo espacio.</div>
-    <div class="mfield"><label class="mlabel">Nombre</label><input class="minput" placeholder="ej. Sala de Reuniones C"></div>
-    <div class="mfield"><label class="mlabel">Tipo</label><select class="mselect"><option>sala</option><option>privada</option><option>capacitacion</option><option>compartido</option></select></div>
-    <div class="mfield"><label class="mlabel">Capacidad</label><input class="minput" type="number" placeholder="8"></div>
-    <div class="mfield"><label class="mlabel">Precio</label><input class="minput" placeholder="ej. $800/hora"></div>
-    <div class="mactions"><button class="mbtn-c" onclick="closeModal()">Cancelar</button><button class="mbtn-p" onclick="closeModal();toast('Espacio agregado correctamente.','ok')">Agregar</button></div>`,
-  'new-user':`<div class="mtitle">Nuevo usuario</div><div class="msub">Registrá un usuario manualmente en el sistema.</div>
-    <div class="mfield"><label class="mlabel">Nombre de usuario</label><input class="minput" placeholder="mi_usuario"></div>
-    <div class="mfield"><label class="mlabel">Email</label><input class="minput" type="email" placeholder="usuario@mail.com"></div>
-    <div class="mfield"><label class="mlabel">Rol</label><select class="mselect"><option value="member">Miembro</option><option value="admin">Admin</option><option value="guest">Invitado</option></select></div>
-    <div class="mfield"><label class="mlabel">Contraseña temporal</label><input class="minput" type="password" placeholder="••••••••"></div>
-    <div class="mactions"><button class="mbtn-c" onclick="closeModal()">Cancelar</button><button class="mbtn-p" onclick="closeModal();toast('Usuario creado y notificado por email.','ok')">Crear usuario</button></div>`,
+function cancelRes(id) {
+  const res = getAllReservations();
+  const r = res.find(x => x.id === id);
+  if (!r) return;
+  r.status = 'cancelled';
+  saveReservations(res);
+  refreshAll();
+  toast(`Reserva ${id.slice(-6)} cancelada.`, 'ok');
+}
+
+function toggleUsr(un, act) {
+  const users = getAllUsers();
+  const u = users.find(x => x.username === un);
+  if (!u) return;
+  u.active = act;
+  saveUsers(users);
+  const filtered = _uRole === 'all' ? users : users.filter(x => x.role === _uRole);
+  renderUsr(filtered);
+  toast(`Usuario ${un} ${act ? 'activado' : 'bloqueado'}.`, 'ok');
+}
+
+function refreshAll() {
+  const res   = getAllReservations();
+  const users = getAllUsers();
+  renderRes(_rSt === 'all' ? res : res.filter(r => r.status === _rSt));
+  renderSp(SPACES_INFO);
+  renderUsr(_uRole === 'all' ? users : users.filter(u => u.role === _uRole));
+  renderOv();
+  updateStats();
+}
+
+/* ══════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════ */
+const MTPL = {
+  'new-reservation': `<div class="mtitle">Nueva reserva</div><div class="msub">Creá una reserva manualmente en nombre de un usuario.</div>
+    <div class="mfield"><label class="mlabel">Usuario</label><input class="minput" id="m-user" placeholder="Nombre de usuario"></div>
+    <div class="mfield"><label class="mlabel">Espacio</label><select class="mselect" id="m-space">${SPACES_INFO.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+    <div class="mfield"><label class="mlabel">Fecha</label><input class="minput" type="date" id="m-date" min="${new Date().toISOString().split('T')[0]}"></div>
+    <div class="mfield"><label class="mlabel">Horarios (ej: 10:00,11:00)</label><input class="minput" id="m-slots" placeholder="10:00,11:00,12:00"></div>
+    <div class="mactions">
+      <button class="mbtn-c" onclick="closeModal()">Cancelar</button>
+      <button class="mbtn-p" onclick="createManualRes()">Crear reserva</button>
+    </div>`,
+  'new-user': `<div class="mtitle">Nuevo usuario</div><div class="msub">Registrá un usuario manualmente.</div>
+    <div class="mfield"><label class="mlabel">Nombre de usuario</label><input class="minput" id="m-username" placeholder="mi_usuario"></div>
+    <div class="mfield"><label class="mlabel">Email</label><input class="minput" id="m-email" type="email" placeholder="usuario@mail.com"></div>
+    <div class="mfield"><label class="mlabel">Contraseña</label><input class="minput" id="m-pw" type="password" placeholder="••••••••"></div>
+    <div class="mactions">
+      <button class="mbtn-c" onclick="closeModal()">Cancelar</button>
+      <button class="mbtn-p" onclick="createManualUser()">Crear usuario</button>
+    </div>`,
 };
-function openModal(t){const c=MTPL[t];if(!c)return;document.getElementById('mcontent').innerHTML=c;document.getElementById('mbg').classList.add('show');}
-function closeModal(e){if(!e||e.target===document.getElementById('mbg'))document.getElementById('mbg').classList.remove('show');}
 
-/* TOAST */
+function createManualRes() {
+  const user  = document.getElementById('m-user')?.value.trim();
+  const space = document.getElementById('m-space')?.value;
+  const date  = document.getElementById('m-date')?.value;
+  const slotsRaw = document.getElementById('m-slots')?.value.trim();
+  if (!user || !space || !date) { toast('Completá usuario, espacio y fecha.','err'); return; }
+  const sp = SPACES_INFO.find(s => s.id === space);
+  const slots = slotsRaw ? slotsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const newRes = {
+    id: 'R-' + Date.now(),
+    username: user, nombre: user, email: '',
+    spaceId: space, spaceName: sp?.name || space,
+    date, slots, total: sp?.price || '—',
+    status: 'confirmed', createdAt: new Date().toISOString(), hasConflict: false,
+  };
+  const res = getAllReservations();
+  res.push(newRes);
+  saveReservations(res);
+  closeModal();
+  refreshAll();
+  toast('Reserva creada y confirmada exitosamente.', 'ok');
+}
+
+function createManualUser() {
+  const un = document.getElementById('m-username')?.value.trim();
+  const em = document.getElementById('m-email')?.value.trim();
+  const pw = document.getElementById('m-pw')?.value;
+  if (!un || !em || !pw) { toast('Completá todos los campos.','err'); return; }
+  const users = getAllUsers();
+  if (users.find(u => u.username.toLowerCase() === un.toLowerCase())) { toast('Usuario ya existe.','err'); return; }
+  users.push({ username: un, email: em, password: pw, role: 'member', created: new Date().toLocaleDateString('es-AR'), active: true });
+  saveUsers(users);
+  closeModal();
+  refreshAll();
+  toast('Usuario creado correctamente.', 'ok');
+}
+
+function openModal(t) {
+  const c = MTPL[t];
+  if (!c) return;
+  document.getElementById('mcontent').innerHTML = c;
+  document.getElementById('mbg').classList.add('show');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('mbg')) document.getElementById('mbg').classList.remove('show');
+}
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
 let _tt;
-function toast(msg,type='ok'){const t=document.getElementById('toast-el');t.textContent=msg;t.className=`toast show ${type}`;clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3200);}
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast-el');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 3200);
+}
 
-/* INIT */
-renderRes(RES); renderSp(SPS); renderUsr(USRS); renderOv(); updBadge();
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+refreshAll();
 </script>
 </body>
 </html>

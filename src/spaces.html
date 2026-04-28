@@ -599,15 +599,6 @@
     .guard-note {
       font-size: 11px; color: var(--txt3); margin-top: 14px; line-height: 1.5;
     }
-    /* Blurred content beneath overlay */
-    body.auth-locked .page-header,
-    body.auth-locked .filter-bar,
-    body.auth-locked .spaces-section,
-    body.auth-locked .detail-panel {
-      filter: blur(4px);
-      pointer-events: none;
-      user-select: none;
-    }
 
     @media (max-width: 1024px) {
       .detail-body { grid-template-columns: 1fr; }
@@ -650,12 +641,12 @@
   </div>
 </nav>
 
-<!-- ══ AUTH GUARD OVERLAY ══ -->
+<!-- ══ BOOKING AUTH GUARD MODAL ══ -->
 <div class="auth-guard-overlay" id="auth-guard" style="display:none;">
   <div class="auth-guard-card">
     <div class="guard-icon">🔐</div>
-    <h2 class="guard-title">Contenido <em>exclusivo</em></h2>
-    <p class="guard-desc">Para ver la disponibilidad y reservar espacios en SpicyTech necesitás iniciar sesión o crear una cuenta gratuita.</p>
+    <h2 class="guard-title">Iniciá sesión para <em>reservar</em></h2>
+    <p class="guard-desc">Podés explorar todos los espacios libremente. Para hacer una reserva necesitás una cuenta.</p>
     <div class="guard-btns">
       <a href="login.html#signup" class="btn-guard-primary">Crear cuenta gratis →</a>
       <a href="login.html" class="btn-guard-ghost">Ya tengo cuenta · Iniciar sesión</a>
@@ -703,21 +694,14 @@
 
 <script>
 /* ══════════════════════════════════════════════
-   MOCK DATA
+   SPACES DATA (sin datos falsos de disponibilidad)
 ══════════════════════════════════════════════ */
 const SPACES = [
   {
-    id: 'A1',
-    type: 'sala',
-    name: 'Sala Roja A1',
+    id: 'A1', type: 'sala', name: 'Sala Roja A1',
     desc: 'Sala de reuniones ejecutiva con luz natural, mesa oval para 12 personas y sistema de videoconferencia integrado.',
-    capacity: 12,
-    area: '35 m²',
-    price: 800,
-    priceUnit: 'hora',
-    status: 'avail',        // avail | partial | full
-    color: ['#C0392B','#E8604C'],
-    emoji: '🏢',
+    capacity: 12, area: '35 m²', price: 800, priceUnit: 'hora',
+    color: ['#C0392B','#E8604C'], emoji: '🏢',
     amenities: [
       { icon:'📺', name:'Pantalla 75"', desc:'4K con HDMI y wireless' },
       { icon:'🎙️', name:'Videoconferencia', desc:'Cámara y micrófonos 360°' },
@@ -726,22 +710,13 @@ const SPACES = [
       { icon:'🔌', name:'Conectores', desc:'HDMI, USB-C, adaptadores' },
       { icon:'🔇', name:'Paredes acústicas', desc:'Aislamiento total' },
     ],
-    mockAvail: { 2:true, 3:true, 5:'partial', 8:true, 9:true, 10:'partial', 12:'full', 14:true, 15:true, 16:true, 17:'partial', 19:true, 20:true, 22:true, 23:'full', 24:true, 26:true },
     timeSlots: ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'],
-    busySlots: ['09:00','10:00','14:00'],
   },
   {
-    id: 'B2',
-    type: 'sala',
-    name: 'Sala Crema B2',
+    id: 'B2', type: 'sala', name: 'Sala Crema B2',
     desc: 'Sala versátil para workshops y brainstorming. Mobiliario modular reconfigurable y proyector de alta definición.',
-    capacity: 8,
-    area: '24 m²',
-    price: 600,
-    priceUnit: 'hora',
-    status: 'partial',
-    color: ['#D4614F','#C9B99A'],
-    emoji: '💡',
+    capacity: 8, area: '24 m²', price: 600, priceUnit: 'hora',
+    color: ['#D4614F','#C9B99A'], emoji: '💡',
     amenities: [
       { icon:'📽️', name:'Proyector HD', desc:'3000 lúmenes, Full HD' },
       { icon:'🪑', name:'Mobiliario modular', desc:'Reconfigurable libremente' },
@@ -750,22 +725,13 @@ const SPACES = [
       { icon:'📡', name:'WiFi dedicado', desc:'Conexión exclusiva 200 Mbps' },
       { icon:'☕', name:'Kitchenette', desc:'Máquina de café incluida' },
     ],
-    mockAvail: { 1:true, 3:'partial', 4:true, 7:'partial', 8:'full', 11:true, 13:true, 15:'partial', 18:true, 19:true, 21:'full', 22:true, 25:true, 28:true, 29:true },
     timeSlots: ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'],
-    busySlots: ['11:00','12:00','16:00','17:00'],
   },
   {
-    id: 'C1',
-    type: 'privada',
-    name: 'Oficina Privada C1',
+    id: 'C1', type: 'privada', name: 'Oficina Privada C1',
     desc: 'Oficina totalmente cerrada y silenciosa para equipos de hasta 5 personas. Acceso con tarjeta individual.',
-    capacity: 5,
-    area: '20 m²',
-    price: 5500,
-    priceUnit: 'mes',
-    status: 'avail',
-    color: ['#1C1209','#7A5C44'],
-    emoji: '🔐',
+    capacity: 5, area: '20 m²', price: 5500, priceUnit: 'mes',
+    color: ['#1C1209','#7A5C44'], emoji: '🔐',
     amenities: [
       { icon:'🚪', name:'Acceso con tarjeta', desc:'Control 24/7 individual' },
       { icon:'🔒', name:'Total privacidad', desc:'Paredes y puerta insonorizada' },
@@ -774,46 +740,28 @@ const SPACES = [
       { icon:'📦', name:'Almacenamiento', desc:'Armario y lockers propios' },
       { icon:'🏷️', name:'Cartel personalizado', desc:'Logo de tu empresa' },
     ],
-    mockAvail: { 1:true, 2:true, 5:true, 6:true, 7:true, 8:true, 9:true, 12:true, 13:true, 14:true, 15:true, 16:true, 19:true, 20:true, 21:true, 22:true, 23:true },
     timeSlots: [],
-    busySlots: [],
   },
   {
-    id: 'D3',
-    type: 'capacitacion',
-    name: 'Aula Magna D3',
+    id: 'D3', type: 'capacitacion', name: 'Aula Magna D3',
     desc: 'Sala de capacitación para eventos, trainings y presentaciones. Capacidad para 25 personas en formato auditorio.',
-    capacity: 25,
-    area: '60 m²',
-    price: 1200,
-    priceUnit: 'hora',
-    status: 'partial',
-    color: ['#96281B','#C0392B'],
-    emoji: '🎓',
+    capacity: 25, area: '60 m²', price: 1200, priceUnit: 'hora',
+    color: ['#96281B','#C0392B'], emoji: '🎓',
     amenities: [
-      { icon:'📺', name:'Pantalla dual 85"', desc:'Dos pantallas sincroni­zadas' },
+      { icon:'📺', name:'Pantalla dual 85"', desc:'Dos pantallas sincronizadas' },
       { icon:'🎙️', name:'Micrófono inalámbrico', desc:'Sistema de audio profesional' },
       { icon:'💺', name:'25 butacas', desc:'Plegables ergonómicas' },
       { icon:'🖊️', name:'Pizarra interactiva', desc:'Táctil 86" con software' },
       { icon:'📷', name:'Grabación integrada', desc:'Cámaras y streaming HD' },
       { icon:'🔇', name:'Aislamiento acústico', desc:'Certificación pro' },
     ],
-    mockAvail: { 3:true, 4:'partial', 7:true, 10:'full', 11:true, 14:'partial', 17:true, 18:true, 21:'partial', 24:true, 25:true, 28:true },
     timeSlots: ['08:00','10:00','12:00','14:00','16:00','18:00'],
-    busySlots: ['12:00','14:00'],
   },
   {
-    id: 'E2',
-    type: 'privada',
-    name: 'Oficina Suite E2',
+    id: 'E2', type: 'privada', name: 'Oficina Suite E2',
     desc: 'Oficina premium con vista panorámica, sala de espera privada y dirección postal oficial incluida.',
-    capacity: 8,
-    area: '38 m²',
-    price: 9500,
-    priceUnit: 'mes',
-    status: 'avail',
-    color: ['#2C1A10','#D4614F'],
-    emoji: '🏆',
+    capacity: 8, area: '38 m²', price: 9500, priceUnit: 'mes',
+    color: ['#2C1A10','#D4614F'], emoji: '🏆',
     amenities: [
       { icon:'🌅', name:'Vista panorámica', desc:'Piso 4, orientación norte' },
       { icon:'🛋️', name:'Sala de espera', desc:'Para recibir clientes' },
@@ -822,22 +770,13 @@ const SPACES = [
       { icon:'🔒', name:'Bóveda de seguridad', desc:'Para documentos y valores' },
       { icon:'🖨️', name:'Impresora dedicada', desc:'Color + escáner + fax' },
     ],
-    mockAvail: { 1:true, 2:true, 3:true, 5:true, 6:true, 8:true, 9:true, 10:true, 12:true, 13:true, 14:true, 16:true, 17:true, 19:true, 20:true, 23:true, 24:true },
     timeSlots: [],
-    busySlots: [],
   },
   {
-    id: 'F1',
-    type: 'sala',
-    name: 'Sala Focus F1',
+    id: 'F1', type: 'sala', name: 'Sala Focus F1',
     desc: 'Sala compacta ideal para entrevistas, reuniones 1:1 o trabajo en silencio. Totalmente insonorizada.',
-    capacity: 4,
-    area: '12 m²',
-    price: 400,
-    priceUnit: 'hora',
-    status: 'full',
-    color: ['#A08870','#7A5C44'],
-    emoji: '🎧',
+    capacity: 4, area: '12 m²', price: 400, priceUnit: 'hora',
+    color: ['#A08870','#7A5C44'], emoji: '🎧',
     amenities: [
       { icon:'🔇', name:'Insonorización total', desc:'Cero ruido externo' },
       { icon:'📺', name:'Monitor 27"', desc:'Para presentaciones pequeñas' },
@@ -846,11 +785,63 @@ const SPACES = [
       { icon:'📡', name:'WiFi exclusivo', desc:'100 Mbps dedicados' },
       { icon:'🎙️', name:'Micrófono', desc:'Perfecto para grabaciones' },
     ],
-    mockAvail: { 4:true, 6:true, 9:'partial', 11:true, 13:true, 16:'full', 18:true, 20:true, 23:'partial', 25:true, 27:true },
     timeSlots: ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'],
-    busySlots: ['08:00','09:00','10:00','12:00','13:00','14:00','17:00','18:00','19:00'],
   },
 ];
+
+/* ══════════════════════════════════════════════
+   RESERVAS: localStorage
+══════════════════════════════════════════════ */
+function getAllReservations() {
+  try { return JSON.parse(localStorage.getItem('nexo_reservations') || '[]'); } catch { return []; }
+}
+function saveReservations(r) { localStorage.setItem('nexo_reservations', JSON.stringify(r)); }
+
+// Slots ocupados para un espacio+fecha (solo reservas confirmadas o pendientes)
+function getBusySlotsForDate(spaceId, dateStr) {
+  const reservations = getAllReservations();
+  const busy = [];
+  reservations
+    .filter(r => r.spaceId === spaceId && r.date === dateStr && r.status !== 'cancelled')
+    .forEach(r => { if (r.slots) r.slots.forEach(s => busy.push(s)); });
+  return busy;
+}
+
+// Calcula estado del día (avail/partial/full) basado en reservas reales
+function getDayStatus(spaceId, dateStr, allSlots) {
+  if (allSlots.length === 0) {
+    // Oficina mensual: avail siempre salvo que tenga reserva confirmada/pendiente ese mes
+    const reservations = getAllReservations();
+    const hasMontly = reservations.some(r => r.spaceId === spaceId && r.date === dateStr && r.status !== 'cancelled');
+    return hasMontly ? 'full' : 'avail';
+  }
+  const busy = getBusySlotsForDate(spaceId, dateStr, allSlots);
+  if (busy.length === 0) return 'avail';
+  if (busy.length >= allSlots.length) return 'full';
+  return 'partial';
+}
+
+/* ══════════════════════════════════════════════
+   SESSION
+══════════════════════════════════════════════ */
+function getSession() {
+  const token = localStorage.getItem('nexo_token');
+  const raw   = localStorage.getItem('nexo_user');
+  let valid = false, role = null, username = null;
+  if (token) {
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        valid = !payload.exp || payload.exp > Math.floor(Date.now() / 1000);
+      }
+    } catch(e) {}
+  }
+  if (valid && raw) {
+    try { const u = JSON.parse(raw); role = u.role; username = u.username; } catch(e) {}
+  }
+  return { valid, role, username };
+}
 
 /* ══════════════════════════════════════════════
    STATE
@@ -866,8 +857,17 @@ calYear  = today.getFullYear();
 calMonth = today.getMonth();
 
 /* ══════════════════════════════════════════════
-   RENDER CARDS
+   RENDER CARDS — status calculado en tiempo real
 ══════════════════════════════════════════════ */
+function getSpaceStatusToday(sp) {
+  const todayStr = formatDate(today);
+  return getDayStatus(sp.id, todayStr, sp.timeSlots);
+}
+
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function statusLabel(s) {
   if (s === 'avail')   return { dot:'avail',   text:'Disponible' };
   if (s === 'partial') return { dot:'partial', text:'Parcial' };
@@ -878,28 +878,24 @@ function renderCards(filter = 'all') {
   const grid = document.getElementById('spaces-grid');
   const filtered = SPACES.filter(sp => {
     if (filter === 'all')   return true;
-    if (filter === 'avail') return sp.status === 'avail';
+    if (filter === 'avail') return getSpaceStatusToday(sp) === 'avail';
     return sp.type === filter;
   });
 
   grid.innerHTML = filtered.map(sp => {
-    const sl = statusLabel(sp.status);
+    const liveStatus = getSpaceStatusToday(sp);
+    const sl = statusLabel(liveStatus);
     const isSelected = selectedSpace && selectedSpace.id === sp.id;
     return `
     <div class="space-card ${isSelected ? 'selected' : ''}" id="card-${sp.id}" onclick="selectSpace('${sp.id}')">
       <div class="card-visual">
         <div class="card-visual-bg">
           <div class="card-floorplan" style="background: linear-gradient(135deg, ${sp.color[0]} 0%, ${sp.color[1]} 100%);">
-            <!-- Floor plan SVG -->
             <svg width="100%" height="100%" viewBox="0 0 340 190" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:0.18">
-              <!-- Room outline -->
               <rect x="30" y="20" width="280" height="150" rx="4" fill="none" stroke="white" stroke-width="2"/>
-              <!-- Door -->
               <path d="M150 170 Q165 155 180 170" fill="none" stroke="white" stroke-width="1.5"/>
               <line x1="150" y1="170" x2="150" y2="160" stroke="white" stroke-width="1.5"/>
-              <!-- Table -->
               <rect x="90" y="65" width="160" height="60" rx="30" fill="white" fill-opacity="0.3"/>
-              <!-- Chairs -->
               <rect x="60" y="75" width="20" height="14" rx="3" fill="white" fill-opacity="0.4"/>
               <rect x="60" y="101" width="20" height="14" rx="3" fill="white" fill-opacity="0.4"/>
               <rect x="115" y="38" width="14" height="18" rx="3" fill="white" fill-opacity="0.4"/>
@@ -956,24 +952,14 @@ function renderCards(filter = 'all') {
 function selectSpace(id) {
   const sp = SPACES.find(s => s.id === id);
   if (!sp) return;
-
   if (selectedSpace && selectedSpace.id === id) {
-    // Deselect
-    selectedSpace = null;
-    selectedDay   = null;
-    selectedSlots = [];
+    selectedSpace = null; selectedDay = null; selectedSlots = [];
     document.getElementById('detail-panel').classList.remove('show');
-    renderCards(currentFilter);
-    return;
+    renderCards(currentFilter); return;
   }
-
-  selectedSpace = sp;
-  selectedDay   = null;
-  selectedSlots = [];
+  selectedSpace = sp; selectedDay = null; selectedSlots = [];
   renderCards(currentFilter);
   renderDetail(sp);
-
-  // Scroll to detail
   setTimeout(() => {
     document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 80);
@@ -982,9 +968,17 @@ function selectSpace(id) {
 /* ══════════════════════════════════════════════
    RENDER DETAIL
 ══════════════════════════════════════════════ */
+function typeLabel(t) {
+  if (t === 'sala')         return 'Sala de reuniones';
+  if (t === 'privada')      return 'Oficina privada';
+  if (t === 'capacitacion') return 'Sala de capacitación';
+  return t;
+}
+
 function renderDetail(sp) {
   const panel = document.getElementById('detail-panel');
   panel.classList.add('show');
+  const liveStatus = getSpaceStatusToday(sp);
   document.getElementById('detail-inner').innerHTML = `
     <div class="detail-header">
       <div class="dh-left">
@@ -994,7 +988,7 @@ function renderDetail(sp) {
         <div class="dh-meta-row" style="margin-top:16px;">
           <div class="dh-meta-item"><div class="dh-meta-icon">👥</div> Hasta ${sp.capacity} personas</div>
           <div class="dh-meta-item"><div class="dh-meta-icon">📐</div> ${sp.area}</div>
-          <div class="dh-meta-item"><div class="dh-meta-icon">${statusLabel(sp.status).dot === 'avail' ? '✅' : statusLabel(sp.status).dot === 'partial' ? '🟡' : '🔴'}</div> ${statusLabel(sp.status).text}</div>
+          <div class="dh-meta-item"><div class="dh-meta-icon">${liveStatus==='avail'?'✅':liveStatus==='partial'?'🟡':'🔴'}</div> ${statusLabel(liveStatus).text}</div>
         </div>
       </div>
       <div class="dh-right">
@@ -1007,7 +1001,6 @@ function renderDetail(sp) {
     </div>
 
     <div class="detail-body">
-      <!-- LEFT -->
       <div class="detail-left">
         <div class="detail-section-title">Comodidades y equipamiento</div>
         <div class="amenities-grid">
@@ -1034,7 +1027,7 @@ function renderDetail(sp) {
             <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div> Disponible</div>
             <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> Parcial</div>
             <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div> Completo</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--cream-mid)"></div> No disponible</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cream-mid)"></div> No lab./pasado</div>
           </div>
         </div>
 
@@ -1046,10 +1039,9 @@ function renderDetail(sp) {
         ` : ''}
       </div>
 
-      <!-- RIGHT: FORM -->
       <div class="detail-right">
         <div class="form-section-title">Hacer reserva</div>
-        <p class="form-section-sub">Completá tus datos y confirmamos tu espacio al instante.</p>
+        <p class="form-section-sub">Completá tus datos y enviá tu solicitud. Un administrador la confirmará.</p>
 
         <div class="booking-summary" id="booking-summary">
           <div class="summary-row"><span class="summary-label">Espacio</span><span class="summary-val" id="sum-space">—</span></div>
@@ -1081,7 +1073,7 @@ function renderDetail(sp) {
         ${sp.priceUnit === 'mes' ? `
         <div class="rform-field">
           <label class="rform-label">Fecha de inicio</label>
-          <input class="rform-input" type="date" id="rf-fecha-inicio">
+          <input class="rform-input" type="date" id="rf-fecha-inicio" min="${formatDate(today)}">
         </div>
         <div class="rform-field">
           <label class="rform-label">Duración</label>
@@ -1098,181 +1090,164 @@ function renderDetail(sp) {
           <textarea class="rform-textarea" id="rf-notas" placeholder="¿Algún requerimiento especial?"></textarea>
         </div>
 
+        <div style="background:var(--cream-dark);border:1px solid var(--cream-mid);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--txt2);margin-bottom:14px;line-height:1.5;">
+          ⏳ Tu reserva quedará <strong>pendiente de aprobación</strong> hasta que un administrador la confirme. Podés ver el estado en <a href="mis-reservas.html" style="color:var(--red);text-decoration:none;font-weight:600;">Mis reservas</a>.
+        </div>
+
         <button class="btn-reserve" onclick="submitReserva()">
-          Confirmar reserva →
+          Enviar solicitud →
         </button>
         <p class="terms-note">Al confirmar aceptás los <a href="#" style="color:var(--red);text-decoration:none;">términos del servicio</a>. Sin cargos hasta la confirmación.</p>
       </div>
     </div>
   `;
-
   renderCalendar();
   updateSummary();
 }
 
-function typeLabel(t) {
-  if (t === 'sala')          return 'Sala de reuniones';
-  if (t === 'privada')       return 'Oficina privada';
-  if (t === 'capacitacion')  return 'Sala de capacitación';
-  return t;
-}
-
 /* ══════════════════════════════════════════════
-   CALENDAR
+   CALENDAR — días laborables reales (Lun–Sáb)
 ══════════════════════════════════════════════ */
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DAYS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function isWorkday(date) {
+  const dow = date.getDay();
+  return dow >= 1 && dow <= 6; // Lunes a Sábado
+}
 
 function renderCalendar() {
   if (!selectedSpace) return;
   const lbl  = document.getElementById('cal-month-label');
   const grid = document.getElementById('cal-grid');
   if (!lbl || !grid) return;
-
   lbl.textContent = `${MONTHS_ES[calMonth]} ${calYear}`;
-
-  const firstDay  = new Date(calYear, calMonth, 1).getDay();
+  const firstDay    = new Date(calYear, calMonth, 1).getDay();
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-
   let html = DAYS_ES.map(d => `<div class="cal-day-name">${d}</div>`).join('');
-
   for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
-
   for (let d = 1; d <= daysInMonth; d++) {
-    const date     = new Date(calYear, calMonth, d);
-    const isPast   = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const isToday  = date.toDateString() === today.toDateString();
-    const avInfo   = selectedSpace.mockAvail[d];
-    const isSel    = selectedDay === d && calYear === today.getFullYear() && calMonth === calMonth;
-
-    let cls = 'cal-day';
-    let indicator = '';
-
-    if (isPast) {
+    const date   = new Date(calYear, calMonth, d);
+    const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isToday = date.toDateString() === today.toDateString();
+    const isWork  = isWorkday(date);
+    const dateStr = formatDate(date);
+    const isSel   = selectedDay === dateStr;
+    let cls = 'cal-day', indicator = '';
+    if (isPast || !isWork) {
       cls += ' past';
-    } else if (avInfo === true) {
-      cls += ' avail';
-      indicator = '<div class="cal-day-indicator"></div>';
-    } else if (avInfo === 'partial') {
-      cls += ' partial';
-      indicator = '<div class="cal-day-indicator"></div>';
-    } else if (avInfo === 'full') {
-      cls += ' full';
-      indicator = '<div class="cal-day-indicator"></div>';
     } else {
-      cls += ' past'; // no data = not available
+      const st = getDayStatus(selectedSpace.id, dateStr, selectedSpace.timeSlots);
+      if (st === 'avail') {
+        cls += ' avail';
+        indicator = '<div class="cal-day-indicator"></div>';
+      } else if (st === 'partial') {
+        cls += ' partial';
+        indicator = '<div class="cal-day-indicator"></div>';
+      } else {
+        cls += ' full';
+        indicator = '<div class="cal-day-indicator"></div>';
+      }
     }
-
     if (isToday) cls += ' today';
-    if (selectedDay === d) cls += ' selected-day';
-
-    const clickable = !isPast && avInfo && avInfo !== 'full';
-    html += `<div class="${cls}" ${clickable ? `onclick="selectDay(${d})"` : ''}>
+    if (isSel)   cls += ' selected-day';
+    const clickable = !isPast && isWork;
+    const dayStatus = getDayStatus(selectedSpace.id, formatDate(date), selectedSpace.timeSlots);
+    const canClick  = clickable && dayStatus !== 'full';
+    html += `<div class="${cls}" ${canClick ? `onclick="selectDay('${dateStr}')"` : ''}>
       ${d}${indicator}
     </div>`;
   }
-
   grid.innerHTML = html;
 }
 
-function selectDay(d) {
-  selectedDay   = d;
+function prevMonth() {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  selectedDay = null; selectedSlots = [];
+  renderCalendar(); updateSummary();
+}
+function nextMonth() {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  selectedDay = null; selectedSlots = [];
+  renderCalendar(); updateSummary();
+}
+
+function selectDay(dateStr) {
+  selectedDay   = dateStr;
   selectedSlots = [];
   renderCalendar();
   updateSummary();
-
-  // Show time slots if applicable
   const timeSection = document.getElementById('time-section');
   if (!timeSection) return;
-
   if (selectedSpace.timeSlots.length > 0) {
     timeSection.classList.add('show');
+    const parts = dateStr.split('-');
     const lbl = document.getElementById('selected-date-label');
-    if (lbl) lbl.textContent = `${d} de ${MONTHS_ES[calMonth]}`;
+    if (lbl) lbl.textContent = `${parseInt(parts[2])} de ${MONTHS_ES[parseInt(parts[1])-1]}`;
     renderTimeSlots();
   }
 }
 
+/* ══════════════════════════════════════════════
+   TIME SLOTS — basados en reservas reales
+══════════════════════════════════════════════ */
 function renderTimeSlots() {
   const grid = document.getElementById('time-slots-grid');
-  if (!grid || !selectedSpace) return;
+  if (!grid || !selectedSpace || !selectedDay) return;
+  const busySlots = getBusySlotsForDate(selectedSpace.id, selectedDay);
   grid.innerHTML = selectedSpace.timeSlots.map(t => {
-    const isBusy = selectedSpace.busySlots.includes(t);
+    const isBusy = busySlots.includes(t);
     const isSel  = selectedSlots.includes(t);
-    let cls = 'time-slot';
-    if (isBusy)    cls += ' taken';
-    else if (isSel) cls += ' sel';
-    else           cls += ' free';
-    return `<div class="${cls}" ${!isBusy ? `onclick="toggleSlot('${t}')"` : ''}>${t}</div>`;
+    return `<div class="time-slot ${isBusy ? 'busy' : isSel ? 'selected-slot' : 'free'}"
+      ${!isBusy ? `onclick="toggleSlot('${t}')"` : ''}>
+      ${t}${isBusy ? '<br><span style="font-size:9px;opacity:.7">Ocupado</span>' : ''}
+    </div>`;
   }).join('');
 }
 
 function toggleSlot(t) {
-  if (selectedSlots.includes(t)) {
-    selectedSlots = selectedSlots.filter(s => s !== t);
-  } else {
-    selectedSlots.push(t);
-  }
+  const idx = selectedSlots.indexOf(t);
+  if (idx === -1) selectedSlots.push(t);
+  else selectedSlots.splice(idx, 1);
+  selectedSlots.sort();
   renderTimeSlots();
   updateSummary();
 }
 
-function prevMonth() {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  selectedDay = null; selectedSlots = [];
-  renderCalendar();
-  const ts = document.getElementById('time-section');
-  if (ts) ts.classList.remove('show');
-  updateSummary();
-}
-function nextMonth() {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  selectedDay = null; selectedSlots = [];
-  renderCalendar();
-  const ts = document.getElementById('time-section');
-  if (ts) ts.classList.remove('show');
-  updateSummary();
-}
-
 /* ══════════════════════════════════════════════
-   BOOKING SUMMARY
+   SUMMARY
 ══════════════════════════════════════════════ */
 function updateSummary() {
-  const summary = document.getElementById('booking-summary');
-  if (!summary || !selectedSpace) return;
-
-  const hasDate  = selectedDay !== null;
-  const hasSlots = selectedSlots.length > 0;
-  const isMonthly = selectedSpace.priceUnit === 'mes';
-
-  if (!hasDate && !isMonthly) return;
-
-  summary.classList.add('show');
-  const sumSpace = document.getElementById('sum-space');
-  const sumDate  = document.getElementById('sum-date');
+  if (!selectedSpace) return;
+  const sumSpace   = document.getElementById('sum-space');
+  const sumDate    = document.getElementById('sum-date');
   const sumTimeRow = document.getElementById('sum-time-row');
-  const sumTime  = document.getElementById('sum-time');
-  const sumTotal = document.getElementById('sum-total');
+  const sumTime    = document.getElementById('sum-time');
+  const sumTotal   = document.getElementById('sum-total');
+  const isMonthly  = selectedSpace.priceUnit === 'mes';
+  const hasSlots   = selectedSlots.length > 0;
+  const hasDate    = !!selectedDay;
 
   if (sumSpace) sumSpace.textContent = selectedSpace.name;
-  if (sumDate && hasDate) sumDate.textContent = `${selectedDay} de ${MONTHS_ES[calMonth]} ${calYear}`;
-  if (sumDate && !hasDate && isMonthly) sumDate.textContent = 'Ver campo fecha';
-
+  if (sumDate) {
+    if (hasDate) {
+      const parts = selectedDay.split('-');
+      sumDate.textContent = `${parseInt(parts[2])} de ${MONTHS_ES[parseInt(parts[1])-1]} ${parts[0]}`;
+    } else {
+      sumDate.textContent = '—';
+    }
+  }
   if (sumTimeRow && sumTime) {
     if (hasSlots) {
-      sumTimeRow.style.display = 'flex';
+      sumTimeRow.style.display = '';
       sumTime.textContent = selectedSlots.join(', ') + ' hs';
     } else {
       sumTimeRow.style.display = 'none';
     }
   }
-
   if (sumTotal) {
-    if (isMonthly) {
-      sumTotal.textContent = `$${selectedSpace.price.toLocaleString()} / mes`;
-    } else if (hasSlots) {
+    if (isMonthly) sumTotal.textContent = `$${selectedSpace.price.toLocaleString()} / mes`;
+    else if (hasSlots) {
       const total = selectedSpace.price * selectedSlots.length;
       sumTotal.textContent = `$${total.toLocaleString()} (${selectedSlots.length}h × $${selectedSpace.price.toLocaleString()})`;
     } else if (hasDate) {
@@ -1282,66 +1257,108 @@ function updateSummary() {
 }
 
 /* ══════════════════════════════════════════════
-   SUBMIT RESERVA
+   SUBMIT RESERVA — requiere login, guarda en localStorage
 ══════════════════════════════════════════════ */
 function submitReserva() {
-  // Guest: solo lectura, no puede reservar
-  if (window._guestMode) {
-    const alert = document.getElementById('rform-alert');
-    alert.innerHTML = `👁️ <strong>Modo Invitado</strong> — No podés hacer reservas. <a href="login.html#signup" style="color:var(--red-deep);font-weight:600;">Creá una cuenta gratuita →</a>`;
-    alert.className = 'rform-alert show err';
+  const { valid, role, username } = getSession();
+  const alertEl = document.getElementById('rform-alert');
+
+  // Si no está logueado, mostrar modal de auth
+  if (!valid) {
+    document.getElementById('auth-guard').style.display = 'flex';
     return;
   }
-  const alert = document.getElementById('rform-alert');
+
   const nombre   = document.getElementById('rf-nombre')?.value.trim();
   const apellido = document.getElementById('rf-apellido')?.value.trim();
   const email    = document.getElementById('rf-email')?.value.trim();
 
   if (!nombre || !apellido || !email) {
-    alert.textContent = 'Completá nombre, apellido y email para continuar.';
-    alert.className = 'rform-alert show err';
-    return;
+    alertEl.textContent = 'Completá nombre, apellido y email para continuar.';
+    alertEl.className = 'rform-alert show err'; return;
   }
   if (!/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(email)) {
-    alert.textContent = 'El email ingresado no es válido.';
-    alert.className = 'rform-alert show err';
-    return;
+    alertEl.textContent = 'El email ingresado no es válido.';
+    alertEl.className = 'rform-alert show err'; return;
   }
   if (!selectedSpace) return;
 
   const isMonthly = selectedSpace.priceUnit === 'mes';
-  if (!isMonthly && !selectedDay) {
-    alert.textContent = 'Seleccioná una fecha disponible en el calendario.';
-    alert.className = 'rform-alert show err';
-    return;
+  let dateStr = selectedDay;
+  if (isMonthly) {
+    const fi = document.getElementById('rf-fecha-inicio')?.value;
+    if (!fi) { alertEl.textContent = 'Seleccioná la fecha de inicio.'; alertEl.className = 'rform-alert show err'; return; }
+    dateStr = fi;
+  }
+  if (!isMonthly && !dateStr) {
+    alertEl.textContent = 'Seleccioná una fecha disponible en el calendario.';
+    alertEl.className = 'rform-alert show err'; return;
   }
   if (!isMonthly && selectedSpace.timeSlots.length > 0 && selectedSlots.length === 0) {
-    alert.textContent = 'Seleccioná al menos un horario disponible.';
-    alert.className = 'rform-alert show err';
-    return;
+    alertEl.textContent = 'Seleccioná al menos un horario disponible.';
+    alertEl.className = 'rform-alert show err'; return;
   }
 
-  // Simulate success
+  // Calcular total
+  let total = '';
+  if (isMonthly) {
+    const dur = document.getElementById('rf-duracion')?.value || '1';
+    total = `$${(selectedSpace.price * parseInt(dur)).toLocaleString()} (${dur} mes${parseInt(dur)>1?'es':''})`;
+  } else if (selectedSlots.length > 0) {
+    total = `$${(selectedSpace.price * selectedSlots.length).toLocaleString()}`;
+  } else {
+    total = `$${selectedSpace.price.toLocaleString()}`;
+  }
+
+  // Detectar conflictos (reservas simultáneas mismo espacio+horario): se permiten pero se marcan
+  const existing = getAllReservations();
+  const conflicts = isMonthly ? [] : existing.filter(r =>
+    r.spaceId === selectedSpace.id &&
+    r.date === dateStr &&
+    r.status !== 'cancelled' &&
+    r.slots && r.slots.some(s => selectedSlots.includes(s))
+  );
+
+  const newRes = {
+    id: 'R-' + Date.now(),
+    username,
+    nombre: nombre + ' ' + apellido,
+    email,
+    tel: document.getElementById('rf-tel')?.value.trim() || '',
+    notas: document.getElementById('rf-notas')?.value.trim() || '',
+    spaceId: selectedSpace.id,
+    spaceName: selectedSpace.name,
+    date: dateStr,
+    slots: isMonthly ? [] : [...selectedSlots],
+    total,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    hasConflict: conflicts.length > 0,
+  };
+
+  existing.push(newRes);
+  saveReservations(existing);
+
   const btn = document.querySelector('.btn-reserve');
   btn.disabled = true;
-  btn.textContent = 'Procesando…';
+  alertEl.innerHTML = `
+    ✅ <strong>¡Solicitud enviada!</strong><br>
+    Tu reserva está <strong>pendiente de aprobación</strong>. El administrador la confirmará a la brevedad.<br>
+    <a href="mis-reservas.html" style="color:var(--red);font-weight:600;text-decoration:none;">Ver mis reservas →</a>
+  `;
+  alertEl.className = 'rform-alert show ok';
+  btn.textContent = '✓ Solicitud enviada';
+  btn.style.background = '#2C7A5C';
 
-  setTimeout(() => {
-    alert.innerHTML = `
-      ✓ <strong>¡Reserva recibida!</strong><br>
-      Te enviamos la confirmación a <strong>${email}</strong>.
-      El equipo de SpicyTech se contactará en menos de 2 horas hábiles.
-    `;
-    alert.className = 'rform-alert show ok';
-    btn.textContent = '✓ Reserva enviada';
-    btn.style.background = '#2C7A5C';
-
-    // Clear fields
-    ['rf-nombre','rf-apellido','rf-email','rf-tel','rf-notas'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-  }, 1200);
+  ['rf-nombre','rf-apellido','rf-email','rf-tel','rf-notas'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  selectedSlots = [];
+  selectedDay   = null;
+  renderCalendar();
+  if (selectedSpace.timeSlots.length > 0) renderTimeSlots();
+  updateSummary();
+  renderCards(currentFilter); // actualizar estado de tarjetas
 }
 
 /* ══════════════════════════════════════════════
@@ -1351,12 +1368,10 @@ function filterSpaces(filter, btn) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-
-  // Close detail if selected space doesn't match filter
   if (selectedSpace) {
     const visible = SPACES.filter(sp => {
       if (filter === 'all')   return true;
-      if (filter === 'avail') return sp.status === 'avail';
+      if (filter === 'avail') return getSpaceStatusToday(sp) === 'avail';
       return sp.type === filter;
     }).map(s => s.id);
     if (!visible.includes(selectedSpace.id)) {
@@ -1368,106 +1383,27 @@ function filterSpaces(filter, btn) {
 }
 
 /* ══════════════════════════════════════════════
-   NAVBAR SCROLL
+   NAVBAR según sesión
 ══════════════════════════════════════════════ */
-window.addEventListener('scroll', () => {
-  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 30);
-});
-
-/* ══════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════ */
-/* ══════════════════════════════════════════════
-   AUTH GUARD — Observer-aware token check
-   Verifica el JWT almacenado por el Observer/AuthService.
-   El token es guardado en localStorage['nexo_token']
-   al completar login exitoso (LOGIN_SUCCESS event).
-══════════════════════════════════════════════ */
-/* ── ROLE HELPERS ── */
-function getSession() {
-  const token = localStorage.getItem('nexo_token');
-  const raw   = localStorage.getItem('nexo_user');
-  let valid = false, role = null, username = null;
-  if (token) {
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        valid = !payload.exp || payload.exp > Math.floor(Date.now() / 1000);
-      }
-    } catch(e) {}
-  }
-  if (valid && raw) {
-    try { const u = JSON.parse(raw); role = u.role; username = u.username; } catch(e) {}
-  }
-  return { valid, role, username };
-}
-
-function checkAuth() {
+function initNavbar() {
   const { valid, role, username } = getSession();
-
+  const actions = document.querySelector('.nav-actions');
+  if (!actions) return;
   if (!valid) {
-    document.body.classList.add('auth-locked');
-    document.getElementById('auth-guard').style.display = 'flex';
-    localStorage.removeItem('nexo_token');
-    return false;
+    actions.innerHTML = `
+      <a href="login.html" class="btn-nav-ghost">Iniciar sesión</a>
+      <a href="login.html#signup" class="btn-nav-red">Registrarse →</a>`;
+  } else if (role === 'admin') {
+    actions.innerHTML = `
+      <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
+      <a href="dashboard.html" class="btn-nav-red" style="margin-right:4px;">⚙️ Admin</a>
+      <button onclick="doLogout()" class="btn-nav-ghost" style="cursor:pointer;">Salir</button>`;
+  } else {
+    actions.innerHTML = `
+      <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
+      <a href="mis-reservas.html" class="btn-nav-ghost">Mis reservas</a>
+      <button onclick="doLogout()" class="btn-nav-ghost" style="cursor:pointer;">Salir</button>`;
   }
-
-  document.body.classList.remove('auth-locked');
-  document.getElementById('auth-guard').style.display = 'none';
-
-  // ── Guest: solo lectura ──
-  if (role === 'guest') {
-    window._guestMode = true;
-    // Añadir banner de aviso
-    const bar = document.createElement('div');
-    bar.id = 'guest-bar';
-    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--dark);color:var(--sand);padding:12px 5%;display:flex;align-items:center;justify-content:space-between;font-size:13px;gap:16px;';
-    bar.innerHTML = `
-      <span>👁️ <strong style="color:var(--cream);">Modo Invitado</strong> — Podés explorar los espacios pero no realizar reservas. <a href="login.html#signup" style="color:var(--red-soft);text-decoration:none;font-weight:600;">Creá una cuenta gratuita →</a></span>
-      <a href="home.html" style="color:var(--sand);text-decoration:none;white-space:nowrap;">← Volver al inicio</a>
-    `;
-    document.body.appendChild(bar);
-    // Añadir padding al body para que no tape contenido
-    document.body.style.paddingBottom = '52px';
-  }
-
-  // ── Admin: chip de acceso al dashboard en navbar ──
-  if (role === 'admin') {
-    window._adminMode = true;
-    const actions = document.querySelector('.nav-actions');
-    if (actions) {
-      actions.innerHTML = `
-        <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
-        <a href="dashboard.html" class="btn-nav-red" style="margin-right:4px;">⚙️ Admin</a>
-        <button onclick="doLogout()" class="btn-nav-ghost" style="cursor:pointer;">Salir</button>
-      `;
-    }
-  }
-
-  // ── Member & Admin: mostrar usuario en navbar ──
-  if (role === 'member') {
-    const actions = document.querySelector('.nav-actions');
-    if (actions) {
-      actions.innerHTML = `
-        <span style="font-size:13px;color:var(--txt2);font-weight:500;">👤 ${username}</span>
-        <a href="home.html" class="btn-nav-ghost">Inicio</a>
-        <button onclick="doLogout()" class="btn-nav-ghost" style="cursor:pointer;">Salir</button>
-      `;
-    }
-  }
-
-  if (role === 'guest') {
-    const actions = document.querySelector('.nav-actions');
-    if (actions) {
-      actions.innerHTML = `
-        <span style="font-size:13px;color:var(--txt2);font-weight:500;">👁️ Invitado</span>
-        <a href="login.html" class="btn-nav-red">Iniciar sesión</a>
-      `;
-    }
-  }
-
-  return true;
 }
 
 function doLogout() {
@@ -1476,8 +1412,19 @@ function doLogout() {
   window.location.href = 'login.html';
 }
 
-// Correr el guard al cargar
-checkAuth();
+/* ══════════════════════════════════════════════
+   NAVBAR SCROLL & INIT
+══════════════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 30);
+});
+
+// Cerrar auth guard modal
+document.getElementById('auth-guard').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+
+initNavbar();
 renderCards('all');
 </script>
 </body>
