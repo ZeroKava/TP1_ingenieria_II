@@ -1,4 +1,4 @@
-# Pruebas de Software - Nexo Coworking (Parte B)
+# Pruebas de Software - SpicyTech Coworking (Parte B)
 
 ## B0. Investigación Previa y Técnicas de Diseño de Pruebas
 
@@ -10,7 +10,7 @@ La partición en clases de equivalencia es una técnica de testing de caja negra
 **¿Qué es y cómo se aplica?**
 El análisis de valores límite es una técnica complementaria a las clases de equivalencia. Se basa en la observación de que la mayoría de los defectos de software ocurren en los "bordes" de las clases de equivalencia, más que en el centro. Consiste en diseñar casos de prueba que evalúen los extremos exactos (límites permitidos) y los valores inmediatamente fuera de esos límites (justo por encima o justo por debajo).
 
-### 3. Ejemplo Concreto Aplicado a Nexo Coworking
+### 3. Ejemplo Concreto Aplicado a SpicyTech Coworking
 **Función bajo prueba:** Validación del rango horario para reservar un espacio.
 **Regla de negocio:** El coworking opera estrictamente de 08:00 a 20:00 hs.
 
