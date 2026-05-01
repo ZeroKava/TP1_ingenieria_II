@@ -79,6 +79,158 @@ Para realizar pruebas de integración rápidas, predecibles y que no afecten los
 *   **Stub para la Base de Datos:** En lugar de conectarnos a la base de datos real, configuraremos SQLAlchemy para que utilice una base de datos en memoria (`sqlite:///:memory:`). Este Stub nace vacío al inicio de la prueba y se destruye al finalizar, garantizando un entorno limpio.
 *   **Mock para Notificaciones:** Reemplazaremos el objeto real del notificador por un objeto *Mock* simulado. Esto evitará que se envíen correos reales durante las pruebas automatizadas, pero nos permitirá "espiar" si el sistema intentó enviar el mensaje correctamente.
 
+# Pruebas de Software - SpicyTech Coworking
+
+---
+
+## Stack tecnológico del proyecto
+
+| Capa | Tecnología |
+|------|------------|
+| Backend | Python + Flask |
+| Frontend | Vanilla JS |
+| Base de datos | SQLite |
+
+---
+
+## Justificación de frameworks
+
+### Backend → pytest
+
+Elegimos **pytest** para testear el backend porque todo el proyecto está en Python y pytest es la herramienta más natural para ese ecosistema. Comparado con `unittest` (que también es Python nativo), pytest tiene una sintaxis mucho más limpia: los tests son funciones simples, no clases obligatorias, y los fixtures permiten reutilizar la configuración de objetos como `AuthService` o `InMemoryUserRepository` sin repetir código en cada `setUp()`.
+
+Otra ventaja concreta: cuando un assert falla, pytest muestra exactamente qué valor se esperaba y qué se recibió, con un diff legible. Eso acelera bastante el debug. Y para el CI/CD con GitHub Actions, se integra solo — basta con correr `pytest src/tests.py` y el workflow interpreta el exit code correctamente.
+
+### Frontend → Cypress
+
+El frontend de SpicyTech es Vanilla JS puro, así que necesitábamos una herramienta E2E que no requiera adaptadores especiales. **Cypress** funciona directamente sobre el navegador, lo que lo hace ideal para este caso.
+
+El motivo más concreto por el que lo elegimos es el **Time Travel Debugging**: Cypress guarda capturas de cada paso del test y permite reproducirlos visualmente, lo cual es muy útil para depurar flujos como el login con JWT. Además, permite hacer assertions sobre el `localStorage` del navegador, que es exactamente donde SpicyTech guarda el token de sesión.
+
+### Testing de integración → unittest.mock + SQLite en memoria
+
+Para las pruebas de integración no instalamos nada extra: usamos `unittest.mock` (incluido en la librería estándar de Python) para simular el `AuthEventBus` y evitar que los tests manden correos reales, y una base de datos SQLite en memoria (`:memory:`) como stub de la base de datos de producción. Así cada test arranca con un estado limpio sin tocar datos reales.
+
+---
+
+## B0. Investigación Previa y Técnicas de Diseño de Pruebas
+
+### 1. Clases de Equivalencia
+
+La partición en clases de equivalencia es una técnica de testing de caja negra que consiste en dividir el dominio de los datos de entrada en diferentes grupos (clases). La premisa es que si un valor de una clase funciona correctamente (o falla), todos los demás valores de esa misma clase se comportarán exactamente igual. Esto permite reducir drásticamente la cantidad de casos de prueba necesarios, eligiendo solo un valor representativo por cada clase válida o inválida.
+
+### 2. Valores Límite
+
+El análisis de valores límite es una técnica complementaria a las clases de equivalencia. Se basa en la observación de que la mayoría de los defectos de software ocurren en los "bordes" de las clases de equivalencia, más que en el centro. Consiste en diseñar casos de prueba que evalúen los extremos exactos (límites permitidos) y los valores inmediatamente fuera de esos límites.
+
+### 3. Ejemplo Concreto Aplicado a SpicyTech
+
+**Función bajo prueba:** Validación del rango horario para reservar un espacio.  
+**Regla de negocio:** El coworking opera estrictamente de 08:00 a 20:00 hs.
+
+**Clases de Equivalencia:**
+- *Válida:* Cualquier hora entre las 08:00 y las 20:00 (ej. representativo: 14:00).
+- *Inválida 1 (inferior):* Cualquier hora antes de las 08:00 (ej. 03:00).
+- *Inválida 2 (superior):* Cualquier hora después de las 20:00 (ej. 22:00).
+
+**Valores Límite:**
+- Límite inferior válido: 08:00
+- Límite inferior inválido: 07:59
+- Límite superior válido: 20:00
+- Límite superior inválido: 20:01
+
+---
+
+## B1. Diseño de Casos de Prueba Unitaria (TDD)
+
+### Función 1: `validar_horario_operativo(hora_solicitada)`
+
+*Regla de negocio:* Solo se permiten reservas dentro de la franja 08:00–20:00 hs.
+
+**CP01 — Partición de Equivalencia (Clase Válida)**
+- Entrada: `hora_solicitada = "14:00"`
+- Resultado esperado: `True` (el sistema permite continuar con la reserva).
+
+**CP02 — Valores Límite (Frontera Inferior Inválida)**
+- Entrada: `hora_solicitada = "07:59"`
+- Resultado esperado: `False` / Excepción: "Horario fuera del rango operativo".
+
+**CP03 — Valores Límite (Frontera Superior Válida)**
+- Entrada: `hora_solicitada = "20:00"`
+- Resultado esperado: `True` (último minuto válido para estar en el espacio).
+
+---
+
+### Función 2: `validar_logica_tiempo(hora_inicio, hora_fin)`
+
+*Regla de negocio:* La hora de finalización debe ser estrictamente posterior a la de inicio.
+
+**CP04 — Partición de Equivalencia (Clase Válida)**
+- Entrada: `hora_inicio = "10:00"`, `hora_fin = "13:00"`
+- Resultado esperado: `True` (el bloque es lógico y válido).
+
+**CP05 — Valores Límite (Límite exacto de colisión)**
+- Entrada: `hora_inicio = "15:00"`, `hora_fin = "15:00"`
+- Resultado esperado: `False` / Excepción: "La hora de fin no puede ser igual a la hora de inicio".
+
+**CP06 — Partición de Equivalencia (Clase Inválida - Lógica inversa)**
+- Entrada: `hora_inicio = "18:00"`, `hora_fin = "16:00"`
+- Resultado esperado: `False` / Excepción: "La hora de fin debe ser posterior a la hora de inicio".
+
+---
+
+## B3. Diseño Conceptual de Pruebas de Integración
+
+### 1. Dependencias Externas Identificadas
+
+Para el módulo de reservas y autenticación del backend (Flask), identificamos dos dependencias externas críticas:
+
+1. **Base de Datos (SQLite):** Persiste el estado de usuarios y reservas.
+2. **Servicio de Notificaciones (AuthEventBus):** Bus de eventos que avisa al Administrador cuando una reserva queda en estado PENDIENTE.
+
+### 2. Estrategia de Mocks y Stubs
+
+- **Stub para la Base de Datos:** Configuramos SQLite para usar una base de datos en memoria (`sqlite:///:memory:`). Nace vacía al inicio de cada prueba y se destruye al terminar, garantizando un entorno limpio.
+- **Mock para Notificaciones:** Reemplazamos el notificador real por un objeto Mock simulado. Evita que se envíen correos reales durante las pruebas, pero permite verificar si el sistema intentó enviarlos correctamente.
+
+### 3. Flujo de Prueba de Integración
+
+**Escenario:** Un miembro solicita una sala — debe guardarse como PENDIENTE y notificar al Administrador.
+
+**Arrange (preparación)**
+- Inicializar la base de datos en memoria.
+- Crear un usuario miembro y un espacio de coworking de prueba.
+- Crear un mock del notificador y suscribirlo al bus de eventos.
+
+**Act (ejecución)**
+- Simular el POST a `/api/reservas` con los datos: `usuario_id`, `espacio_id`, `hora_inicio = "10:00"`, `hora_fin = "12:00"`.
+
+**Assert (verificación)**
+- La respuesta HTTP debe tener status `201`.
+- La reserva guardada en el stub de la BD debe tener estado `PENDIENTE`.
+- El mock del notificador debe haber sido llamado con el evento `NUEVA_RESERVA_PENDIENTE`.
+
+---
+
+## Tipos de pruebas
+
+| Tipo | Estado | Qué cubre |
+|------|--------|-----------|
+| Unitarias | ✅ Implementadas | `PasswordPolicy`, `PasswordHasher`, `UserFactory`, `AuthService`, `AuthEventBus` |
+| Integración | ✅ Implementadas | Registro y login contra `InMemoryUserRepository` con mocks del bus de eventos |
+| Sistema (E2E) | ✅ Implementadas | Flujo completo de login, verificación de JWT en localStorage, rol admin |
+| Regresión (CI/CD) | ✅ Activo | GitHub Actions corre `pytest` en cada push a `main` |
+| Estrés | 🔜 Planificado | Locust — condición de carrera en reservas simultáneas (Fase 2) |
+
+---
+
+## CI/CD
+
+El workflow `.github/workflows/test.yml` se activa en cada `push` y `pull request` a `main`. Corre `pytest src/tests.py` y bloquea el merge si algún test falla. Los resultados se ven en la pestaña **Actions** de GitHub.
+
+> 📸 Captura del workflow exitoso: *(adjuntar screenshot aquí)*
+
+
 ### 3. Flujo de Prueba de Integración (Pseudocódigo)
 **Escenario:** Un miembro solicita una sala, la cual debe guardarse como "PENDIENTE" y notificar al Administrador.
 ```python
@@ -125,5 +277,3 @@ def test_integracion_flujo_reserva_pendiente():
 | Base de datos | SQLite |
 
 ---
-
-
