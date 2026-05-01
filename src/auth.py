@@ -3,7 +3,7 @@
   COWORKING SPACE — Authentication Backend
   Módulo: auth.py
   Patrones: Observer, Factory Method
-  + JWT + bcrypt + SQLite
+  + JWT + bcrypt + Supabase
 =============================================================
 """
 
@@ -13,63 +13,23 @@ from abc import abstractmethod
 import bcrypt
 import jwt
 import re
-import sqlite3
 import uuid
-from contextlib import contextmanager
+import json
 from datetime import datetime, timedelta
 from typing import Any
+
+from supabase import create_client, Client
 
 # ---------- JWT Secret (cambiar en producción) ----------
 JWT_SECRET = "nexo_coworking_super_secret_key_2025"
 JWT_EXPIRATION_HOURS = 2
 
-# ---------- Base de datos SQLite ----------
-DATABASE_PATH = "coworking_auth.db"
+# ---------- Supabase ----------
+SUPABASE_URL = "https://kyjszgpgyykktbhsqqjg.supabase.co"
+SUPABASE_KEY = "sb_secret_0rFwp3lT5BZQRB0IYLCIxg_s2ECDxdT"   # ← la sb_secret_... que usaste para migrar
 
-
-# ═══════════════════════════════════════════════════════════════
-# SECCIÓN 0 ─ INICIALIZACIÓN DE LA BASE DE DATOS
-# ═══════════════════════════════════════════════════════════════
-
-def init_db(db_path: str = DATABASE_PATH) -> None:
-    """Crea las tablas si no existen."""
-    with sqlite3.connect(db_path) as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id       TEXT PRIMARY KEY,
-                username      TEXT UNIQUE NOT NULL,
-                email         TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role          TEXT NOT NULL DEFAULT 'member',
-                is_active     INTEGER NOT NULL DEFAULT 1,
-                failed_attempts INTEGER NOT NULL DEFAULT 0,
-                created_at    TEXT NOT NULL
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS auth_events (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                event_type TEXT NOT NULL,
-                payload    TEXT NOT NULL,
-                timestamp  TEXT NOT NULL
-            )
-        """)
-        conn.commit()
-
-
-@contextmanager
-def get_connection(db_path: str = DATABASE_PATH):
-    """Context manager para obtener una conexión con row_factory."""
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
+def get_supabase() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -119,19 +79,16 @@ class ConsoleLogger(AuthObserver):
 
 
 class DatabaseObserver(AuthObserver):
-    """Persiste cada evento de autenticación en la tabla auth_events."""
-
-    def __init__(self, db_path: str = DATABASE_PATH):
-        self._db_path = db_path
+    """Persiste cada evento de autenticación en la tabla auth_events de Supabase."""
 
     def update(self, event: AuthEvent) -> None:
-        import json
         try:
-            with get_connection(self._db_path) as conn:
-                conn.execute(
-                    "INSERT INTO auth_events (event_type, payload, timestamp) VALUES (?, ?, ?)",
-                    (event.event_type, json.dumps(event.payload), event.timestamp),
-                )
+            supabase = get_supabase()
+            supabase.table("auth_events").insert({
+                "event_type": event.event_type,
+                "payload":    json.dumps(event.payload),
+                "timestamp":  event.timestamp,
+            }).execute()
         except Exception as exc:
             print(f"[DatabaseObserver] Error al guardar evento: {exc}")
 
@@ -139,7 +96,6 @@ class DatabaseObserver(AuthObserver):
 class EmailNotifier(AuthObserver):
     def update(self, event: AuthEvent) -> None:
         if event.event_type == AuthEvent.USER_REGISTERED:
-            username = event.payload.get("username", "")
             # ── INTEGRAR EMAIL ──
             pass
 
@@ -199,7 +155,6 @@ class GuestUser(User):
 class UserFactory:
     @abstractmethod
     def create_user(self, user_id, username, email, password_hash) -> User:
-        """Create a user with the given parameters."""
         ...
 
     def build(self, username, email, password_hash) -> User:
@@ -272,18 +227,11 @@ class InMemoryUserRepository(UserRepository):
             self._store[user.username] = user
 
 
-class SQLiteUserRepository(UserRepository):
-    """Repositorio persistente usando SQLite."""
+class SupabaseUserRepository(UserRepository):
+    """Repositorio persistente usando Supabase."""
 
-    def __init__(self, db_path: str = DATABASE_PATH):
-        self._db_path = db_path
-        init_db(db_path)
-
-    # ── helpers privados ────────────────────────────────────────
-
-    def _row_to_user(self, row: sqlite3.Row) -> User:
-        """Convierte una fila de SQLite en el objeto User correcto según su rol."""
-        role = row["role"]
+    def _row_to_user(self, row: dict) -> User:
+        role = row.get("role", "member")
         constructors = {
             "member": MemberUser,
             "admin":  AdminUser,
@@ -296,67 +244,50 @@ class SQLiteUserRepository(UserRepository):
             email         = row["email"],
             password_hash = row["password_hash"],
         )
-        user.is_active       = bool(row["is_active"])
-        user.failed_attempts = row["failed_attempts"]
-        user.created_at      = row["created_at"]
+        user.is_active       = bool(row.get("is_active", True))
+        user.failed_attempts = row.get("failed_attempts", 0)
+        user.created_at      = row.get("created_at", datetime.utcnow().isoformat())
         return user
 
-    # ── interfaz pública ────────────────────────────────────────
-
     def save(self, user: User) -> None:
-        with get_connection(self._db_path) as conn:
-            conn.execute(
-                """
-                INSERT INTO users
-                    (user_id, username, email, password_hash, role,
-                     is_active, failed_attempts, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    user.user_id,
-                    user.username,
-                    user.email,
-                    user.password_hash,
-                    user.role,
-                    int(user.is_active),
-                    user.failed_attempts,
-                    user.created_at,
-                ),
-            )
+        supabase = get_supabase()
+        supabase.table("users").insert({
+            "user_id":         user.user_id,
+            "username":        user.username,
+            "email":           user.email,
+            "password_hash":   user.password_hash,
+            "role":            user.role,
+            "is_active":       int(user.is_active),
+            "failed_attempts": user.failed_attempts,
+            "created_at":      user.created_at,
+        }).execute()
 
     def find_by_username(self, username: str) -> User | None:
-        with get_connection(self._db_path) as conn:
-            row = conn.execute(
-                "SELECT * FROM users WHERE username = ?", (username,)
-            ).fetchone()
-        return self._row_to_user(row) if row else None
+        supabase = get_supabase()
+        response = supabase.table("users").select("*").eq("username", username).execute()
+        if response.data:
+            return self._row_to_user(response.data[0])
+        return None
 
     def find_by_email(self, email: str) -> User | None:
-        with get_connection(self._db_path) as conn:
-            row = conn.execute(
-                "SELECT * FROM users WHERE email = ?", (email,)
-            ).fetchone()
-        return self._row_to_user(row) if row else None
+        supabase = get_supabase()
+        response = supabase.table("users").select("*").eq("email", email).execute()
+        if response.data:
+            return self._row_to_user(response.data[0])
+        return None
 
     def update(self, user: User) -> None:
-        with get_connection(self._db_path) as conn:
-            conn.execute(
-                """
-                UPDATE users
-                SET email           = ?,
-                    password_hash   = ?,
-                    is_active       = ?,
-                    failed_attempts = ?
-                WHERE username = ?
-                """,
-                (
-                    user.email,
-                    user.password_hash,
-                    int(user.is_active),
-                    user.failed_attempts,
-                    user.username,
-                ),
-            )
+        supabase = get_supabase()
+        supabase.table("users").update({
+            "email":           user.email,
+            "password_hash":   user.password_hash,
+            "is_active":       int(user.is_active),
+            "failed_attempts": user.failed_attempts,
+        }).eq("username", user.username).execute()
+
+
+# Alias para mantener compatibilidad con api.py sin tocar nada más
+SQLiteUserRepository = SupabaseUserRepository
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -390,56 +321,29 @@ class InputValidator:
         if len(username) > 30:
             return False, "El nombre de usuario no puede superar los 30 caracteres."
         if not re.match(r"^[a-zA-Z0-9_]+$", username):
-            return False, "Solo se permiten letras, números y guiones bajos."
+            return False, "El nombre de usuario solo puede contener letras, números y guiones bajos."
         return True, ""
 
     @staticmethod
     def is_valid_email(email: str) -> tuple[bool, str]:
-        pattern = r"^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$"
+        pattern = r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
         if not re.match(pattern, email):
-            return False, "Formato de email inválido."
-        return True, ""
-
-    @staticmethod
-    def passwords_match(password: str, confirm: str) -> tuple[bool, str]:
-        if password != confirm:
-            return False, "Las contraseñas no coinciden."
+            return False, "El correo electrónico no tiene un formato válido."
         return True, ""
 
 
 # ═══════════════════════════════════════════════════════════════
-# SECCIÓN 6 ─ HASHING CON BCRYPT
-# ═══════════════════════════════════════════════════════════════
-
-class PasswordHasher:
-    @staticmethod
-    def hash(plain_password: str) -> str:
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(plain_password.encode('utf-8'), salt).decode('utf-8')
-
-    @staticmethod
-    def verify(plain_password: str, hashed: str) -> bool:
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed.encode('utf-8'))
-
-
-# ═══════════════════════════════════════════════════════════════
-# SECCIÓN 7 ─ RESULTADO
+# SECCIÓN 6 ─ RESULTADO DE AUTENTICACIÓN
 # ═══════════════════════════════════════════════════════════════
 
 class AuthResult:
-    def __init__(
-        self,
-        success: bool,
-        message: str,
-        data: dict[str, Any] | None = None,
-        errors: list[str] | None = None,
-    ):
+    def __init__(self, success: bool, message: str, data: dict | None = None, errors: list | None = None):
         self.success = success
         self.message = message
         self.data    = data or {}
         self.errors  = errors or []
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict:
         return {
             "success": self.success,
             "message": self.message,
@@ -449,119 +353,95 @@ class AuthResult:
 
 
 # ═══════════════════════════════════════════════════════════════
-# SECCIÓN 8 ─ AUTH SERVICE (con JWT)
+# SECCIÓN 7 ─ SERVICIO DE AUTENTICACIÓN
 # ═══════════════════════════════════════════════════════════════
 
-class AuthService:
-    MAX_FAILED_ATTEMPTS = 5
+MAX_FAILED_ATTEMPTS = 5
 
+class AuthService:
     def __init__(self, repository: UserRepository, event_bus: AuthEventBus):
         self._repo      = repository
         self._event_bus = event_bus
 
-    def sign_up(self, username: str, email: str, password: str,
-                confirm_password: str, role: str = "member") -> AuthResult:
-        # Validaciones
-        valid, err = InputValidator.is_valid_username(username)
-        if not valid:
-            return AuthResult(False, "Datos inválidos.", errors=[err])
+    def _generate_token(self, user: User) -> str:
+        payload = {
+            "user_id":  user.user_id,
+            "username": user.username,
+            "role":     user.role,
+            "exp":      datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
+        }
+        return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
-        valid, err = InputValidator.is_valid_email(email)
-        if not valid:
-            return AuthResult(False, "Datos inválidos.", errors=[err])
+    def sign_up(self, username: str, email: str, password: str, confirm_password: str, role: str = "member") -> AuthResult:
+        errors = []
 
-        valid, err = InputValidator.passwords_match(password, confirm_password)
-        if not valid:
-            return AuthResult(False, "Las contraseñas no coinciden.", errors=[err])
+        ok, msg = InputValidator.is_valid_username(username)
+        if not ok:
+            errors.append(msg)
 
-        valid, policy_errors = PasswordPolicy.validate(password)
-        if not valid:
-            return AuthResult(False, "Contraseña no cumple la política.", errors=policy_errors)
+        ok, msg = InputValidator.is_valid_email(email)
+        if not ok:
+            errors.append(msg)
+
+        ok, pwd_errors = PasswordPolicy.validate(password)
+        if not ok:
+            errors.extend(pwd_errors)
+
+        if password != confirm_password:
+            errors.append("Las contraseñas no coinciden.")
+
+        if errors:
+            return AuthResult(False, "Error de validación.", errors=errors)
 
         if self._repo.find_by_username(username):
             return AuthResult(False, "El nombre de usuario ya está en uso.", errors=["Usuario duplicado."])
 
         if self._repo.find_by_email(email):
-            return AuthResult(False, "El email ya está registrado.", errors=["Email duplicado."])
+            return AuthResult(False, "El correo ya está registrado.", errors=["Email duplicado."])
 
-        # Hash con bcrypt
-        password_hash = PasswordHasher.hash(password)
+        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        factory = UserFactoryRegistry.get(role)
+        user    = factory.build(username, email, password_hash)
 
-        try:
-            factory = UserFactoryRegistry.get(role)
-        except ValueError as exc:
-            return AuthResult(False, str(exc))
-
-        user = factory.build(username, email, password_hash)
         self._repo.save(user)
-
-        self._event_bus.publish(AuthEvent(
-            AuthEvent.USER_REGISTERED,
-            {"user_id": user.user_id, "username": username, "email": email, "role": role},
-        ))
-
-        return AuthResult(True, "Cuenta creada exitosamente.", data=user.to_dict())
-
-    def log_in(self, username: str, password: str) -> AuthResult:
-        user = self._repo.find_by_username(username)
-        if not user:
-            self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_FAILED, {"username": username}))
-            return AuthResult(False, "Credenciales inválidas.")
-
-        if not user.is_active:
-            return AuthResult(False, "La cuenta está desactivada.")
-
-        if user.failed_attempts >= self.MAX_FAILED_ATTEMPTS:
-            self._event_bus.publish(AuthEvent(AuthEvent.ACCOUNT_LOCKED, {"username": username}))
-            return AuthResult(False, "Cuenta bloqueada por demasiados intentos fallidos.")
-
-        if not PasswordHasher.verify(password, user.password_hash):
-            user.failed_attempts += 1
-            self._repo.update(user)
-            self._event_bus.publish(AuthEvent(
-                AuthEvent.LOGIN_FAILED,
-                {"username": username, "attempts": user.failed_attempts},
-            ))
-            remaining = self.MAX_FAILED_ATTEMPTS - user.failed_attempts
-            return AuthResult(False, f"Contraseña incorrecta. Intentos restantes: {remaining}.")
-
-        # Login exitoso: resetear intentos y generar JWT
-        user.failed_attempts = 0
-        self._repo.update(user)
-
-        payload = {
+        self._event_bus.publish(AuthEvent(AuthEvent.USER_REGISTERED, {
             "user_id":  user.user_id,
             "username": user.username,
             "email":    user.email,
             "role":     user.role,
-            "exp":      datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
-        }
-        token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        }))
 
-        self._event_bus.publish(AuthEvent(
-            AuthEvent.LOGIN_SUCCESS,
-            {"user_id": user.user_id, "username": username, "role": user.role},
-        ))
+        token = self._generate_token(user)
+        return AuthResult(True, "Usuario registrado correctamente.", data={**user.to_dict(), "token": token})
 
-        user_data = user.to_dict()
-        user_data["token"] = token
-        return AuthResult(True, "Inicio de sesión exitoso.", data=user_data)
+    def log_in(self, username: str, password: str) -> AuthResult:
+        user = self._repo.find_by_username(username)
 
+        if not user:
+            self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_FAILED, {"username": username}))
+            return AuthResult(False, "Credenciales incorrectas.", errors=["Usuario no encontrado."])
 
-# ═══════════════════════════════════════════════════════════════
-# SECCIÓN 9 ─ FACTORY DE INFRAESTRUCTURA
-# ═══════════════════════════════════════════════════════════════
+        if not user.is_active:
+            return AuthResult(False, "Cuenta bloqueada. Contactá al administrador.", errors=["Cuenta bloqueada."])
 
-def create_auth_service(db_path: str = DATABASE_PATH) -> AuthService:
-    """
-    Construye un AuthService listo para usar con SQLite.
-    Uso:
-        auth = create_auth_service()
-        result = auth.sign_up("ana", "ana@mail.com", "Pass1!", "Pass1!", "member")
-    """
-    repo      = SQLiteUserRepository(db_path)
-    event_bus = AuthEventBus()
-    event_bus.subscribe(ConsoleLogger())
-    event_bus.subscribe(DatabaseObserver(db_path))
-    event_bus.subscribe(EmailNotifier())
-    return AuthService(repo, event_bus)
+        if not bcrypt.checkpw(password.encode(), user.password_hash.encode()):
+            user.failed_attempts += 1
+            if user.failed_attempts >= MAX_FAILED_ATTEMPTS:
+                user.is_active = False
+                self._event_bus.publish(AuthEvent(AuthEvent.ACCOUNT_LOCKED, {"username": username}))
+            else:
+                self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_FAILED, {"username": username}))
+            self._repo.update(user)
+            return AuthResult(False, "Credenciales incorrectas.", errors=["Contraseña incorrecta."])
+
+        user.failed_attempts = 0
+        self._repo.update(user)
+
+        self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_SUCCESS, {
+            "user_id":  user.user_id,
+            "username": user.username,
+            "role":     user.role,
+        }))
+
+        token = self._generate_token(user)
+        return AuthResult(True, "Inicio de sesión exitoso.", data={**user.to_dict(), "token": token})
