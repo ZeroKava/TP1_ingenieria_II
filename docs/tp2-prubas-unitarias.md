@@ -1,4 +1,4 @@
-# Pruebas de Software - SpicyTech Coworking (Parte B)
+# Pruebas de Software - SpicyTech Coworking 
 
 ## B0. Investigación Previa y Técnicas de Diseño de Pruebas
 
