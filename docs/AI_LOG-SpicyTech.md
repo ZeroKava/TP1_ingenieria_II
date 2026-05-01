@@ -165,3 +165,18 @@ No fue necesario descartar nada, ya que la salida se configuró para cumplir est
 **¿Qué modificamos y por qué?** Se ajustaron manualmente los parámetros de los casos de prueba unitaria para que reflejen exactamente las reglas de negocio de nuestro coworking (como el margen de error en horarios y la imposibilidad de auto-confirmación de reservas). Se verificó que las contraseñas de los administradores en el contrato coincidieran con los requerimientos de complejidad definidos previamente.
 
 **¿Qué descartamos y por qué?** Se descartaron sugerencias iniciales de usar herramientas de testing pagas o de alta complejidad (como Selenium o JMeter) en favor de opciones más ágiles y modernas como Cypress y Locust, priorizando la facilidad de mantenimiento y la curva de aprendizaje del equipo.
+
+Fecha: 01/05/2026
+Herramienta: Claude
+Responsable: Dev Lead — Matías Polcowñuk
+Eje temático: Pruebas Unitarias
+
+¿Para qué se usó? Crear las seis pruebas unitarias en pytest
+
+¿Qué generó la IA? Generó el archivo test_validaciones.py con 6 pruebas unitarias organizadas en dos clases (TestValidarHorarioOperativo y TestValidarLogicaTiempo), cubriendo los 6 casos de prueba especificados. Incluyó además la implementación de las dos funciones validadas (validar_horario_operativo y validar_logica_tiempo) usando el módulo datetime de Python estándar.
+
+¿Qué aceptamos tal cual? Los 6 casos de prueba con sus assertions, el uso de pytest.raises con match= para validar los mensajes de excepción, la estructura en clases por función, y los docstrings con técnica, entrada y resultado esperado.
+
+¿Qué modificamos y por qué? Nada.
+
+¿Qué descartamos y por qué? Nada.
