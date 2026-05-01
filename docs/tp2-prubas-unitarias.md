@@ -24,6 +24,47 @@ El análisis de valores límite es una técnica complementaria a las clases de e
     *   *Límite Superior Válido:* 20:00.
     *   *Límite Superior Inválido:* 20:01.
 
+## B1. Diseño de Casos de Prueba Unitaria (TDD)
+
+A continuación se detallan los 6 casos de prueba diseñados utilizando partición de equivalencia y análisis de valores límite. Estos casos aseguran la integridad de las reglas de negocio fundamentales de **SpicyTech Coworking** y serán automatizados mediante código por el equipo de desarrollo.
+
+### Función 1: `validar_horario_operativo(hora_solicitada)`
+*Regla de negocio:* El coworking solo permite reservas dentro de la franja horaria de 08:00 a 20:00 hs.
+
+*   **Caso de Prueba 1 (CP01)**
+    *   **Técnica:** Partición de Equivalencia (Clase Válida).
+    *   **Datos de entrada:** `hora_solicitada = "14:00"`
+    *   **Resultado esperado:** `True` (El sistema permite continuar con la reserva).
+
+*   **Caso de Prueba 2 (CP02)**
+    *   **Técnica:** Valores Límite (Frontera Inferior Inválida).
+    *   **Datos de entrada:** `hora_solicitada = "07:59"`
+    *   **Resultado esperado:** `False` / Excepción: "Horario fuera del rango operativo".
+
+*   **Caso de Prueba 3 (CP03)**
+    *   **Técnica:** Valores Límite (Frontera Superior Válida).
+    *   **Datos de entrada:** `hora_solicitada = "20:00"`
+    *   **Resultado esperado:** `True` (Es el último minuto válido para estar en el espacio).
+
+---
+
+### Función 2: `validar_logica_tiempo(hora_inicio, hora_fin)`
+*Regla de negocio:* Para que un bloque de reserva sea válido, la hora de finalización debe ser estrictamente posterior a la hora de inicio.
+
+*   **Caso de Prueba 4 (CP04)**
+    *   **Técnica:** Partición de Equivalencia (Clase Válida).
+    *   **Datos de entrada:** `hora_inicio = "10:00"`, `hora_fin = "13:00"`
+    *   **Resultado esperado:** `True` (El bloque es lógico y válido).
+
+*   **Caso de Prueba 5 (CP05)**
+    *   **Técnica:** Valores Límite (Límite exacto de colisión).
+    *   **Datos de entrada:** `hora_inicio = "15:00"`, `hora_fin = "15:00"`
+    *   **Resultado esperado:** `False` / Excepción: "La hora de fin no puede ser igual a la hora de inicio".
+
+*   **Caso de Prueba 6 (CP06)**
+    *   **Técnica:** Partición de Equivalencia (Clase Inválida - Lógica inversa).
+    *   **Datos de entrada:** `hora_inicio = "18:00"`, `hora_fin = "16:00"`
+    *   **Resultado esperado:** `False` / Excepción: "La hora de fin debe ser posterior a la hora de inicio".
 ---
 
 ## B3. Diseño Conceptual de Pruebas de Integración
