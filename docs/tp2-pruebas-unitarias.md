@@ -94,7 +94,7 @@ Para realizar pruebas de integración rápidas, predecibles y que no afecten los
 
 ---
 
-## Justificación de frameworks
+## Elección y Justificación de frameworks
 
 ### Backend → pytest
 
