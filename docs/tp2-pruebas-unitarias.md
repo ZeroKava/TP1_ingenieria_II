@@ -210,6 +210,43 @@ Para el módulo de reservas y autenticación del backend (Flask), identificamos 
 - La reserva guardada en el stub de la BD debe tener estado `PENDIENTE`.
 - El mock del notificador debe haber sido llamado con el evento `NUEVA_RESERVA_PENDIENTE`.
 
+-------------
+ELECCIÓN DE FRAMEWORK
+
+# Estrategia de Testing y Calidad — SpicyTech
+
+---
+
+## Stack tecnológico del proyecto
+
+| Capa | Tecnología |
+|------|------------|
+| Backend | Python + Flask |
+| Frontend | Vanilla JS |
+| Base de datos | SQLite |
+
+---
+
+## Justificación de frameworks
+
+### Backend → pytest
+
+Elegimos **pytest** para testear el backend porque todo el proyecto está en Python y pytest es la herramienta más natural para ese ecosistema. Comparado con `unittest` (que también es Python nativo), pytest tiene una sintaxis mucho más limpia: los tests son funciones simples, no clases obligatorias, y los fixtures permiten reutilizar la configuración de objetos como `AuthService` o `InMemoryUserRepository` sin repetir código en cada `setUp()`.
+
+Otra ventaja concreta: cuando un assert falla, pytest muestra exactamente qué valor se esperaba y qué se recibió, con un diff legible. Eso acelera bastante el debug. Y para el CI/CD con GitHub Actions, se integra solo — basta con correr `pytest src/tests.py` y el workflow interpreta el exit code correctamente.
+
+No se consideró ninguna herramienta de otro lenguaje porque no tiene sentido agregar complejidad cuando el stack ya está definido en Python.
+
+### Frontend → Cypress
+
+El frontend de SpicyTech es Vanilla JS puro (sin React ni ningún framework de componentes), así que necesitábamos una herramienta E2E que no requiera adaptadores especiales. **Cypress** funciona directamente sobre el navegador, lo que lo hace ideal para este caso.
+
+El motivo más concreto por el que lo elegimos es el **Time Travel Debugging**: Cypress guarda capturas de cada paso del test y permite reproducirlos visualmente, lo cual es muy útil para depurar flujos como el login con JWT. Además, permite hacer assertions sobre el `localStorage` del navegador, que es exactamente donde SpicyTech guarda el token de sesión. Eso no es algo que todas las herramientas E2E soporten fácilmente.
+
+### Testing de integración → unittest.mock + SQLite en memoria
+
+Para las pruebas de integración no instalamos nada extra: usamos `unittest.mock` (incluido en la librería estándar de Python) para simular el `AuthEventBus` y evitar que los tests manden correos reales, y una base de datos SQLite en memoria (`:memory:`) como stub de la base de datos de producción. Así cada test arranca con un estado limpio sin tocar datos reales.
+
 ---
 
 ## Tipos de pruebas
@@ -224,56 +261,23 @@ Para el módulo de reservas y autenticación del backend (Flask), identificamos 
 
 ---
 
+## Casos de prueba unitaria — Motor de Reservas
+
+**Regla de negocio:** el coworking opera de 08:00 a 20:00. La hora de fin debe ser mayor a la de inicio.
+
+| # | Entrada | Resultado esperado |
+|---|---------|-------------------|
+| 1 (válido) | Inicio: 10:00 / Fin: 12:00 | `True` — reserva permitida |
+| 2 (límite inferior) | Inicio: 07:59 / Fin: 09:00 | `False` — fuera del rango operativo |
+| 3 (lógica temporal) | Inicio: 15:00 / Fin: 15:00 | `False` — fin no es posterior al inicio |
+
+Implementados en `src/tests.py`.
+
+---
+
 ## CI/CD
 
 El workflow `.github/workflows/test.yml` se activa en cada `push` y `pull request` a `main`. Corre `pytest src/tests.py` y bloquea el merge si algún test falla. Los resultados se ven en la pestaña **Actions** de GitHub.
 
 > 📸 Captura del workflow exitoso: *(adjuntar screenshot aquí)*
 
-
-### 3. Flujo de Prueba de Integración (Pseudocódigo)
-**Escenario:** Un miembro solicita una sala, la cual debe guardarse como "PENDIENTE" y notificar al Administrador.
-```python
-def test_integracion_flujo_reserva_pendiente():
-    # 1. Preparación (Arrange)
-    db_stub = inicializar_db_en_memoria()
-    usuario_test = crear_usuario_miembro(db_stub)
-    espacio_test = crear_espacio_coworking(db_stub)
-    
-    mock_notificador = crear_mock()
-    sistema_eventos.suscribir(mock_notificador)
-
-    # 2. Ejecución (Act)
-    # Se simula el POST a la API /api/reservas
-    respuesta = api.post('/api/reservas', data={
-        "usuario_id": usuario_test.id,
-        "espacio_id": espacio_test.id,
-        "hora_inicio": "10:00",
-        "hora_fin": "12:00"
-    })
-
-    # 3. Verificación (Assert)
-    # Verificamos la respuesta HTTP
-    asegurar_que(respuesta.status_code == 201)
-    
-    # Verificamos la persistencia en el Stub de la BD
-    reserva_guardada = db_stub.obtener_ultima_reserva()
-    asegurar_que(reserva_guardada.estado == "PENDIENTE")
-    
-    # Verificamos la interacción con el Mock
-    asegurar_que(mock_notificador.fue_llamado_con("NUEVA_RESERVA_PENDIENTE"))
-
-
-    # Estrategia de Testing y Calidad — SpicyTech
-
----
-
-## Stack tecnológico del proyecto
-
-| Capa | Tecnología |
-|------|------------|
-| Backend | Python + Flask |
-| Frontend | Vanilla JS |
-| Base de datos | SQLite |
-
----
