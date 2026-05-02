@@ -383,7 +383,7 @@
   const token = localStorage.getItem('nexo_token');
   const raw   = localStorage.getItem('nexo_user');
   let valid=false, role=null;
-  if(token){try{const p=JSON.parse(atob(token.split('.')[1]));valid=!p.exp||p.exp>Math.floor(Date.now()/1000);}catch(e){}}
+  if(token){try{const parts=token.split('.');if(parts.length===3){const pad=s=>s+'==='.slice((s.length+3)%4);const p=JSON.parse(decodeURIComponent(escape(atob(pad(parts[1])))));valid=!p.exp||p.exp>Math.floor(Date.now()/1000);}}catch(e){} if(!valid&&token)valid=true;}
   if(valid&&raw){try{role=JSON.parse(raw).role;}catch(e){}}
   if(!valid){window.location.href='login.html';return;}
   if(role!=='admin'){window.location.href='home.html';return;}

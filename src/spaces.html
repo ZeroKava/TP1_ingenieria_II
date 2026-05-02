@@ -616,7 +616,26 @@
       .detail-header { flex-direction: column; }
       .dh-right { align-items: flex-start; }
     }
-  </style>
+/* ── TERMS MODAL ── */
+.tmodal-bg{position:fixed;inset:0;background:rgba(28,18,9,.6);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;}
+.tmodal-bg.show{display:flex;}
+.tmodal-box{background:var(--white);border-radius:20px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(28,18,9,.3);animation:tmIn .22s ease;}
+@keyframes tmIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.tmodal-head{padding:24px 28px 16px;border-bottom:1px solid var(--cream-mid);flex-shrink:0;}
+.tmodal-eyebrow{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:6px;}
+.tmodal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--dark);}
+.tmodal-body{overflow-y:auto;padding:20px 28px;flex:1;}
+.tmodal-body::-webkit-scrollbar{width:4px;}
+.tmodal-body::-webkit-scrollbar-thumb{background:var(--cream-mid);border-radius:4px;}
+.tc-section{margin-bottom:20px;}
+.tc-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--cream-mid);}
+.tc-clause{margin-bottom:10px;}
+.tc-clause-num{font-size:11px;font-weight:700;color:var(--dark);margin-bottom:3px;}
+.tc-clause-text{font-size:12.5px;color:var(--txt2);line-height:1.65;}
+.tmodal-foot{padding:16px 28px;border-top:1px solid var(--cream-mid);flex-shrink:0;}
+.tmodal-btn-close{width:100%;padding:11px;background:var(--red);border:none;border-radius:var(--rm);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:background .18s;}
+.tmodal-btn-close:hover{background:var(--red-deep);}
+</style>
 </head>
 <body>
 
@@ -832,12 +851,18 @@ function getSession() {
     try {
       const parts = token.split('.');
       if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
+        // Añadir padding si falta, soportar base64 URL-safe
+        const pad = s => s + '==='.slice((s.length + 3) % 4);
+        const payload = JSON.parse(decodeURIComponent(escape(atob(pad(parts[1])))));
         valid = !payload.exp || payload.exp > Math.floor(Date.now() / 1000);
       }
-    } catch(e) {}
+    } catch(e) { valid = false; }
   }
-  if (valid && raw) {
+  // Fallback: si el token existe pero no se puede decodificar, confiar en nexo_user
+  if (!valid && token && raw) {
+    try { JSON.parse(raw); valid = true; } catch(e) {}
+  }
+  if (raw) {
     try { const u = JSON.parse(raw); role = u.role; username = u.username; } catch(e) {}
   }
   return { valid, role, username };
@@ -1093,11 +1118,10 @@ function renderDetail(sp) {
         <div style="background:var(--cream-dark);border:1px solid var(--cream-mid);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--txt2);margin-bottom:14px;line-height:1.5;">
           ⏳ Tu reserva quedará <strong>pendiente de aprobación</strong> hasta que un administrador la confirme. Podés ver el estado en <a href="mis-reservas.html" style="color:var(--red);text-decoration:none;font-weight:600;">Mis reservas</a>.
         </div>
-
         <button class="btn-reserve" onclick="submitReserva()">
           Enviar solicitud →
         </button>
-        <p class="terms-note">Al confirmar aceptás los <a href="#" style="color:var(--red);text-decoration:none;">términos del servicio</a>. Sin cargos hasta la confirmación.</p>
+        <p class="terms-note">Al confirmar aceptás los <a href="terminos.html" target="_blank" style="color:var(--red);text-decoration:none;font-weight:500;">términos y condiciones</a>. Sin cargos hasta la confirmación.</p>
       </div>
     </div>
   `;
@@ -1426,6 +1450,40 @@ document.getElementById('auth-guard').addEventListener('click', function(e) {
 
 initNavbar();
 renderCards('all');
-</script>
+</script><!-- ══ TÉRMINOS DEL SERVICIO MODAL (solo lectura) ══ -->
+<div class="tmodal-bg" id="spaces-tc-modal" onclick="if(event.target===this)closeSpacesTcModal()">
+  <div class="tmodal-box">
+    <div class="tmodal-head">
+      <div class="tmodal-eyebrow">Nexo Coworking · SpicyTech</div>
+      <div class="tmodal-title">Términos del Servicio de Reservas</div>
+    </div>
+    <div class="tmodal-body">
+      <div class="tc-section">
+        <div class="tc-section-title">3. Protocolo de Reservas</div>
+        <div class="tc-clause"><div class="tc-clause-num">3.1 Naturaleza de la Solicitud</div><div class="tc-clause-text">La realización de una solicitud a través de la plataforma <strong>no garantiza el derecho de uso</strong>. Toda petición ingresa al sistema con el estado "PENDIENTE".</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">3.2 Confirmación Obligatoria</div><div class="tc-clause-text">El derecho de uso solo se perfecciona cuando un Administrador de SpicyTech modifica el estado de la solicitud a "CONFIRMADA". El usuario <strong>no debe presentarse en las instalaciones</strong> sin contar con dicha confirmación expresa.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">3.3 Resolución de Concurrencia</div><div class="tc-clause-text">Ante solicitudes simultáneas para el mismo espacio y horario, SpicyTech seleccionará según criterios de disponibilidad y prioridad interna. El rechazo no genera derecho a reclamo, indemnización o compensación alguna.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">4. Cancelaciones y Ausencias</div>
+        <div class="tc-clause"><div class="tc-clause-num">4.1 Cancelación Anticipada sin Costo</div><div class="tc-clause-text">El usuario podrá cancelar su reserva confirmada sin costo alguno siempre que lo realice con una antelación mínima de <strong>24 horas</strong> respecto al inicio del turno.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">4.2 Cancelación Tardía y No-Show</div><div class="tc-clause-text">Las cancelaciones con menos de 24 horas de antelación y la inasistencia conllevarán el cobro del <strong>100% del valor total</strong> de la reserva. SpicyTech no realizará devoluciones, reembolsos ni créditos compensatorios, independientemente del motivo.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">2. Horarios y Penalizaciones</div>
+        <div class="tc-clause"><div class="tc-clause-num">2.1 Franja Horaria Laboral</div><div class="tc-clause-text">El horario de funcionamiento es de <strong>lunes a viernes, de 08:00 a 20:00 horas</strong>. El ingreso fuera de estos horarios está prohibido.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">2.2 Penalización por Exceso de Tiempo</div><div class="tc-clause-text">El período de tolerancia máximo es de <strong>15 minutos</strong>. Superado dicho margen, se generará un cargo por una (1) hora adicional con una penalización del <strong>200%</strong> sobre la tarifa vigente.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">5. Conducta y Responsabilidad</div>
+        <div class="tc-clause"><div class="tc-clause-num">5.3 Indemnidad por Daños</div><div class="tc-clause-text">El usuario es el único responsable económico por daños al mobiliario o infraestructura de Nexo Coworking. Deberá abonar el costo total de reparación o reposición en un plazo máximo de <strong>5 días hábiles</strong> tras la notificación.</div></div>
+      </div>
+    </div>
+    <div class="tmodal-foot">
+      <button class="tmodal-btn-close" onclick="closeSpacesTcModal()">Entendido →</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

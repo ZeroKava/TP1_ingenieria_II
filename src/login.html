@@ -51,6 +51,8 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      text-align: center;
       padding: 48px 52px;
       animation: panelIn 0.7s cubic-bezier(.22,1,.36,1) both;
     }
@@ -94,8 +96,8 @@
     .lp-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.13); }
     .lp-dot.on { background: var(--red-soft); }
 
-    .lp-top, .lp-mid, .lp-bot { position: relative; z-index: 1; }
-    .lp-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .lp-top, .lp-mid, .lp-bot { position: relative; z-index: 1; width: 100%; }
+    .lp-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
     .logo-link { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
     .logo-mark {
@@ -114,6 +116,7 @@
       opacity: 0; transform: translateY(14px);
       transition: opacity 0.5s ease, transform 0.5s ease;
       pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
     }
     .c-slide.active {
       opacity: 1; transform: translateY(0);
@@ -124,14 +127,16 @@
       font-size: clamp(30px, 3vw, 46px);
       font-weight: 900; color: var(--cream);
       line-height: 1.08; margin-bottom: 14px;
+      text-align: center;
     }
     .slide-title em { font-style: italic; color: var(--red-soft); }
     .slide-desc {
       font-size: 14px; color: var(--sand);
       line-height: 1.7; font-weight: 300;
-      max-width: 300px; margin-bottom: 26px;
+      max-width: 320px; margin-bottom: 26px;
+      text-align: center;
     }
-    .slide-pills { display: flex; flex-direction: column; gap: 9px; }
+    .slide-pills { display: flex; flex-direction: column; gap: 9px; align-items: center; width: 100%; }
     .slide-pill  {
       display: inline-flex; align-items: center; gap: 10px;
       background: rgba(255,255,255,0.06);
@@ -145,7 +150,7 @@
     }
     .pill-text { font-size: 12.5px; color: var(--cream); opacity: 0.85; }
 
-    .c-nav { display: flex; align-items: center; gap: 8px; margin-top: 22px; }
+    .c-nav { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; }
     .c-dot-btn {
       width: 7px; height: 7px; border-radius: 50%;
       background: rgba(255,255,255,0.2);
@@ -162,7 +167,7 @@
       transition: background 0.2s, color 0.2s;
     }
     .c-arrow:hover { background: rgba(255,255,255,0.14); color: #fff; }
-    .c-arrow-right { margin-left: auto; }
+    .c-arrow-right { margin-left: 0; }
 
     .lp-card {
       background: rgba(255,255,255,0.05);
@@ -333,6 +338,33 @@
       .right-inner { padding: 36px 7%; max-width: 100%; }
     }
     @media (max-width: 460px) { .role-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* ── TERMS MODAL ── */
+    .tmodal-bg{position:fixed;inset:0;background:rgba(28,18,9,.6);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;}
+    .tmodal-bg.show{display:flex;}
+    .tmodal-box{background:var(--white);border-radius:20px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(28,18,9,.3);animation:tmIn .22s ease;}
+    @keyframes tmIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+    .tmodal-head{padding:24px 28px 16px;border-bottom:1px solid var(--cream-mid);flex-shrink:0;}
+    .tmodal-eyebrow{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:6px;}
+    .tmodal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--dark);}
+    .tmodal-body{overflow-y:auto;padding:20px 28px;flex:1;}
+    .tmodal-body::-webkit-scrollbar{width:4px;}
+    .tmodal-body::-webkit-scrollbar-thumb{background:var(--cream-mid);border-radius:4px;}
+    .tc-section{margin-bottom:20px;}
+    .tc-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--cream-mid);}
+    .tc-clause{margin-bottom:10px;}
+    .tc-clause-num{font-size:11px;font-weight:700;color:var(--dark);margin-bottom:3px;}
+    .tc-clause-text{font-size:12.5px;color:var(--txt2);line-height:1.65;}
+    .tmodal-foot{padding:16px 28px;border-top:1px solid var(--cream-mid);flex-shrink:0;display:flex;flex-direction:column;gap:12px;}
+    .tc-check-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--txt2);cursor:pointer;}
+    .tc-check-row input[type=checkbox]{width:16px;height:16px;flex-shrink:0;accent-color:var(--red);margin-top:2px;cursor:pointer;}
+    .tmodal-actions{display:flex;gap:10px;}
+    .tmodal-btn-accept{flex:1;padding:11px;background:var(--red);border:none;border-radius:var(--rm);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:background .18s,opacity .18s;opacity:.5;pointer-events:none;}
+    .tmodal-btn-accept.enabled{opacity:1;pointer-events:auto;}
+    .tmodal-btn-accept.enabled:hover{background:var(--red-deep);}
+    .tmodal-btn-back{padding:11px 20px;border:1.5px solid var(--cream-mid);border-radius:var(--rm);background:transparent;font-family:'Outfit',sans-serif;font-size:13px;color:var(--txt2);cursor:pointer;transition:all .18s;}
+    .tmodal-btn-back:hover{border-color:var(--red);color:var(--red);}
+    .tc-scroll-hint{font-size:11px;color:var(--txt3);text-align:center;}
   </style>
 </head>
 <body>
@@ -496,7 +528,14 @@
           </div>
           <span class="field-error" id="err-sc"></span>
         </div>
-        <button class="btn-submit" id="btn-signup" onclick="doSignup()">Crear cuenta →</button>
+        <!-- T&C checkbox -->
+        <div style="background:var(--cream-dark);border:1px solid var(--cream-mid);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--txt2);">
+            <input type="checkbox" id="tc-check" onchange="onTcCheck()" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--red);margin-top:2px;">
+            <span>Leí y acepto los <a href="terminos.html" target="_blank" onclick="openTcModal();return false;" style="color:var(--red);font-weight:600;text-decoration:none;">Términos y Condiciones</a> de Nexo Coworking. Entiendo que mis datos serán tratados conforme a la cláusula 6.</span>
+          </label>
+        </div>
+        <button class="btn-submit" id="btn-signup" onclick="doSignup()" style="opacity:.5;pointer-events:none;">Crear cuenta →</button>
         <div class="divider">o</div>
         <p style="text-align:center;font-size:13px;color:var(--txt2);">¿Ya tenés cuenta? <a href="#" onclick="switchTab('login');return false;" style="color:var(--red);text-decoration:none;font-weight:600;">Iniciá sesión</a></p>
       </div>
@@ -510,6 +549,72 @@
         <button class="btn-back" onclick="backToForm()">Volver al acceso</button>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ══ TÉRMINOS Y CONDICIONES MODAL ══ -->
+<div class="tmodal-bg" id="tc-modal" onclick="if(event.target===this)closeTcModal()">
+  <div class="tmodal-box">
+    <div class="tmodal-head">
+      <div class="tmodal-eyebrow">Nexo Coworking · SpicyTech</div>
+      <div class="tmodal-title">Términos y Condiciones de Uso</div>
+    </div>
+    <div class="tmodal-body">
+      <div class="tc-section">
+        <div class="tc-section-title">Aceptación</div>
+        <div class="tc-clause"><div class="tc-clause-text">Al registrarse, el usuario declara haber leído, comprendido y aceptado en su totalidad las cláusulas aquí expuestas, las cuales constituyen un contrato vinculante entre el usuario y SpicyTech.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">1. Régimen de Acceso y Usuarios</div>
+        <div class="tc-clause"><div class="tc-clause-num">1.1 Obligatoriedad de Registro</div><div class="tc-clause-text">No se permite el acceso bajo la figura de "Invitado" o usuario anónimo. Todo individuo debe completar el proceso de registro oficial proporcionando datos veraces y actualizados.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">1.2 Carácter Personal e Intransferible</div><div class="tc-clause-text">La cuenta y las reservas confirmadas son estrictamente personales. Queda prohibida la cesión, préstamo o transferencia de credenciales o derechos de uso a terceros. Cualquier uso indebido resultará en la baja inmediata de la cuenta.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">1.3 Autoridad Administrativa</div><div class="tc-clause-text">El sistema opera bajo la supervisión de cinco (5) cuentas Administradoras predefinidas, pertenecientes a los socios fundadores de SpicyTech, quienes poseen autoridad final para gestionar la ocupación y resolver conflictos.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">2. Horarios y Penalizaciones</div>
+        <div class="tc-clause"><div class="tc-clause-num">2.1 Franja Horaria Laboral</div><div class="tc-clause-text">El horario de funcionamiento es de lunes a viernes, de 08:00 a 20:00 horas. El ingreso fuera de estos horarios está prohibido.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">2.2 Penalización por Exceso de Tiempo</div><div class="tc-clause-text">Se establece un período de tolerancia máximo de 15 minutos. Superado dicho margen, se generará un cargo por una (1) hora adicional con una penalización del 200% sobre la tarifa vigente.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">3. Protocolo de Reservas</div>
+        <div class="tc-clause"><div class="tc-clause-num">3.1 Naturaleza de la Solicitud</div><div class="tc-clause-text">La realización de una solicitud no garantiza el derecho de uso. Toda petición ingresa con el estado "PENDIENTE".</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">3.2 Confirmación Obligatoria</div><div class="tc-clause-text">El derecho de uso solo se perfecciona cuando un Administrador modifica el estado a "CONFIRMADA". No debe presentarse en las instalaciones sin dicha confirmación.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">3.3 Resolución de Concurrencia</div><div class="tc-clause-text">Ante solicitudes simultáneas para el mismo espacio y horario, SpicyTech seleccionará según criterios internos. El rechazo no genera derecho a reclamo ni compensación.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">4. Cancelaciones y Ausencias</div>
+        <div class="tc-clause"><div class="tc-clause-num">4.1 Cancelación Anticipada</div><div class="tc-clause-text">El usuario podrá cancelar sin costo siempre que lo realice con una antelación mínima de <strong>24 horas</strong> respecto al inicio del turno.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">4.2 Cancelación Tardía y No-Show</div><div class="tc-clause-text">Las cancelaciones con menos de 24 horas de antelación y la inasistencia conllevarán el cobro del <strong>100% del valor total</strong> de la reserva, sin devoluciones ni compensaciones.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">5. Conducta y Responsabilidad</div>
+        <div class="tc-clause"><div class="tc-clause-num">5.1 Ambiente de Productividad</div><div class="tc-clause-text">Queda prohibido generar ruidos molestos en áreas comunes. El uso de telefonía o videoconferencias en estas áreas requiere auriculares.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">5.2 Uso de Conectividad</div><div class="tc-clause-text">El Wi-Fi se provee exclusivamente para fines profesionales. Está prohibido usarlo para actividades ilícitas, descargas ilegales, piratería o minería de activos digitales.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">5.3 Indemnidad por Daños</div><div class="tc-clause-text">El usuario es el único responsable económico por daños al mobiliario o infraestructura. Deberá abonar el costo total de reparación en un plazo máximo de 5 días hábiles.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">6. Privacidad y Seguridad</div>
+        <div class="tc-clause"><div class="tc-clause-num">6.1 Bienes Personales</div><div class="tc-clause-text">SpicyTech no asume responsabilidad por el robo, pérdida o daño de bienes personales o equipos electrónicos dentro de las instalaciones.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">6.2 Videovigilancia</div><div class="tc-clause-text">El usuario presta su consentimiento expreso para ser grabado por el sistema de CCTV las 24 horas en todas las áreas comunes.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">6.3 Datos Personales</div><div class="tc-clause-text">La plataforma cumple con estándares ISO/IEC 27001. Las contraseñas se almacenan mediante Bcrypt y las sesiones se gestionan con estándar JWT.</div></div>
+      </div>
+      <div class="tc-section">
+        <div class="tc-section-title">7. Derecho de Admisión y Rescisión</div>
+        <div class="tc-clause"><div class="tc-clause-num">7.1 Facultad de Permanencia</div><div class="tc-clause-text">SpicyTech se reserva el derecho de admisión y permanencia. Los administradores podrán solicitar el retiro inmediato de usuarios que alteren el orden.</div></div>
+        <div class="tc-clause"><div class="tc-clause-num">7.2 Baja por Incumplimiento</div><div class="tc-clause-text">El incumplimiento de cualquier cláusula facultará a SpicyTech a rescindir unilateralmente el servicio, inhabilitando la cuenta y anulando reservas futuras sin reembolso.</div></div>
+      </div>
+    </div>
+    <div class="tmodal-foot">
+      <div class="tc-scroll-hint">📜 Desplazate para leer todos los términos antes de aceptar</div>
+      <label class="tc-check-row" for="tc-modal-check">
+        <input type="checkbox" id="tc-modal-check" onchange="onModalCheck(this)">
+        <span>He leído y acepto en su totalidad los Términos y Condiciones de Nexo Coworking.</span>
+      </label>
+      <div class="tmodal-actions">
+        <button class="tmodal-btn-back" onclick="closeTcModal()">← Volver</button>
+        <button class="tmodal-btn-accept" id="tmodal-accept-btn" onclick="acceptTerms()">Aceptar y continuar →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -548,9 +653,11 @@ function initAdmins() {
 initAdmins();
 
 function makeToken(username, role) {
-  const header  = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = btoa(JSON.stringify({ sub: username, role, exp: Math.floor(Date.now()/1000) + 86400 * 7 }));
-  const sig     = btoa(username + role + Date.now());
+  // Usamos encodeURIComponent para soportar cualquier caracter en username
+  const toB64 = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/=/g,'');
+  const header  = toB64({ alg: 'HS256', typ: 'JWT' });
+  const payload = toB64({ sub: username, role, exp: Math.floor(Date.now()/1000) + 86400 * 7 });
+  const sig     = btoa(unescape(encodeURIComponent(username + role + Date.now()))).replace(/=/g,'');
   return `${header}.${payload}.${sig}`;
 }
 
@@ -591,6 +698,31 @@ function setErr(iId, eId, msg) {
   const i=document.getElementById(iId), e=document.getElementById(eId); if(!i||!e) return;
   if(msg){ i.classList.add('error'); e.textContent=msg; e.classList.add('show'); }
   else   { i.classList.remove('error'); e.textContent=''; e.classList.remove('show'); }
+}
+
+/* ── TÉRMINOS Y CONDICIONES MODAL ── */
+function openTcModal() {
+  document.getElementById('tc-modal').classList.add('show');
+  document.getElementById('tc-modal-check').checked = false;
+  document.getElementById('tmodal-accept-btn').classList.remove('enabled');
+}
+function closeTcModal() {
+  document.getElementById('tc-modal').classList.remove('show');
+}
+function onModalCheck(cb) {
+  document.getElementById('tmodal-accept-btn').classList.toggle('enabled', cb.checked);
+}
+function acceptTerms() {
+  // Marcar el checkbox externo como aceptado
+  document.getElementById('tc-check').checked = true;
+  onTcCheck();
+  closeTcModal();
+}
+function onTcCheck() {
+  const checked = document.getElementById('tc-check').checked;
+  const btn = document.getElementById('btn-signup');
+  btn.style.opacity    = checked ? '1' : '0.5';
+  btn.style.pointerEvents = checked ? 'auto' : 'none';
 }
 
 /* ── SHOW/HIDE PASSWORD ── */

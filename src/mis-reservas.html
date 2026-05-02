@@ -118,8 +118,19 @@ const MONTHS_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agost
 function getSession(){
   const token=localStorage.getItem('nexo_token'),raw=localStorage.getItem('nexo_user');
   let valid=false,role=null,username=null;
-  if(token){try{const p=JSON.parse(atob(token.split('.')[1]));valid=!p.exp||p.exp>Math.floor(Date.now()/1000);}catch(e){}}
-  if(valid&&raw){try{const u=JSON.parse(raw);role=u.role;username=u.username;}catch(e){}}
+  if(token){
+    try{
+      const parts=token.split('.');
+      if(parts.length===3){
+        const pad=s=>s+'==='.slice((s.length+3)%4);
+        const p=JSON.parse(decodeURIComponent(escape(atob(pad(parts[1])))));
+        valid=!p.exp||p.exp>Math.floor(Date.now()/1000);
+      }
+    }catch(e){}
+  }
+  // Fallback: si hay nexo_user válido, confiar en él
+  if(!valid&&token&&raw){try{JSON.parse(raw);valid=true;}catch(e){}}
+  if(raw){try{const u=JSON.parse(raw);role=u.role;username=u.username;}catch(e){}}
   return{valid,role,username};
 }
 function doLogout(){localStorage.removeItem('nexo_token');localStorage.removeItem('nexo_user');window.location.href='login.html';}
