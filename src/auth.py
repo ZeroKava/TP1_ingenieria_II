@@ -26,7 +26,7 @@ JWT_EXPIRATION_HOURS = 2
 
 # ---------- Supabase ----------
 SUPABASE_URL = "https://kyjszgpgyykktbhsqqjg.supabase.co"
-SUPABASE_KEY = "sb_publishable_7XJYNkkzzbg7HZC7bEqv3w_zxFFxd8U"   # ← la sb_secret_... que usaste para migrar
+SUPABASE_KEY = "sb_publishable_7XJYNkkzzbg7HZC7bEqv3w_zxFFxd8U"   
 
 def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
