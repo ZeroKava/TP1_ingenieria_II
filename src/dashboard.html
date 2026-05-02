@@ -15,10 +15,10 @@
       --green:#2E7D52; --green-pale:#F0FBF4; --amber:#B45309; --amber-pale:#FFF8EC;
       --sidebar-w:268px; --r:16px; --rm:10px;
     }
-    html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--cream);color:var(--txt);overflow-x:hidden;}
+    html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--cream);color:var(--txt);overflow:hidden;}
     ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:var(--cream-dark);} ::-webkit-scrollbar-thumb{background:var(--red-muted);border-radius:3px;}
 
-    .app{display:flex;min-height:100vh;}
+    .app{display:flex;height:100vh;overflow:hidden;}
 
     /* SIDEBAR */
     .sidebar{width:var(--sidebar-w);background:var(--dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
@@ -45,8 +45,8 @@
     .sb-logout:hover{background:rgba(192,57,43,.12);color:var(--red-soft);}
 
     /* MAIN */
-    .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
-    .topbar{height:64px;background:rgba(250,246,240,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--cream-mid);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:50;}
+    .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+    .topbar{height:64px;background:rgba(250,246,240,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--cream-mid);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;z-index:50;}
     .tb-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--dark);}
     .tb-right{display:flex;align-items:center;gap:10px;}
     .btn-ghost-sm{padding:8px 18px;border:1.5px solid var(--cream-mid);border-radius:var(--rm);background:transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;color:var(--txt2);cursor:pointer;text-decoration:none;transition:all .18s;}
@@ -54,7 +54,7 @@
     .btn-red-sm{padding:8px 18px;background:var(--red);border:none;border-radius:var(--rm);font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#fff;cursor:pointer;text-decoration:none;transition:background .18s;display:inline-flex;align-items:center;gap:5px;}
     .btn-red-sm:hover{background:var(--red-deep);}
 
-    .content{padding:28px 32px;flex:1;}
+    .content{padding:28px 32px;flex:1;overflow-y:auto;}
 
     /* VIEWS */
     .view{display:none;} .view.active{display:block;}
@@ -222,7 +222,7 @@
           <div class="stat-card"><div class="s-icon" style="background:var(--red-pale)">📅</div><div><div class="s-num" id="stat-res-active">0</div><div class="s-label">Reservas confirmadas</div></div></div>
           <div class="stat-card"><div class="s-icon" style="background:var(--green-pale)">👥</div><div><div class="s-num" id="stat-users">0</div><div class="s-label">Usuarios registrados</div></div></div>
           <div class="stat-card"><div class="s-icon" style="background:var(--amber-pale)">⏳</div><div><div class="s-num" id="stat-pending-n">0</div><div class="s-label">Pendientes de aprobación</div></div></div>
-          <div class="stat-card"><div class="s-icon" style="background:#EEF2FF">🏢</div><div><div class="s-num">${SPACES_INFO ? SPACES_INFO.length : 6}</div><div class="s-label">Espacios disponibles</div></div></div>
+          <div class="stat-card"><div class="s-icon" style="background:#EEF2FF">🏢</div><div><div class="s-num" id="stat-spaces">6</div><div class="s-label">Espacios disponibles</div></div></div>
         </div>
         <div class="g2">
           <div class="card">
@@ -234,21 +234,17 @@
             <div class="ringwrap">
               <svg width="114" height="114" viewBox="0 0 114 114" style="flex-shrink:0">
                 <circle cx="57" cy="57" r="46" fill="none" stroke="var(--cream-dark)" stroke-width="13"/>
-                <circle cx="57" cy="57" r="46" fill="none" stroke="var(--red)" stroke-width="13" stroke-dasharray="289" stroke-dashoffset="72" stroke-linecap="round" transform="rotate(-90 57 57)"/>
-                <text x="57" y="53" text-anchor="middle" font-family="Playfair Display,serif" font-size="19" font-weight="800" fill="var(--dark)">75%</text>
+                <circle id="ring-circle" cx="57" cy="57" r="46" fill="none" stroke="var(--red)" stroke-width="13" stroke-dasharray="0 289" stroke-linecap="round" transform="rotate(-90 57 57)"/>
+                <text id="ring-pct" x="57" y="53" text-anchor="middle" font-family="Playfair Display,serif" font-size="19" font-weight="800" fill="var(--dark)">0%</text>
                 <text x="57" y="68" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="var(--txt3)">ocupación</text>
               </svg>
               <div class="ringleg">
-                <div class="ringitem"><div class="ringdot" style="background:var(--red)"></div>Ocupados: 6</div>
-                <div class="ringitem"><div class="ringdot" style="background:var(--amber)"></div>Parcial: 1</div>
-                <div class="ringitem"><div class="ringdot" style="background:var(--green)"></div>Disponibles: 1</div>
+                <div class="ringitem"><div class="ringdot" style="background:var(--red)"></div><span id="ring-oc">Ocupados: 0</span></div>
+                <div class="ringitem"><div class="ringdot" style="background:var(--amber)"></div><span id="ring-pa">Parcial: 0</span></div>
+                <div class="ringitem"><div class="ringdot" style="background:var(--green)"></div><span id="ring-fr">Disponibles: 0</span></div>
               </div>
             </div>
-            <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
-              <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><span>Salas de reunión</span><span style="font-weight:700">4/4</span></div><div style="height:5px;background:var(--cream-dark);border-radius:3px"><div style="height:100%;width:100%;background:var(--red);border-radius:3px"></div></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><span>Oficinas privadas</span><span style="font-weight:700">2/3</span></div><div style="height:5px;background:var(--cream-dark);border-radius:3px"><div style="height:100%;width:67%;background:var(--amber);border-radius:3px"></div></div></div>
-              <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><span>Espacio compartido</span><span style="font-weight:700">0/1</span></div><div style="height:5px;background:var(--cream-dark);border-radius:3px"><div style="height:100%;width:0;background:var(--green);border-radius:3px"></div></div></div>
-            </div>
+            <div id="type-bars" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;"></div>
           </div>
         </div>
         <div class="g2">
@@ -459,20 +455,17 @@ function fmtSlots(slots) {
 function updateStats() {
   const res   = getAllReservations();
   const users = getAllUsers();
-  const pending = res.filter(r => r.status === 'pending').length;
+  const pending   = res.filter(r => r.status === 'pending').length;
   const confirmed = res.filter(r => r.status === 'confirmed').length;
-  const total = res.filter(r => r.status !== 'cancelled').length;
 
-  // Stat cards overview
   document.getElementById('stat-res-active').textContent = confirmed;
   document.getElementById('stat-users').textContent      = users.filter(u => u.role === 'member').length;
   document.getElementById('stat-pending-n').textContent  = pending;
+  const ss = document.getElementById('stat-spaces'); if(ss) ss.textContent = SPACES_INFO.length;
 
-  // Alerta de pendientes
+  // Alerta pendientes
   const alertChip = document.getElementById('alert-pending');
-  if (alertChip) {
-    alertChip.querySelector('.ac-count').textContent = pending + ' reserva' + (pending!==1?'s':'') + ' pendiente' + (pending!==1?'s':'') + ' de confirmación';
-  }
+  if (alertChip) alertChip.querySelector('.ac-count').textContent = pending + ' reserva' + (pending!==1?'s':'') + ' pendiente' + (pending!==1?'s':'') + ' de confirmación';
 
   // Conflictos
   const conflicts = res.filter(r => r.hasConflict && r.status === 'pending');
@@ -483,7 +476,45 @@ function updateStats() {
     if (cc) cc.textContent = conflicts.length + ' conflicto' + (conflicts.length!==1?'s':'') + ' de horario detectado' + (conflicts.length!==1?'s':'');
   }
 
-  // Badge sidebar
+  // Ring chart — real data
+  const today = new Date().toISOString().split('T')[0];
+  const total = SPACES_INFO.length;
+  const ocupados  = SPACES_INFO.filter(s => res.some(r => r.spaceId===s.id && r.date===today && r.status==='confirmed')).length;
+  const parciales = SPACES_INFO.filter(s => !res.some(r => r.spaceId===s.id && r.date===today && r.status==='confirmed') && res.some(r => r.spaceId===s.id && r.date===today && r.status==='pending')).length;
+  const libres    = total - ocupados - parciales;
+  const pct       = total > 0 ? Math.round((ocupados / total) * 100) : 0;
+
+  const el = id => document.getElementById(id);
+  if(el('ring-pct')) el('ring-pct').textContent = pct + '%';
+  if(el('ring-oc'))  el('ring-oc').textContent  = 'Ocupados: ' + ocupados;
+  if(el('ring-pa'))  el('ring-pa').textContent  = 'Parcial: '  + parciales;
+  if(el('ring-fr'))  el('ring-fr').textContent  = 'Disponibles: ' + libres;
+  const circle = el('ring-circle');
+  if(circle){ const r=46, circ=2*Math.PI*r, dash=(pct/100)*circ; circle.setAttribute('stroke-dasharray',`${dash} ${circ - dash}`); }
+
+  // Barras por tipo de espacio
+  const typeBars = el('type-bars');
+  if(typeBars) {
+    const types = [
+      { label: 'Salas de reunión',    key: 'sala',         color: 'var(--red)' },
+      { label: 'Oficinas privadas',   key: 'privada',      color: 'var(--amber)' },
+      { label: 'Sala capacitación',   key: 'capacitacion', color: 'var(--green)' },
+    ];
+    typeBars.innerHTML = types.map(t => {
+      const grupo = SPACES_INFO.filter(s => s.type === t.key);
+      const ocup  = grupo.filter(s => res.some(r => r.spaceId===s.id && r.date===today && r.status==='confirmed')).length;
+      const pctT  = grupo.length > 0 ? Math.round((ocup/grupo.length)*100) : 0;
+      return `<div>
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+          <span>${t.label}</span><span style="font-weight:700">${ocup}/${grupo.length}</span>
+        </div>
+        <div style="height:5px;background:var(--cream-dark);border-radius:3px">
+          <div style="height:100%;width:${pctT}%;background:${t.color};border-radius:3px;transition:width .4s ease"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   updBadge();
 }
 
