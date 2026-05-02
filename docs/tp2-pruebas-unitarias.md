@@ -82,7 +82,8 @@ Para realizar pruebas de integración rápidas, predecibles y que no afecten los
 # Pruebas de Software - SpicyTech Coworking
 
 ---
-
+# Estrategia de Testing y Calidad — SpicyTech
+---
 ## Stack tecnológico del proyecto
 
 | Capa | Tecnología |
