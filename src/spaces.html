@@ -391,48 +391,52 @@
     .cal-day {
       aspect-ratio: 1; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 500;
+      font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.15s;
-      position: relative;
+      position: relative; border: 2px solid transparent;
     }
-    .cal-day.empty { cursor: default; }
-    .cal-day.past { color: var(--cream-mid); cursor: not-allowed; }
-    .cal-day.avail { color: var(--txt); }
-    .cal-day.avail:hover { background: var(--red-pale); color: var(--red); }
-    .cal-day.partial { color: var(--txt); }
-    .cal-day.partial:hover { background: #FEF9E7; color: #D97706; }
-    .cal-day.full { color: var(--txt3); cursor: not-allowed; }
+    .cal-day.empty { cursor: default; border: none; }
+    .cal-day.past  { color: var(--cream-mid); cursor: not-allowed; background: transparent; }
+
+    /* Fondo completo de color según disponibilidad */
+    .cal-day.avail   { background: rgba(34,197,94,0.13); color: #166534; border-color: rgba(34,197,94,0.25); }
+    .cal-day.partial { background: rgba(245,158,11,0.13); color: #92400E; border-color: rgba(245,158,11,0.28); }
+    .cal-day.full    { background: rgba(239,68,68,0.10); color: #991B1B; border-color: rgba(239,68,68,0.2); cursor: not-allowed; }
+
+    .cal-day.avail:hover   { background: rgba(34,197,94,0.28); border-color: #22C55E; transform: scale(1.06); }
+    .cal-day.partial:hover { background: rgba(245,158,11,0.28); border-color: #F59E0B; transform: scale(1.06); }
+
+    /* Día seleccionado — rojo sólido con borde blanco interior */
     .cal-day.selected-day {
-      background: var(--red); color: #fff !important;
+      background: var(--red) !important;
+      color: #fff !important;
+      border-color: var(--red-deep) !important;
+      box-shadow: 0 3px 10px rgba(192,57,43,0.4);
+      transform: scale(1.08);
     }
-    .cal-day.today::after {
-      content: '';
-      position: absolute; bottom: 3px; left: 50%;
-      transform: translateX(-50%);
-      width: 4px; height: 4px; border-radius: 50%;
-      background: currentColor;
+    /* Múltiples días seleccionados — más suave para los no-primarios */
+    .cal-day.selected-extra {
+      background: var(--red-muted) !important;
+      color: #fff !important;
+      border-color: var(--red) !important;
+      box-shadow: 0 2px 6px rgba(192,57,43,0.25);
     }
-    .cal-day-indicator {
-      position: absolute; bottom: 3px; left: 50%;
-      transform: translateX(-50%);
-      width: 7px; height: 7px; border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.9);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    }
-    .cal-day.avail .cal-day-indicator { background: #22C55E; }
-    .cal-day.partial .cal-day-indicator { background: #F59E0B; }
-    .cal-day.full .cal-day-indicator { background: #EF4444; }
+
+    .cal-day.today { outline: 2px solid var(--dark); outline-offset: 1px; }
+    .cal-day.today.selected-day { outline-color: #fff; }
 
     .cal-legend {
-      display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap;
+      display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;
     }
     .legend-item {
-      display: flex; align-items: center; gap: 5px;
+      display: flex; align-items: center; gap: 6px;
       font-size: 11px; color: var(--txt3);
     }
-    .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .legend-dot {
+      width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+    }
 
-    /* Time slots */
+    /* Time slots — resalte fuerte al seleccionar */
     .time-section { margin-top: 24px; display: none; }
     .time-section.show { display: block; }
     .time-slots-grid {
@@ -440,20 +444,33 @@
       gap: 7px;
     }
     .time-slot {
-      padding: 8px 4px; border-radius: 8px; text-align: center;
-      font-size: 12px; font-weight: 500;
+      padding: 10px 4px; border-radius: 8px; text-align: center;
+      font-size: 12px; font-weight: 600;
       cursor: pointer; transition: all 0.15s;
-      border: 1.5px solid transparent;
+      border: 2px solid transparent; position: relative;
     }
     .time-slot.free {
       background: var(--cream); color: var(--txt2); border-color: var(--cream-mid);
     }
-    .time-slot.free:hover { border-color: var(--red); color: var(--red); }
-    .time-slot.taken {
-      background: var(--cream-dark); color: var(--txt3);
+    .time-slot.free:hover {
+      border-color: var(--red); color: var(--red);
+      background: var(--red-pale); transform: scale(1.04);
+    }
+    .time-slot.busy {
+      background: rgba(239,68,68,0.07); color: var(--txt3);
+      border-color: rgba(239,68,68,0.15);
       text-decoration: line-through; cursor: not-allowed;
     }
-    .time-slot.sel { background: var(--red); color: #fff; border-color: var(--red); }
+    .time-slot.sel {
+      background: var(--red); color: #fff; border-color: var(--red-deep);
+      box-shadow: 0 3px 10px rgba(192,57,43,0.35);
+      transform: scale(1.06);
+    }
+    .time-slot.sel::after {
+      content: '✓';
+      position: absolute; top: 2px; right: 5px;
+      font-size: 9px; opacity: 0.8;
+    }
 
     /* Right: reservation form */
     .detail-right { padding: 32px 28px; background: var(--cream); }
@@ -872,8 +889,9 @@ function getSession() {
    STATE
 ══════════════════════════════════════════════ */
 let selectedSpace  = null;
-let selectedDay    = null;
-let selectedSlots  = [];
+let selectedDay    = null;      // último día clickeado (para compatibilidad)
+let selectedDays   = {};        // { 'yyyy-mm-dd': ['08:00','09:00'], ... }
+let selectedSlots  = [];        // slots del día activo (selectedDay)
 let currentFilter  = 'all';
 let calYear, calMonth;
 
@@ -1151,35 +1169,31 @@ function renderCalendar() {
   let html = DAYS_ES.map(d => `<div class="cal-day-name">${d}</div>`).join('');
   for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
   for (let d = 1; d <= daysInMonth; d++) {
-    const date   = new Date(calYear, calMonth, d);
-    const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const date    = new Date(calYear, calMonth, d);
+    const isPast  = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const isToday = date.toDateString() === today.toDateString();
     const isWork  = isWorkday(date);
     const dateStr = formatDate(date);
-    const isSel   = selectedDay === dateStr;
-    let cls = 'cal-day', indicator = '';
+    const isSel   = dateStr in selectedDays;
+    const isActive = selectedDay === dateStr;
+    let cls = 'cal-day';
     if (isPast || !isWork) {
       cls += ' past';
     } else {
       const st = getDayStatus(selectedSpace.id, dateStr, selectedSpace.timeSlots);
-      if (st === 'avail') {
-        cls += ' avail';
-        indicator = '<div class="cal-day-indicator"></div>';
-      } else if (st === 'partial') {
-        cls += ' partial';
-        indicator = '<div class="cal-day-indicator"></div>';
-      } else {
-        cls += ' full';
-        indicator = '<div class="cal-day-indicator"></div>';
-      }
+      cls += st === 'avail' ? ' avail' : st === 'partial' ? ' partial' : ' full';
     }
     if (isToday) cls += ' today';
-    if (isSel)   cls += ' selected-day';
-    const clickable = !isPast && isWork;
-    const dayStatus = getDayStatus(selectedSpace.id, formatDate(date), selectedSpace.timeSlots);
-    const canClick  = clickable && dayStatus !== 'full';
-    html += `<div class="${cls}" ${canClick ? `onclick="selectDay('${dateStr}')"` : ''}>
-      ${d}${indicator}
+    if (isActive) cls += ' selected-day';
+    else if (isSel) cls += ' selected-extra';
+    const canClick = !isPast && isWork &&
+      getDayStatus(selectedSpace.id, formatDate(date), selectedSpace.timeSlots) !== 'full';
+    // Mostrar tick si tiene slots seleccionados
+    const tickCount = isSel && selectedDays[dateStr]?.length > 0
+      ? `<span style="position:absolute;top:2px;right:4px;font-size:8px;opacity:.85;">✓${selectedDays[dateStr].length}</span>`
+      : '';
+    html += `<div class="${cls}" ${canClick ? `onclick="selectDay('${dateStr}')"` : ''} title="${canClick ? dateStr : ''}">
+      ${d}${tickCount}
     </div>`;
   }
   grid.innerHTML = html;
@@ -1187,29 +1201,50 @@ function renderCalendar() {
 
 function prevMonth() {
   calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
-  selectedDay = null; selectedSlots = [];
-  renderCalendar(); updateSummary();
+  selectedDay = null; selectedSlots = []; selectedDays = {};
+  renderCalendar(); updateSummary(); hideTimeSection();
 }
 function nextMonth() {
   calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
-  selectedDay = null; selectedSlots = [];
-  renderCalendar(); updateSummary();
+  selectedDay = null; selectedSlots = []; selectedDays = {};
+  renderCalendar(); updateSummary(); hideTimeSection();
+}
+function hideTimeSection() {
+  const ts = document.getElementById('time-section');
+  if (ts) ts.classList.remove('show');
 }
 
 function selectDay(dateStr) {
+  // Toggle: si ya está seleccionado, deseleccionar
+  if (dateStr in selectedDays && selectedDay === dateStr) {
+    delete selectedDays[dateStr];
+    // Activar el último día restante si queda alguno
+    const remaining = Object.keys(selectedDays);
+    selectedDay   = remaining.length > 0 ? remaining[remaining.length - 1] : null;
+    selectedSlots = selectedDay ? (selectedDays[selectedDay] || []) : [];
+    renderCalendar();
+    updateSummary();
+    if (selectedDay && selectedSpace.timeSlots.length > 0) showTimeSection(selectedDay);
+    else hideTimeSection();
+    return;
+  }
+  // Nuevo día: si no es oficina mensual, agregar al mapa
+  if (!(dateStr in selectedDays)) selectedDays[dateStr] = [];
   selectedDay   = dateStr;
-  selectedSlots = [];
+  selectedSlots = selectedDays[dateStr]; // referencia
   renderCalendar();
   updateSummary();
+  if (selectedSpace.timeSlots.length > 0) showTimeSection(dateStr);
+}
+
+function showTimeSection(dateStr) {
   const timeSection = document.getElementById('time-section');
   if (!timeSection) return;
-  if (selectedSpace.timeSlots.length > 0) {
-    timeSection.classList.add('show');
-    const parts = dateStr.split('-');
-    const lbl = document.getElementById('selected-date-label');
-    if (lbl) lbl.textContent = `${parseInt(parts[2])} de ${MONTHS_ES[parseInt(parts[1])-1]}`;
-    renderTimeSlots();
-  }
+  timeSection.classList.add('show');
+  const parts = dateStr.split('-');
+  const lbl = document.getElementById('selected-date-label');
+  if (lbl) lbl.innerHTML = `<span style="font-weight:700;color:var(--red)">${parseInt(parts[2])} de ${MONTHS_ES[parseInt(parts[1])-1]}</span> <span style="color:var(--txt3);font-size:11px;">(click en otro día para agregar)</span>`;
+  renderTimeSlots();
 }
 
 /* ══════════════════════════════════════════════
