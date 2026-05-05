@@ -148,5 +148,6 @@ Implementados en `src/tests.py`.
 
 El workflow `.github/workflows/test.yml` se activa en cada `push` y `pull request` a `main`. Corre `pytest src/tests.py` y bloquea el merge si algún test falla. Los resultados se ven en la pestaña **Actions** de GitHub.
 
-> 📸 Captura del workflow exitoso: *(adjuntar screenshot aquí)*
+> <img width="1529" height="649" alt="image" src="https://github.com/user-attachments/assets/13b88e39-9992-43cf-8edb-f56c4d514df7" />
+
 
