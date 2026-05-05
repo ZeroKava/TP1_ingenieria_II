@@ -20,7 +20,7 @@ jobs:
           python-version: "3.11"
 
       - name: Instalar dependencias
-        run: pip install pytest bcrypt
+        run: pip install pytest bcrypt PyJWT flask flask-sqlalchemy
 
       - name: Correr tests unitarios
         run: pytest tests/unit/tests.py -v
