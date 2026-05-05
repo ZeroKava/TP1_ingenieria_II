@@ -14,22 +14,25 @@ from auth import (
     ConsoleLogger,
     DatabaseObserver,
     EmailNotifier,
-    SQLiteUserRepository,
+    SupabaseUserRepository,  # ← 1. Importamos explícitamente Supabase
     AuthService,
+    BookingRepository,
+    SpaceRepository,
 )
 
 app = Flask(__name__)
 CORS(app)
 
-# Composición del sistema con SQLite
+# Composición del sistema con Supabase
 event_bus = AuthEventBus()
 event_bus.subscribe(ConsoleLogger())
 event_bus.subscribe(DatabaseObserver())
 event_bus.subscribe(EmailNotifier())
 
-repository = SQLiteUserRepository()          # ← persiste en coworking_auth.db
+repository = SupabaseUserRepository()  # ← 2. Conectamos el repositorio de la nube
 auth_service = AuthService(repository=repository, event_bus=event_bus)
-
+booking_repo = BookingRepository()
+space_repo = SpaceRepository()
 
 def _require_json_fields(data: dict, *fields: str):
     missing = [f for f in fields if not data.get(f)]
@@ -69,7 +72,55 @@ def login():
     )
     status_code = 200 if result.success else 401
     return jsonify(result.to_dict()), status_code
+@app.get("/api/users")
 
+def get_all_users():
+    """Endpoint para que el Dashboard obtenga la lista real de usuarios."""
+    users = repository.get_all()
+    # Convertimos los objetos a diccionarios, pero ocultamos el password_hash por seguridad
+    users_data = []
+    for u in users:
+        u_dict = u.to_dict()
+        users_data.append(u_dict)
+        
+    return jsonify({
+        "success": True, 
+        "data": users_data
+    }), 200
+
+# --- ENDPOINTS DE RESERVAS ---
+
+@app.post("/api/bookings")
+def create_booking():
+    data = request.get_json(silent=True) or {}
+    ok, err = _require_json_fields(data, "username", "space_name", "booking_date", "booking_time")
+    if not ok:
+        return jsonify({"success": False, "message": err}), 400
+
+    new_booking = {
+        "username": data["username"],
+        "space_name": data["space_name"],
+        "booking_date": data["booking_date"],
+        "booking_time": data["booking_time"],
+        "status": "activa"
+    }
+    
+    result = booking_repo.create(new_booking)
+    if result:
+        return jsonify({"success": True, "message": "Reserva confirmada.", "data": result}), 201
+    return jsonify({"success": False, "message": "Error al guardar en BD."}), 500
+
+@app.get("/api/bookings")
+def get_bookings():
+    username = request.args.get("username")
+    reservas = booking_repo.get_by_username(username) if username else booking_repo.get_all()
+    return jsonify({"success": True, "data": reservas}), 200
+
+@app.get("/api/spaces")
+def get_spaces():
+    """Devuelve el catálogo dinámico de espacios desde Supabase."""
+    espacios = space_repo.get_all()
+    return jsonify({"success": True, "data": espacios}), 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

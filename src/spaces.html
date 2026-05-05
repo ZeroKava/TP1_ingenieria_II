@@ -826,19 +826,26 @@ const SPACES = [
 ];
 
 /* ══════════════════════════════════════════════
-   RESERVAS: localStorage
+   RESERVAS: CONECTADAS A LA BASE DE DATOS
 ══════════════════════════════════════════════ */
-function getAllReservations() {
-  try { return JSON.parse(localStorage.getItem('nexo_reservations') || '[]'); } catch { return []; }
-}
-function saveReservations(r) { localStorage.setItem('nexo_reservations', JSON.stringify(r)); }
+let DB_RESERVAS = []; // Acá vamos a guardar lo que venga de la API
 
-// Slots ocupados para un espacio+fecha (solo reservas confirmadas o pendientes)
+// Esta función ahora devuelve la lista real de la base de datos
+function getAllReservations() {
+  return DB_RESERVAS; 
+}
+
+// Ya no guardamos en localStorage, esta función la vaciamos
+function saveReservations(r) { 
+  console.log("Ya no usamos localStorage, todo va a la nube ☁️");
+}
+
+// Slots ocupados para un espacio+fecha (ahora lee de la API)
 function getBusySlotsForDate(spaceId, dateStr) {
   const reservations = getAllReservations();
   const busy = [];
   reservations
-    .filter(r => r.spaceId === spaceId && r.date === dateStr && r.status !== 'cancelled')
+    .filter(r => r.spaceId === spaceId && r.date === dateStr && r.status !== 'cancelada' && r.status !== 'cancelled')
     .forEach(r => { if (r.slots) r.slots.forEach(s => busy.push(s)); });
   return busy;
 }
@@ -1316,13 +1323,12 @@ function updateSummary() {
 }
 
 /* ══════════════════════════════════════════════
-   SUBMIT RESERVA — requiere login, guarda en localStorage
+   SUBMIT RESERVA — CONECTADO A FLASK
 ══════════════════════════════════════════════ */
-function submitReserva() {
+async function submitReserva() {
   const { valid, role, username } = getSession();
   const alertEl = document.getElementById('rform-alert');
 
-  // Si no está logueado, mostrar modal de auth
   if (!valid) {
     document.getElementById('auth-guard').style.display = 'flex';
     return;
@@ -1358,66 +1364,62 @@ function submitReserva() {
     alertEl.className = 'rform-alert show err'; return;
   }
 
-  // Calcular total
-  let total = '';
-  if (isMonthly) {
-    const dur = document.getElementById('rf-duracion')?.value || '1';
-    total = `$${(selectedSpace.price * parseInt(dur)).toLocaleString()} (${dur} mes${parseInt(dur)>1?'es':''})`;
-  } else if (selectedSlots.length > 0) {
-    total = `$${(selectedSpace.price * selectedSlots.length).toLocaleString()}`;
-  } else {
-    total = `$${selectedSpace.price.toLocaleString()}`;
-  }
-
-  // Detectar conflictos (reservas simultáneas mismo espacio+horario): se permiten pero se marcan
-  const existing = getAllReservations();
-  const conflicts = isMonthly ? [] : existing.filter(r =>
-    r.spaceId === selectedSpace.id &&
-    r.date === dateStr &&
-    r.status !== 'cancelled' &&
-    r.slots && r.slots.some(s => selectedSlots.includes(s))
-  );
-
-  const newRes = {
-    id: 'R-' + Date.now(),
-    username,
-    nombre: nombre + ' ' + apellido,
-    email,
-    tel: document.getElementById('rf-tel')?.value.trim() || '',
-    notas: document.getElementById('rf-notas')?.value.trim() || '',
-    spaceId: selectedSpace.id,
-    spaceName: selectedSpace.name,
-    date: dateStr,
-    slots: isMonthly ? [] : [...selectedSlots],
-    total,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-    hasConflict: conflicts.length > 0,
-  };
-
-  existing.push(newRes);
-  saveReservations(existing);
-
+  // Desactivar botón y avisar que está cargando
   const btn = document.querySelector('.btn-reserve');
   btn.disabled = true;
-  alertEl.innerHTML = `
-    ✅ <strong>¡Solicitud enviada!</strong><br>
-    Tu reserva está <strong>pendiente de aprobación</strong>. El administrador la confirmará a la brevedad.<br>
-    <a href="mis-reservas.html" style="color:var(--red);font-weight:600;text-decoration:none;">Ver mis reservas →</a>
-  `;
-  alertEl.className = 'rform-alert show ok';
-  btn.textContent = '✓ Solicitud enviada';
-  btn.style.background = '#2C7A5C';
+  btn.textContent = 'Procesando en la nube... ☁️';
 
-  ['rf-nombre','rf-apellido','rf-email','rf-tel','rf-notas'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  selectedSlots = [];
-  selectedDay   = null;
-  renderCalendar();
-  if (selectedSpace.timeSlots.length > 0) renderTimeSlots();
-  updateSummary();
-  renderCards(currentFilter); // actualizar estado de tarjetas
+  // Formateamos los horarios (Ej: "08:00, 09:00" o "Mensual")
+  const timeToSend = isMonthly ? "Mensual" : selectedSlots.join(', ');
+
+  try {
+    // 🚀 ENVIAMOS A FLASK
+    const response = await fetch('http://127.0.0.1:5000/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: username,
+        space_name: selectedSpace.name,
+        booking_date: dateStr,
+        booking_time: timeToSend
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alertEl.innerHTML = `
+        ✅ <strong>¡Solicitud enviada!</strong><br>
+        Tu reserva está <strong>pendiente de aprobación</strong>. El administrador la confirmará a la brevedad.<br>
+        <a href="mis-reservas.html" style="color:var(--red);font-weight:600;text-decoration:none;">Ver mis reservas →</a>
+      `;
+      alertEl.className = 'rform-alert show ok';
+      btn.textContent = '✓ Solicitud enviada';
+      btn.style.background = '#2C7A5C';
+
+      // Limpiamos el formulario
+      ['rf-nombre','rf-apellido','rf-email','rf-tel','rf-notas'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      selectedSlots = [];
+      selectedDay   = null;
+      
+      // Recargamos las reservas desde la base de datos para actualizar el calendario
+      await loadBookingsFromAPI(); 
+      
+    } else {
+      alertEl.textContent = 'Error del servidor: ' + result.message;
+      alertEl.className = 'rform-alert show err';
+      btn.disabled = false;
+      btn.textContent = 'Enviar solicitud →';
+    }
+  } catch (error) {
+    console.error("Error crítico:", error);
+    alertEl.textContent = 'No se pudo conectar al servidor. ¿Está api.py corriendo?';
+    alertEl.className = 'rform-alert show err';
+    btn.disabled = false;
+    btn.textContent = 'Enviar solicitud →';
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -1483,13 +1485,36 @@ document.getElementById('auth-guard').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
 
+// Función para ir a buscar las reservas
+async function loadBookingsFromAPI() {
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/bookings');
+    const result = await response.json();
+    if (result.success) {
+      // Adaptamos la data para que el calendario la entienda
+      DB_RESERVAS = result.data.map(r => ({
+        spaceId: SPACES.find(s => s.name === r.space_name)?.id || '',
+        date: r.booking_date,
+        slots: r.booking_time === 'Mensual' ? [] : r.booking_time.split(', '),
+        status: r.status === 'activa' ? 'confirmed' : 'pending' 
+      }));
+      renderCards(currentFilter); // Recarga visual de las tarjetas
+      renderCalendar();           // Recarga visual del calendario
+    }
+  } catch (e) {
+    console.error("Error al cargar reservas de la BD", e);
+  }
+}
+
+// Inicializamos la página en este orden
 initNavbar();
-renderCards('all');
+loadBookingsFromAPI(); // ← MAGIA
+
 </script><!-- ══ TÉRMINOS DEL SERVICIO MODAL (solo lectura) ══ -->
 <div class="tmodal-bg" id="spaces-tc-modal" onclick="if(event.target===this)closeSpacesTcModal()">
   <div class="tmodal-box">
     <div class="tmodal-head">
-      <div class="tmodal-eyebrow">Nexo Coworking · SpicyTech</div>
+      <div class="tmodal-eyebinitNavbar();row">Nexo Coworking · SpicyTech</div>
       <div class="tmodal-title">Términos del Servicio de Reservas</div>
     </div>
     <div class="tmodal-body">

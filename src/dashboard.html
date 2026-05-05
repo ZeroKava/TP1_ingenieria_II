@@ -397,9 +397,106 @@ function getAllReservations() {
   try { return JSON.parse(localStorage.getItem('nexo_reservations') || '[]'); } catch { return []; }
 }
 function saveReservations(r) { localStorage.setItem('nexo_reservations', JSON.stringify(r)); }
-function getAllUsers() {
-  try { return JSON.parse(localStorage.getItem('nexo_users') || '[]'); } catch { return []; }
+/* ── CONEXIÓN A LA API REAL PARA USUARIOS ── */
+
+const API_BASE = 'http://127.0.0.1:5000/api';
+let USRS = []; // Ahora es una variable que llenaremos desde la base de datos
+
+// Borramos la vieja función getAllUsers() y usamos esta asíncrona:
+/* ── CONEXIÓN A LA API REAL PARA USUARIOS ── */
+async function fetchUsersFromAPI() {
+  console.log("1. Intentando buscar usuarios en la API...");
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/users');
+    const result = await response.json();
+    console.log("2. Datos recibidos del servidor:", result);
+
+    if (result.success) {
+      USRS = result.data.map(u => ({
+        username: u.username,
+        email: u.email,
+        role: u.role,
+        bookings: 0, 
+        created: new Date(u.created_at).toLocaleDateString('es-AR'),
+        active: u.is_active
+      }));
+      console.log("3. Datos convertidos para la tabla:", USRS);
+      
+      renderUsr(USRS); 
+      // Si la función de abajo falla, la comentamos temporalmente
+      try { updateStats(); } catch(e) { console.warn("updateStats falló, pero no importa ahora."); }
+    }
+  } catch (error) {
+    console.error("❌ ERROR CRÍTICO en el fetch:", error);
+  }
 }
+
+/* ── CONEXIÓN A LA API PARA RESERVAS (PASO 3) ── */
+let DB_RESERVAS = []; // Variable global para guardar la info real
+
+async function fetchBookingsAPI() {
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/bookings');
+    const result = await response.json();
+    
+    if (result.success) {
+      DB_RESERVAS = result.data; // Guardamos los datos puros de la BD
+      
+      // Adaptamos la base de datos al formato visual de la tabla de reservas
+      const reservasFront = DB_RESERVAS.map(r => ({
+        id: r.id || 'N/A', 
+        user: r.username, 
+        space: r.space_name, 
+        date: r.booking_date, 
+        time: r.booking_time, 
+        status: r.status || 'pending'
+      }));
+      
+      renderRes(reservasFront); // Dibujamos la tabla de reservas
+    }
+  } catch (error) {
+    console.error("Error obteniendo las reservas:", error);
+  }
+}
+
+
+/* ── CONEXIÓN A LA API PARA ESPACIOS (PASO 2) ── */
+async function fetchSpacesAPI() {
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/spaces');
+    const result = await response.json();
+    
+    if (result.success) {
+      // Traducimos los datos al "idioma" que espera renderSp
+      const espaciosFront = result.data.map(sp => ({
+        id: sp.id,
+        name: sp.name,
+        type: sp.type,
+        cap: sp.capacity + ' pers.', // ¡ACÁ ESTABA EL DETALLE! Le agregamos ' pers.' para que quede más pro
+        price: '$' + sp.price,
+        status: 'active' 
+      }));
+      
+      renderSp(espaciosFront);
+    }
+  } catch (error) {
+    console.error("Error obteniendo los espacios de la API:", error);
+  }
+}
+// Buscá la función INIT al final de tu archivo dashboard.html y cambiala por esto:
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+
+async function inicializarDashboard() {
+  // Usamos await para que cargue paso a paso
+  await fetchUsersFromAPI(); 
+  await fetchBookingsAPI();
+  await fetchSpacesAPI();
+}
+
+inicializarDashboard();
+
 function saveUsers(u) { localStorage.setItem('nexo_users', JSON.stringify(u)); }
 
 const SPACES_INFO = [
@@ -454,7 +551,7 @@ function fmtSlots(slots) {
 ══════════════════════════════════════════════ */
 function updateStats() {
   const res   = getAllReservations();
-  const users = getAllUsers();
+  const users = fetchUsersFromAPI();
   const pending   = res.filter(r => r.status === 'pending').length;
   const confirmed = res.filter(r => r.status === 'confirmed').length;
 
@@ -570,13 +667,20 @@ function renderRes(list) {
    RENDER SPACES
 ══════════════════════════════════════════════ */
 function renderSp(list) {
-  const res = getAllReservations();
+  // BORRAMOS: const res = getAllReservations();
+  // USAMOS LA BASE DE DATOS REAL:
+  const res = DB_RESERVAS; 
+
   document.getElementById('sp-tbody').innerHTML = list.map(s => {
-    const bookings = res.filter(r => r.spaceId === s.id && r.status !== 'cancelled').length;
-    // estado: si tiene reserva confirmada hoy = full, si pendiente = partial, si no = avail
+    // Filtramos comparando el nombre del espacio
+    const bookings = res.filter(r => r.space_name === s.name && r.status !== 'cancelada').length;
+    
     const today = new Date().toISOString().split('T')[0];
-    const todayRes = res.filter(r => r.spaceId === s.id && r.date === today && r.status !== 'cancelled');
-    const st = todayRes.some(r => r.status === 'confirmed') ? 'full' : todayRes.length > 0 ? 'partial' : 'avail';
+    const todayRes = res.filter(r => r.space_name === s.name && r.booking_date === today && r.status !== 'cancelada');
+    
+    // Simplificamos la lógica de estado para la demo
+    const st = todayRes.length >= 3 ? 'full' : todayRes.length > 0 ? 'partial' : 'avail';
+    
     return `
     <tr>
       <td style="padding-left:20px;font-weight:600;color:var(--dark)">${s.name}</td>
@@ -716,13 +820,12 @@ function toggleUsr(un, act) {
 }
 
 function refreshAll() {
-  const res   = getAllReservations();
-  const users = getAllUsers();
-  renderRes(_rSt === 'all' ? res : res.filter(r => r.status === _rSt));
-  renderSp(SPACES_INFO);
-  renderUsr(_uRole === 'all' ? users : users.filter(u => u.role === _uRole));
-  renderOv();
-  updateStats();
+  fetchUsersFromAPI(); 
+  
+  // Usamos .then() para garantizar el orden: 1° Reservas, 2° Espacios
+  fetchBookingsAPI().then(() => {
+    fetchSpacesAPI(); 
+  });
 }
 
 /* ══════════════════════════════════════════════

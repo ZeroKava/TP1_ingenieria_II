@@ -28,8 +28,8 @@ JWT_EXPIRATION_HOURS = 2
 SUPABASE_URL = "https://kyjszgpgyykktbhsqqjg.supabase.co"
 SUPABASE_KEY = "sb_publishable_7XJYNkkzzbg7HZC7bEqv3w_zxFFxd8U"   
 
-def get_supabase() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
+# Inicializamos el cliente UNA sola vez para todo el módulo (Mejora drástica de rendimiento)
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -80,11 +80,12 @@ class ConsoleLogger(AuthObserver):
 
 class DatabaseObserver(AuthObserver):
     """Persiste cada evento de autenticación en la tabla auth_events de Supabase."""
+    def __init__(self, db_path: str = None):
+        pass # Acepta un arg opcional por compatibilidad con código viejo
 
     def update(self, event: AuthEvent) -> None:
         try:
-            supabase = get_supabase()
-            supabase.table("auth_events").insert({
+            supabase_client.table("auth_events").insert({
                 "event_type": event.event_type,
                 "payload":    json.dumps(event.payload),
                 "timestamp":  event.timestamp,
@@ -229,6 +230,8 @@ class InMemoryUserRepository(UserRepository):
 
 class SupabaseUserRepository(UserRepository):
     """Repositorio persistente usando Supabase."""
+    def __init__(self, db_path: str = None):
+        pass # Acepta db_path para no romper compatibilidad con api.py
 
     def _row_to_user(self, row: dict) -> User:
         role = row.get("role", "member")
@@ -250,48 +253,51 @@ class SupabaseUserRepository(UserRepository):
         return user
 
     def save(self, user: User) -> None:
-        supabase = get_supabase()
-        supabase.table("users").insert({
+        supabase_client.table("users").insert({
             "user_id":         user.user_id,
             "username":        user.username,
             "email":           user.email,
             "password_hash":   user.password_hash,
             "role":            user.role,
-            "is_active":       int(user.is_active),
+            "is_active":       int(user.is_active), # ← ¡Acá está la magia! Forzamos 1 o 0
             "failed_attempts": user.failed_attempts,
             "created_at":      user.created_at,
         }).execute()
 
     def find_by_username(self, username: str) -> User | None:
-        supabase = get_supabase()
-        response = supabase.table("users").select("*").eq("username", username).execute()
+        response = supabase_client.table("users").select("*").eq("username", username).execute()
         if response.data:
             return self._row_to_user(response.data[0])
         return None
 
     def find_by_email(self, email: str) -> User | None:
-        supabase = get_supabase()
-        response = supabase.table("users").select("*").eq("email", email).execute()
+        response = supabase_client.table("users").select("*").eq("email", email).execute()
         if response.data:
             return self._row_to_user(response.data[0])
         return None
-
+    
+    def get_all(self) -> list[User]:
+        """Obtiene todos los usuarios registrados en Supabase."""
+        response = supabase_client.table("users").select("*").execute()
+        if response.data:
+            return [self._row_to_user(row) for row in response.data]
+        return []
+    
     def update(self, user: User) -> None:
-        supabase = get_supabase()
-        supabase.table("users").update({
+        supabase_client.table("users").update({
             "email":           user.email,
             "password_hash":   user.password_hash,
-            "is_active":       int(user.is_active),
+            "is_active":       int(user.is_active), # ← Acá también
             "failed_attempts": user.failed_attempts,
         }).eq("username", user.username).execute()
 
 
-# Alias para mantener compatibilidad con api.py sin tocar nada más
+# Alias clave para mantener compatibilidad con el servidor Flask actual
 SQLiteUserRepository = SupabaseUserRepository
 
 
 # ═══════════════════════════════════════════════════════════════
-# SECCIÓN 5 ─ VALIDACIONES
+# SECCIÓN 5 ─ VALIDACIONES Y HASHING
 # ═══════════════════════════════════════════════════════════════
 
 class PasswordPolicy:
@@ -330,6 +336,24 @@ class InputValidator:
         if not re.match(pattern, email):
             return False, "El correo electrónico no tiene un formato válido."
         return True, ""
+        
+    @staticmethod
+    def passwords_match(password: str, confirm: str) -> tuple[bool, str]:
+        if password != confirm:
+            return False, "Las contraseñas no coinciden."
+        return True, ""
+
+
+class PasswordHasher:
+    """Clase restaurada para aislar la lógica de encriptación y no romper los tests."""
+    @staticmethod
+    def hash(plain_password: str) -> str:
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(plain_password.encode('utf-8'), salt).decode('utf-8')
+
+    @staticmethod
+    def verify(plain_password: str, hashed: str) -> bool:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed.encode('utf-8'))
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -382,13 +406,14 @@ class AuthService:
         ok, msg = InputValidator.is_valid_email(email)
         if not ok:
             errors.append(msg)
+            
+        ok, msg = InputValidator.passwords_match(password, confirm_password)
+        if not ok:
+            errors.append(msg)
 
         ok, pwd_errors = PasswordPolicy.validate(password)
         if not ok:
             errors.extend(pwd_errors)
-
-        if password != confirm_password:
-            errors.append("Las contraseñas no coinciden.")
 
         if errors:
             return AuthResult(False, "Error de validación.", errors=errors)
@@ -399,7 +424,9 @@ class AuthService:
         if self._repo.find_by_email(email):
             return AuthResult(False, "El correo ya está registrado.", errors=["Email duplicado."])
 
-        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        # Usamos nuestro PasswordHasher restaurado
+        password_hash = PasswordHasher.hash(password)
+        
         factory = UserFactoryRegistry.get(role)
         user    = factory.build(username, email, password_hash)
 
@@ -419,12 +446,13 @@ class AuthService:
 
         if not user:
             self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_FAILED, {"username": username}))
+            # FIJATE ACÁ: No hay coma al final, solo el AuthResult
             return AuthResult(False, "Credenciales incorrectas.", errors=["Usuario no encontrado."])
 
         if not user.is_active:
             return AuthResult(False, "Cuenta bloqueada. Contactá al administrador.", errors=["Cuenta bloqueada."])
 
-        if not bcrypt.checkpw(password.encode(), user.password_hash.encode()):
+        if not PasswordHasher.verify(password, user.password_hash):
             user.failed_attempts += 1
             if user.failed_attempts >= MAX_FAILED_ATTEMPTS:
                 user.is_active = False
@@ -444,4 +472,45 @@ class AuthService:
         }))
 
         token = self._generate_token(user)
+        # FIJATE ACÁ TAMBIÉN: Solo AuthResult, sin ", 200" al final
         return AuthResult(True, "Inicio de sesión exitoso.", data={**user.to_dict(), "token": token})
+
+        user.failed_attempts = 0
+        self._repo.update(user)
+
+        self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_SUCCESS, {
+            "user_id":  user.user_id,
+            "username": user.username,
+            "role":     user.role,
+        }))
+
+        token = self._generate_token(user)
+        return AuthResult(True, "Inicio de sesión exitoso.", data={**user.to_dict(), "token": token}),
+
+# ═══════════════════════════════════════════════════════════════
+# SECCIÓN 8 ─ REPOSITORIO DE RESERVAS
+# ═══════════════════════════════════════════════════════════════
+
+class BookingRepository:
+    """Repositorio para gestionar las reservas en Supabase."""
+    
+    def get_all(self) -> list[dict]:
+        """Obtiene todas las reservas del sistema (para el admin)."""
+        response = supabase_client.table("bookings").select("*").execute()
+        return response.data if response.data else []
+
+    def get_by_username(self, username: str) -> list[dict]:
+        """Obtiene solo las reservas de un usuario específico."""
+        response = supabase_client.table("bookings").select("*").eq("username", username).execute()
+        return response.data if response.data else []
+
+    def create(self, booking_data: dict) -> dict | None:
+        """Guarda una nueva reserva en la nube."""
+        response = supabase_client.table("bookings").insert(booking_data).execute()
+        return response.data[0] if response.data else None
+    
+class SpaceRepository:
+    """Repositorio para leer el catálogo de espacios en Supabase."""
+    def get_all(self) -> list[dict]:
+        response = supabase_client.table("spaces").select("*").execute()
+        return response.data if response.data else []

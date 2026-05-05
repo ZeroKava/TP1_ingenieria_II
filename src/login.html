@@ -766,93 +766,111 @@ function valP() {
   if(document.getElementById('su-confirm').value) valC();
 }
 
-/* ── LOGIN (LOCAL) ── */
-function doLogin() {
-  const btn=document.getElementById('btn-login');
-  const u=document.getElementById('login-username').value.trim();
-  const p=document.getElementById('login-password').value;
-  if(!u){setErr('login-username','err-lu','Ingresá tu usuario');return;}
-  if(!p){setErr('login-password','err-lp','Ingresá tu contraseña');return;}
-  btn.disabled=true; btn.textContent='Verificando…';
+/* ── LOGIN (CONECTADO A LA NUBE ☁️) ── */
+async function doLogin() {
+  const btn = document.getElementById('btn-login');
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value;
+  
+  if(!u){ setErr('login-username','err-lu','Ingresá tu usuario'); return; }
+  if(!p){ setErr('login-password','err-lp','Ingresá tu contraseña'); return; }
+  
+  btn.disabled = true; btn.textContent = 'Conectando al servidor... ☁️';
 
-  const users = getUsers();
-  const found = users.find(x => x.username === u);
-  if (!found) {
-    showAlert('login-alert','Usuario no encontrado.','err');
-    btn.disabled=false; btn.innerHTML='Iniciar sesión →'; return;
-  }
-  if (found.password !== p) {
-    showAlert('login-alert','Contraseña incorrecta.','err');
-    btn.disabled=false; btn.innerHTML='Iniciar sesión →'; return;
-  }
-  if (found.active === false) {
-    showAlert('login-alert','Tu cuenta está bloqueada. Contactá al administrador.','err');
-    btn.disabled=false; btn.innerHTML='Iniciar sesión →'; return;
-  }
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    
+    const result = await response.json();
 
-  const token = makeToken(found.username, found.role);
-  localStorage.setItem('nexo_token', token);
-  localStorage.setItem('nexo_user', JSON.stringify({ username: found.username, email: found.email, role: found.role }));
+    if (result.success) {
+      // Guardamos el token y los datos reales que nos manda la base de datos
+      const userData = result.data;
+      localStorage.setItem('nexo_token', userData.token);
+      localStorage.setItem('nexo_user', JSON.stringify({ 
+        username: userData.username, 
+        email: userData.email, 
+        role: userData.role 
+      }));
 
-  const dest = found.role === 'admin' ? 'dashboard.html' : 'home.html';
-  const roleLabel = found.role === 'admin' ? 'Panel de administración' : 'Inicio';
-  showSuccess('¡Bienvenido de vuelta!', `Redirigiendo a ${roleLabel}…`, `Conectado como <strong>${found.username}</strong> · ${found.role}`);
-  setTimeout(() => { window.location.href = dest; }, 1500);
+      const dest = userData.role === 'admin' ? 'dashboard.html' : 'home.html';
+      const roleLabel = userData.role === 'admin' ? 'Panel de administración' : 'Inicio';
+      showSuccess('¡Bienvenido de vuelta!', `Redirigiendo a ${roleLabel}…`, `Conectado como <strong>${userData.username}</strong> · ${userData.role}`);
+      setTimeout(() => { window.location.href = dest; }, 1500);
+    } else {
+      // Error de credenciales (incorrectas, bloqueadas, etc)
+      showAlert('login-alert', result.message || 'Credenciales incorrectas.', 'err');
+      btn.disabled = false; btn.innerHTML = 'Iniciar sesión →';
+    }
+  } catch (error) {
+    console.error("Error de conexión:", error);
+    showAlert('login-alert', 'No se pudo conectar con el servidor. ¿api.py está corriendo?', 'err');
+    btn.disabled = false; btn.innerHTML = 'Iniciar sesión →';
+  }
 }
 
-/* ── SIGNUP (LOCAL) ── */
-function doSignup() {
-  const btn=document.getElementById('btn-signup');
-  const u=document.getElementById('su-username').value.trim();
-  const m=document.getElementById('su-email').value.trim().toLowerCase();
-  const p=document.getElementById('su-password').value;
-  const c=document.getElementById('su-confirm').value;
-  btn.disabled=true; btn.textContent='Creando cuenta…';
 
+/* ── SIGNUP (CONECTADO A LA NUBE ☁️) ── */
+async function doSignup() {
+  const btn = document.getElementById('btn-signup');
+  const u = document.getElementById('su-username').value.trim();
+  const m = document.getElementById('su-email').value.trim().toLowerCase();
+  const p = document.getElementById('su-password').value;
+  const c = document.getElementById('su-confirm').value;
+
+  // Validaciones visuales (se mantienen igual)
   if (!u || u.length < 3 || !/^[a-zA-Z0-9_]+$/.test(u)) {
     showAlert('signup-alert','Nombre de usuario inválido (mín. 3 caracteres, solo letras, números y _).','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
+    return;
   }
   if (!/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(m)) {
     showAlert('signup-alert','Email inválido.','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
+    return;
   }
   if (p !== c) {
     showAlert('signup-alert','Las contraseñas no coinciden.','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
+    return;
   }
   if (p.length < 6) {
     showAlert('signup-alert','La contraseña debe tener al menos 6 caracteres.','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
+    return;
   }
 
-  const users = getUsers();
-  if (users.find(x => x.username.toLowerCase() === u.toLowerCase())) {
-    showAlert('signup-alert','Ese nombre de usuario ya está en uso.','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
+  btn.disabled = true; btn.textContent = 'Creando cuenta en la base de datos... ☁️';
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, email: m, password: p })
+    });
+    
+    const result = await response.json();
+
+    if (result.success) {
+      showSuccess('¡Cuenta creada!', 'Tu usuario ya está registrado en Supabase. Redirigiendo al acceso…', `<strong>${u}</strong> · ${m} · Miembro`);
+      // Vaciamos los campos y mandamos al usuario a que inicie sesión
+      setTimeout(() => { 
+        document.getElementById('su-username').value = '';
+        document.getElementById('su-password').value = '';
+        document.getElementById('su-confirm').value = '';
+        backToForm(); 
+        switchTab('login'); 
+      }, 2500);
+      btn.disabled = false; btn.innerHTML = 'Crear cuenta →';
+    } else {
+      // Error (ej: el usuario ya existe en Supabase)
+      showAlert('signup-alert', result.message || 'Error al registrar.', 'err');
+      btn.disabled = false; btn.innerHTML = 'Crear cuenta →';
+    }
+  } catch (error) {
+    console.error("Error de conexión:", error);
+    showAlert('signup-alert', 'No se pudo conectar con el servidor.', 'err');
+    btn.disabled = false; btn.innerHTML = 'Crear cuenta →';
   }
-  if (users.find(x => x.email === m)) {
-    showAlert('signup-alert','Ese email ya está registrado.','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
-  }
-
-  // Verificar que no intente registrarse como admin
-  if (ADMIN_ACCOUNTS.find(a => a.username.toLowerCase() === u.toLowerCase())) {
-    showAlert('signup-alert','Ese nombre de usuario está reservado.','err');
-    btn.disabled=false; btn.innerHTML='Crear cuenta →'; return;
-  }
-
-  const newUser = { username: u, email: m, password: p, role: 'member', created: new Date().toLocaleDateString('es-AR'), active: true };
-  users.push(newUser);
-  saveUsers(users);
-
-  const token = makeToken(u, 'member');
-  localStorage.setItem('nexo_token', token);
-  localStorage.setItem('nexo_user', JSON.stringify({ username: u, email: m, role: 'member' }));
-
-  showSuccess('¡Cuenta creada!', 'Tu cuenta fue registrada. Redirigiendo al inicio…', `<strong>${u}</strong> · ${m} · Miembro`);
-  setTimeout(() => { window.location.href = 'home.html'; }, 1800);
-  btn.disabled=false; btn.innerHTML='Crear cuenta →';
 }
 
 function showSuccess(title,msg,info) {
