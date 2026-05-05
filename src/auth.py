@@ -472,20 +472,7 @@ class AuthService:
         }))
 
         token = self._generate_token(user)
-        # FIJATE ACÁ TAMBIÉN: Solo AuthResult, sin ", 200" al final
         return AuthResult(True, "Inicio de sesión exitoso.", data={**user.to_dict(), "token": token})
-
-        user.failed_attempts = 0
-        self._repo.update(user)
-
-        self._event_bus.publish(AuthEvent(AuthEvent.LOGIN_SUCCESS, {
-            "user_id":  user.user_id,
-            "username": user.username,
-            "role":     user.role,
-        }))
-
-        token = self._generate_token(user)
-        return AuthResult(True, "Inicio de sesión exitoso.", data={**user.to_dict(), "token": token}),
 
 # ═══════════════════════════════════════════════════════════════
 # SECCIÓN 8 ─ REPOSITORIO DE RESERVAS
