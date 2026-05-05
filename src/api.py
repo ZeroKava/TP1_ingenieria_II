@@ -6,7 +6,8 @@
 =============================================================
 """
 
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 from auth import (
@@ -14,14 +15,19 @@ from auth import (
     ConsoleLogger,
     DatabaseObserver,
     EmailNotifier,
-    SupabaseUserRepository,  # ← 1. Importamos explícitamente Supabase
+    SupabaseUserRepository,
     AuthService,
     BookingRepository,
     SpaceRepository,
 )
 
-app = Flask(__name__)
-CORS(app)
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder=SRC_DIR, static_url_path="")
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+@app.get("/")
+def index():
+    return send_from_directory(SRC_DIR, "login.html")
 
 # Composición del sistema con Supabase
 event_bus = AuthEventBus()
