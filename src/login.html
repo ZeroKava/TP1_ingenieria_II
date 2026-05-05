@@ -842,10 +842,10 @@ async function doSignup() {
   btn.disabled = true; btn.textContent = 'Creando cuenta en la base de datos... ☁️';
 
   try {
-    const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+    const response = await fetch('http://127.0.0.1:5000/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: u, email: m, password: p })
+      body: JSON.stringify({ username: u, email: m, password: p, confirm_password: c })
     });
     
     const result = await response.json();
