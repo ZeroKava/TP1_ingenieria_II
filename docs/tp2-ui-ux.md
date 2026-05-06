@@ -3,7 +3,7 @@
 ## A1. Prototipado en Figma
 El prototipo de **SpicyTech** ha sido diseñado para reflejar el flujo crítico de reserva de recursos, asegurando una navegación intuitiva y una jerarquía visual clara.
 
-*   **Enlace al prototipo navegable:** [(https://mobile-excel-62702710.figma.site/)]
+*   **Enlace al prototipo navegable:** (https://mobile-excel-62702710.figma.site/)
 
 ### Vistas Principales del Sistema
 *A continuación se presentan las capturas de pantalla de las tres pantallas que cubren el caso de uso principal.*
