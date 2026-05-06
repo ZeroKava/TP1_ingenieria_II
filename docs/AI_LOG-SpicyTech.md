@@ -206,3 +206,38 @@ La estructura de los componentes en los diferentes marcos responsivos y la fidel
 
 **¿Qué descartamos y por qué?**
 Descartamos la iconografía sugerida por la IA, manteniendo nuestros SVG originales para asegurar la consistencia con el desarrollo previo.
+
+## Entrada 011 — Semana 7
+Fecha: 06/05/2026
+Herramienta: Gemini
+Responsable: Scrum Master — Octavio García
+Eje temático: Gestión de Proyecto / Documentación Final TP2
+
+¿Para qué se usó?
+Consolidar toda la información técnica producida por los diferentes roles del equipo (Jesus, Matías y Manrique) en un informe final coherente. Se utilizó específicamente para estructurar el archivo docs/tp2-ui-ux.md y para definir el esqueleto del informe PDF que se sube al aula virtual, asegurando que ningún punto de la consigna (ISO, TDD, CI/CD) quedara fuera.
+
+¿Qué generó la IA?
+
+Estructura del Informe: Un índice detallado alineado con las consignas del TP2, organizando la Parte A (UI/UX) y la Parte B (Testing) de forma profesional.
+
+Sección de Auditoría ISO 9241-11: Redacción técnica de las métricas de eficacia y eficiencia basadas en las simulaciones realizadas sobre el prototipo de Figma.
+
+Justificación ISO 13407: Un párrafo argumentativo que vincula nuestro proceso de diseño iterativo con el estándar internacional de diseño centrado en el usuario.
+
+Guía de Solución de Entorno: Un borrador de los pasos de instalación de dependencias, adaptado a los problemas de compatibilidad detectados durante la semana.
+
+¿Qué aceptamos tal cual?
+
+La tabla de auditoría de usabilidad, ya que los criterios de "Tasa de éxito" (Eficacia) y "Tiempo en tarea" (Eficiencia) son los estándares que mejor se adaptan a nuestro sistema de reservas.
+
+La estructura jerárquica para el archivo tp2-ui-ux.md.
+
+¿Qué modificamos y por qué?
+
+Configuración del Entorno: Forzamos la redacción para especificar el uso de Python 3.13 y el comando py -3.13. La IA sugería inicialmente versiones genéricas, pero debido a los errores de "Build Tools" detectados en la práctica, ajustamos la documentación para que sea una guía de instalación infalible para el equipo y los evaluadores.
+
+Contexto de Usuario: Refinamos la descripción de los usuarios objetivo (Sección A2) para que coincida exactamente con el alcance de SpicyTech, eliminando generalidades sobre otros tipos de sistemas.
+
+¿Qué descartamos y por qué?
+
+Descartamos una propuesta de la IA para incluir métricas de "Satisfacción" mediante encuestas de escala Likert, ya que en esta fase de prototipo no contamos con usuarios reales suficientes para que el dato sea estadísticamente válido; decidimos priorizar Eficacia y Eficiencia que son medibles mediante observación técnica.
