@@ -67,6 +67,14 @@ A continuación se detallan los 6 casos de prueba diseñados utilizando partici�
     *   **Resultado esperado:** `False` / Excepción: "La hora de fin debe ser posterior a la hora de inicio".
 ---
 
+## B2. Framework de pruebas y automatización CI/CD
+
+### Evidencia Audiovisual
+A continuación se adjunta el video con la ejecución de las pruebas unitarias en el entorno local:
+
+**[Ver video de ejecución de pruebas - SpicyTech](https://youtu.be/ZY8X9JZbet4)**
+---
+
 ## B3. Diseño Conceptual de Pruebas de Integración
 
 ### 1. Dependencias Externas Identificadas
