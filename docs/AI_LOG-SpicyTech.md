@@ -244,3 +244,30 @@ Contexto de Usuario: Refinamos la descripción de los usuarios objetivo (Secció
 ¿Qué descartamos y por qué?
 
 Descartamos una propuesta de la IA para incluir métricas de "Satisfacción" mediante encuestas de escala Likert, ya que en esta fase de prototipo no contamos con usuarios reales suficientes para que el dato sea estadísticamente válido; decidimos priorizar Eficacia y Eficiencia que son medibles mediante observación técnica.
+
+## Entrada 012 — Semana 7
+
+**Fecha:** 06/05/2026
+**Herramienta:** Claude
+**Responsable:** Dev Lead / QA — Calamari Santino
+**Eje temático:** Eje 2 / Pruebas Unitarias y CI/CD
+
+**¿Para qué se usó?**
+Redactar la justificación técnica de los frameworks de testing en `docs/tp2-pruebas-unitarias.md`, configurar el pipeline de CI/CD en `.github/workflows/test.yml` para automatizar la ejecución de los tests unitarios en cada push y pull request a main, y preparar el guión y estructura del video de evidencia.
+
+**¿Qué generó la IA?**
+1. **Justificación de frameworks:** Redacción de la elección de pytest (backend), Cypress (frontend E2E) y unittest.mock + SQLite en memoria (integración), con argumentos técnicos concretos aplicados al stack real del proyecto (Python/Flask/Vanilla JS).
+2. **Archivo `test.yml`:** Configuración completa del workflow de GitHub Actions con los pasos de checkout, setup de Python 3.11, instalación de dependencias (pytest, bcrypt, PyJWT, flask, flask-sqlalchemy, supabase) y ejecución de `pytest tests/unit/tests.py -v`.
+3. **Documentación técnica:** Contenido del archivo `tests/unit/test.md` explicando cada clase de prueba, sus dependencias y las decisiones de diseño del módulo de tests.
+4. **Guión del video:** Estructura y texto para el video de evidencia de 2-3 minutos mostrando los tests corriendo en verde en la terminal y el pipeline exitoso en GitHub Actions.
+
+**¿Qué aceptamos tal cual?**
+La justificación de los tres frameworks y su relación con el stack tecnológico del proyecto. El archivo `test.yml` final (luego de resolver los errores de dependencias). La documentación técnica de `test.md`.
+
+**¿Qué modificamos y por qué?**
+- **Dependencias del workflow:** El `test.yml` requirió múltiples iteraciones para identificar todos los módulos necesarios (`bcrypt`, `PyJWT`, `supabase`), ya que el proyecto no tiene `requirements.txt`. Cada error del runner de GitHub Actions fue analizado y corregido manualmente hasta lograr el workflow verde.
+- **Guión del video:** Adaptamos el guión sugerido agregando las indicaciones exactas de qué mostrar en pantalla y qué comandos ejecutar en cada momento, para que la evidencia cubra todos los requisitos de la consigna.
+
+**¿Qué descartamos y por qué?**
+Descartamos la sugerencia de usar `supabase-py` como nombre del paquete pip, ya que no existe en el índice de PyPI. El nombre correcto es `supabase` y fue verificado empíricamente en el runner de GitHub Actions.
+
