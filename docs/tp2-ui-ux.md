@@ -11,13 +11,9 @@ El prototipo de **SpicyTech** ha sido diseñado para reflejar el flujo crítico 
 
 | Pantalla 1: Panel de Control / Inicio | Pantalla 2: Formulario de Reserva | Pantalla 3: Confirmación de Éxito |
 | :---: | :---: | :---: |
-| ![Inicio](<img width="1540" height="895" alt="iphone 16 inicio" src="https://github.com/user-attachments/assets/89510abf-fc2d-4296-80ef-0ef8dc6469e7" />, <img width="1919" height="984" alt="PC inicio" src="https://github.com/user-attachments/assets/638dd97c-01ee-4a6e-a44e-d4989e1d82a1" />, <img width="1549" height="896" alt="Tablet inicio" src="https://github.com/user-attachments/assets/9e6aef5b-366f-4aa6-bbe4-f081b586e6f7" /> ) | ![Formulario](<img width="1553" height="898" alt="Tablet reserva" src="https://github.com/user-attachments/assets/07ab8649-f9a1-4e77-83b1-8f403e2c6735" />
-<img width="1919" height="990" alt="PC reserva" src="https://github.com/user-attachments/assets/8e58ac7d-bd53-4881-8c90-05a0068df664" />
-<img width="1552" height="893" alt="iphone 16 reserva" src="https://github.com/user-attachments/assets/9fefc6f3-ec28-4b44-90ef-0c8ff8168d2b" />
-) | ![Confirmacion](<img width="1547" height="897" alt="iphone 16 reserva confirmado" src="https://github.com/user-attachments/assets/aa7ed903-a272-4fd2-b591-fbedbc84a658" />
-<img width="1547" height="890" alt="Tablet reserva exito" src="https://github.com/user-attachments/assets/164c68e6-c629-4aa8-b03d-bf7a970d8d85" />
-<img width="1918" height="989" alt="PC reserva exito" src="https://github.com/user-attachments/assets/313b1293-0662-4017-a9a5-3739b8e3171d" />
-) |
+| ![Inicio](<img width="1540" height="895" alt="iphone 16 inicio" src="https://github.com/user-attachments/assets/89510abf-fc2d-4296-80ef-0ef8dc6469e7" />, <img width="1919" height="984" alt="PC inicio" src="https://github.com/user-attachments/assets/638dd97c-01ee-4a6e-a44e-d4989e1d82a1" />, <img width="1549" height="896" alt="Tablet inicio" src="https://github.com/user-attachments/assets/9e6aef5b-366f-4aa6-bbe4-f081b586e6f7" /> ) | ![Formulario](<img width="1553" height="898" alt="Tablet reserva" src="https://github.com/user-attachments/assets/07ab8649-f9a1-4e77-83b1-8f403e2c6735" />,
+<img width="1919" height="990" alt="PC reserva" src="https://github.com/user-attachments/assets/8e58ac7d-bd53-4881-8c90-05a0068df664" />, <img width="1552" height="893" alt="iphone 16 reserva" src="https://github.com/user-attachments/assets/9fefc6f3-ec28-4b44-90ef-0c8ff8168d2b" />) 
+| ![Confirmacion](<img width="1547" height="897" alt="iphone 16 reserva confirmado" src="https://github.com/user-attachments/assets/aa7ed903-a272-4fd2-b591-fbedbc84a658" />,<img width="1547" height="890" alt="Tablet reserva exito" src="https://github.com/user-attachments/assets/164c68e6-c629-4aa8-b03d-bf7a970d8d85" />,<img width="1918" height="989" alt="PC reserva exito" src="https://github.com/user-attachments/assets/313b1293-0662-4017-a9a5-3739b8e3171d" />) |
 
 ---
 
