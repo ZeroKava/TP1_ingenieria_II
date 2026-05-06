@@ -178,28 +178,28 @@ Eje temático: Pruebas Unitarias
 ¿Qué aceptamos tal cual? Los 6 casos de prueba con sus assertions, el uso de pytest.raises con match= para validar los mensajes de excepción, la estructura en clases por función, y los docstrings con técnica, entrada y resultado esperado.
 
 ¿Qué modificamos y por qué? Nada.
-Entrada 010 — Semana 7
-Fecha: 05/05/2026
-Herramienta: Figma (AI Design / HTML to Design)
-Responsable: UX Dev — Santiago Manrique
-Eje temático: Eje 1 / Desarrollo Front End y UI/UX
 
-¿Para qué se usó?
-Adaptar los archivos HTML ya maquetados a un entorno de diseño en Figma para asegurar que el sitio sea responsivo y generar un prototipo interactivo compartible bajo la ruta docs/tp2-ui-ux.md.
+## Entrada 010 — Semana 7
 
-¿Qué generó la IA?
+**Fecha:** 05/05/2026
+**Herramienta:** Figma (AI Design / HTML to Design)
+**Responsable:** UX Dev — Santiago Manrique
+**Eje temático:** Eje 1 / Desarrollo Front End y UI/UX
 
-Una estructura de diseño en Figma basada en el código HTML/CSS existente, organizando los elementos en capas y Auto Layouts.
+**¿Para qué se usó?**
+Adaptar los archivos HTML maquetados a un entorno de Figma para asegurar que el sitio sea responsivo y generar un enlace de prototipo interactivo para el archivo `docs/tp2-ui-ux.md`.
 
-Adaptaciones responsivas automáticas para resoluciones de Mobile, Tablet y Desktop.
+**¿Qué generó la IA?**
+1. Conversión de código HTML/CSS a capas de diseño en Figma con *Auto Layout*.
+2. Adaptaciones del layout para resoluciones Mobile, Tablet y Desktop.
+3. Creación de un enlace de visualización e interacción para el prototipo.
 
-Un enlace de prototipo funcional (Figma Link) para visualizar e interactuar con la interfaz en tiempo real.
+**¿Qué aceptamos tal cual?**
+La estructura de los componentes en los diferentes marcos responsivos y la fidelidad visual respecto al código original.
 
-¿Qué aceptamos tal cual?
-La disposición de los componentes dentro de los marcos responsivos y la jerarquía visual que mantuvo la fidelidad respecto al código original. El enlace de visualización generado para la documentación técnica.
+**¿Qué modificamos y por qué?**
+- **Interacciones:** Ajustamos manualmente el flujo de navegación entre pantallas para que coincida con la lógica de negocio del coworking.
+- **Breakpoints:** Refinamos márgenes en la versión mobile para evitar superposición de elementos en el menú.
 
-¿Qué modificamos y por qué?
-nada.
-
-¿Qué descartamos y por qué?
-Descartamos la propuesta de la IA de utilizar una librería de iconos externa y decidimos mantener los SVG que ya teníamos integrados en el código, para evitar inconsistencias visuales entre el diseño de Figma y el sitio web real.
+**¿Qué descartamos y por qué?**
+Descartamos la iconografía sugerida por la IA, manteniendo nuestros SVG originales para asegurar la consistencia con el desarrollo previo.
