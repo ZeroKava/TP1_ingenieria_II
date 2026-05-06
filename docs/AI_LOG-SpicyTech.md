@@ -169,8 +169,11 @@ No fue necesario descartar nada, ya que la salida se configuró para cumplir est
 ## Entrada 009 — Semana 6
 
 **Fecha:** 01/05/2026
+
 **Herramienta:** Claude
+
 **Responsable:** Dev Lead — Matías Polcowñuk
+
 **Eje temático:** Pruebas Unitarias
 
 
