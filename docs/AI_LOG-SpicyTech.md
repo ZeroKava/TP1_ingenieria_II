@@ -166,10 +166,13 @@ No fue necesario descartar nada, ya que la salida se configuró para cumplir est
 
 **¿Qué descartamos y por qué?** Se descartaron sugerencias iniciales de usar herramientas de testing pagas o de alta complejidad (como Selenium o JMeter) en favor de opciones más ágiles y modernas como Cypress y Locust, priorizando la facilidad de mantenimiento y la curva de aprendizaje del equipo.
 
-Fecha: 01/05/2026
-Herramienta: Claude
-Responsable: Dev Lead — Matías Polcowñuk
-Eje temático: Pruebas Unitarias
+## Entrada 009 — Semana 6
+
+**Fecha:** 01/05/2026
+**Herramienta:** Claude
+**Responsable:** Dev Lead — Matías Polcowñuk
+**Eje temático:** Pruebas Unitarias
+
 
 ¿Para qué se usó? Crear las seis pruebas unitarias en pytest
 
