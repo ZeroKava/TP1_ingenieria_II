@@ -10,7 +10,7 @@ El prototipo de **SpicyTech** ha sido diseñado para reflejar el flujo crítico 
 
 | Pantalla 1: Panel de Control / Inicio | Pantalla 2: Formulario de Reserva | Pantalla 3: Confirmación de Éxito |
 | :---: | :---: | :---: |
-| ![Inicio](img/PC%20inicio.png) | ![Formulario](img/PC%20reserva.png) | ![Confirmacion](img/PC%20reserva%20exito.png) |
+| ![Inicio]( design/img/PC%inicio.png) | ![Formulario](img/PC%20reserva.png) | ![Confirmacion](img/PC%20reserva%20exito.png) |
 
 ---
 
