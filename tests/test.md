@@ -99,3 +99,8 @@ Testear `log_in()` de forma aislada es el siguiente paso planificado. Los tests 
 
 **¿Por qué se usa `unittest.TestCase` con pytest?**  
 Los tests están escritos con `unittest.TestCase` pero pytest los descubre y ejecuta sin problema. Esto permite usar `assertFalse`, `assertEqual`, `assertRaises` y demás métodos nativos de unittest mientras se aprovecha la salida visual y el reporte de pytest.
+
+## Video evidencia de los test 
+
+link yt: https://www.youtube.com/watch?v=ZY8X9JZbet4
+
