@@ -178,5 +178,28 @@ Eje temático: Pruebas Unitarias
 ¿Qué aceptamos tal cual? Los 6 casos de prueba con sus assertions, el uso de pytest.raises con match= para validar los mensajes de excepción, la estructura en clases por función, y los docstrings con técnica, entrada y resultado esperado.
 
 ¿Qué modificamos y por qué? Nada.
+Entrada 010 — Semana 7
+Fecha: 05/05/2026
+Herramienta: Figma (AI Design / HTML to Design)
+Responsable: UX Dev — Santiago Manrique
+Eje temático: Eje 1 / Desarrollo Front End y UI/UX
 
-¿Qué descartamos y por qué? Nada.
+¿Para qué se usó?
+Adaptar los archivos HTML ya maquetados a un entorno de diseño en Figma para asegurar que el sitio sea responsivo y generar un prototipo interactivo compartible bajo la ruta docs/tp2-ui-ux.md.
+
+¿Qué generó la IA?
+
+Una estructura de diseño en Figma basada en el código HTML/CSS existente, organizando los elementos en capas y Auto Layouts.
+
+Adaptaciones responsivas automáticas para resoluciones de Mobile, Tablet y Desktop.
+
+Un enlace de prototipo funcional (Figma Link) para visualizar e interactuar con la interfaz en tiempo real.
+
+¿Qué aceptamos tal cual?
+La disposición de los componentes dentro de los marcos responsivos y la jerarquía visual que mantuvo la fidelidad respecto al código original. El enlace de visualización generado para la documentación técnica.
+
+¿Qué modificamos y por qué?
+nada.
+
+¿Qué descartamos y por qué?
+Descartamos la propuesta de la IA de utilizar una librería de iconos externa y decidimos mantener los SVG que ya teníamos integrados en el código, para evitar inconsistencias visuales entre el diseño de Figma y el sitio web real.
