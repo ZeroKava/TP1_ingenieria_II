@@ -1,3 +1,4 @@
+
 # Parte A: Diseño de Interfaz Centrado en el Usuario (Eje 3)
 
 ## A1. Prototipado en Figma
@@ -10,7 +11,7 @@ El prototipo de **SpicyTech** ha sido diseñado para reflejar el flujo crítico 
 
 | Pantalla 1: Panel de Control / Inicio | Pantalla 2: Formulario de Reserva | Pantalla 3: Confirmación de Éxito |
 | :---: | :---: | :---: |
-| ![Inicio]( design/img/PC%inicio.png) | ![Formulario](img/PC%20reserva.png) | ![Confirmacion](img/PC%20reserva%20exito.png) |
+| ![Inicio](<img width="1540" height="895" alt="iphone 16 inicio" src="https://github.com/user-attachments/assets/89510abf-fc2d-4296-80ef-0ef8dc6469e7" />, <img width="1919" height="984" alt="PC inicio" src="https://github.com/user-attachments/assets/638dd97c-01ee-4a6e-a44e-d4989e1d82a1" />, <img width="1549" height="896" alt="Tablet inicio" src="https://github.com/user-attachments/assets/9e6aef5b-366f-4aa6-bbe4-f081b586e6f7" /> ) | ![Formulario](img/PC%20reserva.png) | ![Confirmacion](img/PC%20reserva%20exito.png) |
 
 ---
 
