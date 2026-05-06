@@ -207,10 +207,13 @@ La estructura de los componentes en los diferentes marcos responsivos y la fidel
 **¿Qué descartamos y por qué?**
 Descartamos la iconografía sugerida por la IA, manteniendo nuestros SVG originales para asegurar la consistencia con el desarrollo previo.
 
-## Entrada 011 — Semana 7
+Entrada 011 — Semana 7
 Fecha: 06/05/2026
+
 Herramienta: Gemini
+
 Responsable: Scrum Master — Octavio García
+
 Eje temático: Gestión de Proyecto / Documentación Final TP2
 
 ¿Para qué se usó?
