@@ -3,9 +3,9 @@
 ##  Cuestionario de Verificación y Validación (V&V) Aplicado a Spicy Tech
 
 ### 1. Verificación vs Validación
-* **Verificación (*¿Estamos construyendo el producto correctamente?*):** Comprobación técnica de que el software responde fielmente a las especificaciones de diseño y requerimientos lógicos sin introducir fallas en el código.
+* **Verificación (*Verificamos si estamos construyendo el producto con el plano y las herramientas correctas*):** Comprobación técnica de que el software responde fielmente a las especificaciones de diseño y requerimientos lógicos sin introducir fallas en el código.
     * *Ejemplo en nuestro proyecto Spicy Tech:* Implementar una prueba unitaria para verificar que la función constructora de tarifas calcule correctamente el valor neto sumando las horas reservadas por el valor base de la sala de coworking, sin bugs de redondeo o desbordamiento de tipos.
-* **Validación (*¿Estamos construyendo el producto correcto?*):** Evaluación de si el software en funcionamiento satisface las necesidades reales del negocio y del usuario final dentro de su entorno operativo.
+* **Validación (*Estamos haciendo el producto correcto para nuestro cliente?*):** Evaluación de si el software en funcionamiento satisface las necesidades reales del negocio y del usuario final dentro de su entorno operativo.
     * *Ejemplo en nuestro proyecto Spicy Tech:* Someter la interfaz del flujo de reservas a un test con un administrador real de un coworking para certificar que la planilla horaria visual le permite organizar el espacio físico de forma fluida y sin confusiones operacionales.
 
 ### 2. Planificación de V&V en un Sprint de 1 Semana
