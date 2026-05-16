@@ -4,9 +4,9 @@
 
 ### 1. Verificación vs Validación
 * **Verificación (*¿Estamos construyendo el producto correctamente?*):** Comprobación técnica de que el software responde fielmente a las especificaciones de diseño y requerimientos lógicos sin introducir fallas en el código.
-    * *Ejemplo en Spicy Tech:* Implementar una prueba unitaria para verificar que la función constructora de tarifas calcule correctamente el valor neto sumando las horas reservadas por el valor base de la sala de coworking, sin bugs de redondeo o desbordamiento de tipos.
+    * *Ejemplo en nuestro proyecto Spicy Tech:* Implementar una prueba unitaria para verificar que la función constructora de tarifas calcule correctamente el valor neto sumando las horas reservadas por el valor base de la sala de coworking, sin bugs de redondeo o desbordamiento de tipos.
 * **Validación (*¿Estamos construyendo el producto correcto?*):** Evaluación de si el software en funcionamiento satisface las necesidades reales del negocio y del usuario final dentro de su entorno operativo.
-    * *Ejemplo en Spicy Tech:* Someter la interfaz del flujo de reservas a un test con un administrador real de un coworking para certificar que la planilla horaria visual le permite organizar el espacio físico de forma fluida y sin confusiones operacionales.
+    * *Ejemplo en nuestro proyecto Spicy Tech:* Someter la interfaz del flujo de reservas a un test con un administrador real de un coworking para certificar que la planilla horaria visual le permite organizar el espacio físico de forma fluida y sin confusiones operacionales.
 
 ### 2. Planificación de V&V en un Sprint de 1 Semana
 Si tuviéramos que planificar las actividades de V&V para el próximo sprint de desarrollo de **Spicy Tech**, considerando la alta restricción de tiempo (1 semana), nos enfocaríamos concretamente en el **módulo de reservas y asignación de roles**:
@@ -22,7 +22,7 @@ Si tuviéramos que planificar las actividades de V&V para el próximo sprint de 
 
 ### 4. Análisis Estático Automatizado
 * **Herramienta de referencia:** `ESLint` (para el frontend en React) o `Pylint` (si se utiliza Python en el backend).
-* **Errores específicos en Spicy Tech:** Analiza el código fuente como texto plano sin ejecutar el programa. En nuestro sistema de coworking, esta herramienta detectaría tempranamente si un desarrollador importó un hook de conexión a la pasarela de pagos pero olvidó invocarlo (código muerto), si se dejaron bloques `try/catch` vacíos al intentar conectar con la base de datos (lo que silenciaría errores críticos de servidor), o si se instanció una variable de sesión de usuario que nunca se lee, optimizando la memoria antes del despliegue.
+* **Errores específicos en nuestro proyecto Spicy Tech:** Analiza el código fuente como texto plano sin ejecutar el programa. En nuestro sistema de coworking, esta herramienta detectaría tempranamente si un desarrollador importó un hook de conexión a la pasarela de pagos pero olvidó invocarlo (código muerto), si se dejaron bloques `try/catch` vacíos al intentar conectar con la base de datos (lo que silenciaría errores críticos de servidor), o si se instanció una variable de sesión de usuario que nunca se lee, optimizando la memoria antes del despliegue.
 
 ### 5. Métodos Formales de Verificación
 * **Imprescindibles en:** Sistemas de misión crítica o vida crítica donde un fallo de software causa catástrofes físicas o financieras humanas (sistemas aeroespaciales, dispositivos médicos autónomos, algoritmos core de compensación bancaria masiva).
