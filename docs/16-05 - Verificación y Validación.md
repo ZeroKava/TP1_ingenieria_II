@@ -17,8 +17,8 @@ Este tipo de planificaciones son una sección estratégica donde se define cómo
 ### 3. Inspecciones de Software vs Pruebas Automáticas
 * **Diferencia Clave:** La **Inspección de código** es un proceso estático y humano (ej. *Code Reviews* a través de *Pull Requests*) enfocado en evaluar la calidad del diseño arquitectónico, legibilidad y mantenibilidad. La **Prueba automática** es un proceso dinámico y computacional donde se ejecuta un fragmento de código aislado con entradas y salidas predefinidas de forma repetitiva.
 * **Aplicación en Spicy Tech:**
-    * *Cuándo conviene Inspección:* Al diseñar la estructura de los middlewares de autenticación y los decoradores de **gestión de roles** en la API. Una revisión por pares humana es superior para detectar vulnerabilidades lógicas de seguridad (como saltos de permisos o IDOR) que las pruebas automáticas suelen pasar por alto.
-    * *Cuándo convienen Pruebas Automáticas:* Al realizar cambios en los modelos de datos o agregar nuevos tipos de membresías (ej. pase corporativo). Ejecutar tests automáticos nos permite hacer **pruebas de regresión** instantáneas para asegurar que el nuevo código no rompió la lógica de reservas básicas que ya funcionaba bien.
+    * *Cuándo nos conviene una Inspección?:* Al diseñar la estructura de los middlewares de autenticación y los decoradores de **gestión de roles** en la API. Una revisión por pares humana es superior para detectar vulnerabilidades lógicas de seguridad (como saltos de permisos o IDOR) que las pruebas automáticas suelen pasar por alto.
+    * *Cuándo nos convienen Pruebas Automáticas?:* Al realizar cambios en los modelos de datos o agregar nuevos tipos de membresías (ej. pase corporativo). Ejecutar tests automáticos nos permite hacer **pruebas de regresión** instantáneas para asegurar que el nuevo código no rompió la lógica de reservas básicas que ya funcionaba bien.
 
 ### 4. Análisis Estático Automatizado
 * **Herramienta de referencia:** `ESLint` (para el frontend en React) o `Pylint` (si se utiliza Python en el backend).
