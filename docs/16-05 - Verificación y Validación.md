@@ -31,3 +31,49 @@ Este tipo de planificaciones son una sección estratégica donde se define cómo
 ### 6. Reuniones de Validación en Frameworks Ágiles (Scrum/XP)
 * **Rol del Product Owner (PO) en la Sprint Review:** El PO actúa como el validador supremo del incremento de software. Su función en la demo de Spicy Tech no es evaluar el código, sino juzgar si las funcionalidades de reserva de salas construidas durante la semana cumplen con los criterios de aceptación y si realmente aportan el valor estratégico que el negocio del coworking necesita.
 * **Relación con las Pruebas Automatizadas:** Las pruebas automáticas actúan como un filtro higiénico de verificación técnica previa. Al garantizar robóticamente que el servidor de Spicy Tech es estable y que no va a colapsar por bugs básicos en plena presentación, le permiten al PO y a los stakeholders clave enfocar la discusión de la Sprint Review al 100% en la **validación funcional y usabilidad de negocio**, maximizando el valor del feedback recibido.
+
+
+## 7. Plan de Verificación y Validación (V&V) a Escala — Spicy Tech
+
+---
+
+### SECCIÓN 1: Verificación vs Validación
+
+1.  **Verificación actual en el proyecto:** Ejecutamos de manera automatizada una suite de pruebas unitarias sobre las funciones controladoras del backend para verificar que el cálculo del precio neto de una reserva de coworking (horas seleccionadas multiplicadas por la tarifa base del espacio) arroje el valor matemático exacto antes de impactar en la base de datos.
+2.  **Validación planificada con el Product Owner:** Planificamos realizar una simulación interactiva junto al Product Owner utilizando un entorno de pruebas (*Staging*) recreando una situación de alta demanda simultánea, para validar si la interfaz de usuario de Spicy Tech responde de forma intuitiva, no genera confusión al mostrar los escritorios ocupados y cumple con las expectativas del negocio en tiempo real.
+
+---
+
+### SECCIÓN 2: Planificación de V&V (Cronograma de Sprints)
+
+A continuación se detalla la planificación de actividades de aseguramiento de la calidad para el ciclo actual y el subsiguiente:
+
+| Sprint | Actividad de V&V | Técnica | Responsable | Herramienta |
+| :--- | :--- | :--- | :--- | :--- |
+| **Actual** | Revisión de la lógica de los middlewares de control de acceso y validación de tokens de sesión. | Inspección estática por pares (*Code Review*) | Backend Developer | GitHub Pull Requests & Checklist OWASP |
+| **Próximo** | Evaluación del comportamiento transaccional del módulo de reservas bajo concurrencia masiva simultánea. | Pruebas de estrés y carga automatizadas | QA / Tester Lead | Apache JMeter |
+
+---
+
+### SECCIÓN 3: Inspección y Análisis Estático
+
+* **a) Módulo prioritario para inspección:** Inspeccionaríamos primero el módulo del **Controlador de Autenticación y Gestión de Roles** (`AuthController`). Al ser un sistema comercial basado en roles donde los clientes manejan datos de facturación y los administradores tienen control total de las salas, es el componente más crítico. Un error de lógica humana en los middlewares o decoradores de permisos podría provocar una escalada de privilegios (IDOR), exponiendo datos privados o permitiendo acciones destructivas no autorizadas.
+* **b) Herramienta de análisis estático y regla prioritaria:** Utilizaremos **ESLint** (si el stack frontend es React) o **Pylint** (para backend en Python). La primera regla estricta que aplicaríamos es `no-unused-vars` (o `unused-import` en Python). Esta regla bloquea de manera automática cualquier despliegue si detecta que se importó una función, variable de sesión o hook (como el de conexión a la pasarela de pagos externos) pero nunca se invocó en el código ejecutable, evitando subir código "muerto" o incompleto.
+
+---
+
+### SECCIÓN 4: Método Formal Conceptual (Invariantes de Software)
+
+* **a) Descripción del Invariante en Spicy Tech:**
+    En la clase o entidad `Reserva`, se establece el siguiente invariante lógico fundamental: *“Para cualquier instancia válida de una reserva, la propiedad `fecha_fin` debe ser estrictamente posterior en el tiempo a la propiedad `fecha_inicio`, y la duración resultante (`fecha_fin - fecha_inicio`) debe ser mayor o igual a la fracción mínima parametrizada (ej. 1 hora).”*
+* **b) Estrategia de prueba unitaria para verificar la propiedad:**
+    Para probar este invariante de forma automática, escribiríamos un test unitario que intente forzar una violación de la regla. El test instanciará un objeto `Reserva` pasándole por parámetro una `fecha_inicio` fijada a las `10:00 AM` y una `fecha_fin` inválida fijada a las `09:00 AM` (pasado) o a las `10:00 AM` (duración cero). La prueba unitaria verificará (*assert*) que el constructor de la clase o el servicio de validación lance explícitamente una excepción de negocio (ej. `InvalidReservationIntervalException`) y deniegue la creación del objeto, demostrando que el código bloquea los estados inválidos de manera matemática y hermética.
+
+---
+
+### SECCIÓN 5: Reunión de Validación (Simulación Sprint Review)
+
+Para garantizar en la próxima Sprint Review que el incremento del sistema realmente resuelve la problemática de optimización del coworking, le haríamos las siguientes dos preguntas clave al Product Owner:
+
+1.  *“Considerando el flujo actual de reservas que te acabamos de mostrar, ¿consideras que un cliente promedio de nuestro coworking podrá agendar un escritorio común en menos de tres clics desde el celular, mitigando las colas de espera físicas en la recepción?”*
+2.  *“Desde la perspectiva operativa del Administrador del lugar, ¿los indicadores visuales del mapa de salas ocupadas/libres que agregamos en este sprint le aportan la claridad necesaria para reorganizar los espacios físicos en el día a día sin requerir planillas de Excel externas?”*
