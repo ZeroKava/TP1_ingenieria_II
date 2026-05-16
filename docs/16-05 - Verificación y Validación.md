@@ -1,32 +1,33 @@
 # Informe de Ingeniería de Software II: Estándares, Usabilidad y V&V
 
-##  Cuestionario de Verificación y Validación (V&V)
+##  Cuestionario de Verificación y Validación (V&V) Aplicado a Spicy Tech
 
 ### 1. Verificación vs Validación
-* **Verificación (*¿Estamos construyendo el producto correctamente?*):** Proceso estático y dinámico enfocado en comprobar que el software cumple con las especificaciones técnicas, requisitos de diseño y buenas prácticas de desarrollo.
-    * *Ejemplo en Spicy Tech:* Implementar una prueba unitaria para verificar que la función constructora de tarifas calcule correctamente el valor neto sumando las horas reservadas por el valor base, sin bugs de redondeo.
-* **Validación (*¿Estamos construyendo el producto correcto?*):** Proceso enfocado en evaluar si el software terminado cumple con las expectativas reales, necesidades de negocio y objetivos de los usuarios finales.
-    * *Ejemplo en Spicy Tech:* Someter el flujo completo de reserva a un test con un administrador del coworking real para certificar que la interfaz le permite gestionar la planilla diaria de forma fluida y sin confusiones operacionales.
+* **Verificación (*¿Estamos construyendo el producto correctamente?*):** Comprobación técnica de que el software responde fielmente a las especificaciones de diseño y requerimientos lógicos sin introducir fallas en el código.
+    * *Ejemplo en Spicy Tech:* Implementar una prueba unitaria para verificar que la función constructora de tarifas calcule correctamente el valor neto sumando las horas reservadas por el valor base de la sala de coworking, sin bugs de redondeo o desbordamiento de tipos.
+* **Validación (*¿Estamos construyendo el producto correcto?*):** Evaluación de si el software en funcionamiento satisface las necesidades reales del negocio y del usuario final dentro de su entorno operativo.
+    * *Ejemplo en Spicy Tech:* Someter la interfaz del flujo de reservas a un test con un administrador real de un coworking para certificar que la planilla horaria visual le permite organizar el espacio físico de forma fluida y sin confusiones operacionales.
 
 ### 2. Planificación de V&V en un Sprint de 1 Semana
-Debido a la alta restricción de tiempo, la planificación de actividades debe ser altamente automatizada y enfocada:
-1.  **Actividad de Verificación (Automatizada):** Desarrollar e integrar suites de pruebas unitarias específicas sobre las funciones del controlador de autenticación y asignación de roles de usuario, garantizando estabilidad lógica antes de mergear la funcionalidad.
-2.  **Actividad de Validación (Ágil):** Preparar una demostración funcional (Demo) del "camino feliz" de una reserva de espacio y ejecutarla frente al Product Owner (PO) al cierre del sprint para corroborar la alineación con la visión del negocio.
+Si tuviéramos que planificar las actividades de V&V para el próximo sprint de desarrollo de **Spicy Tech**, considerando la alta restricción de tiempo (1 semana), nos enfocaríamos concretamente en el **módulo de reservas y asignación de roles**:
+
+1.  **Actividad de Verificación Concreta:** Desarrollar e integrar una suite de pruebas unitarias automatizadas sobre el controlador de la base de datos que maneja la disponibilidad de salas. El objetivo técnico es verificar que cuando un usuario con rol "Cliente" reserve un espacio, el sistema bloquee el registro de manera atómica para impedir colisiones (*race conditions*) si otro usuario intenta clickear el mismo asiento simultáneamente.
+2.  **Actividad de Validación Concreta:** Preparar un escenario de prueba interactivo (User Acceptance Testing ágil) del "camino feliz" de una reserva desde la interfaz móvil. Al final de la semana, ejecutaremos una sesión de pruebas con un usuario externo simulando un entorno con conexión inestable para validar si el flujo de selección de escritorio y confirmación de franja horaria resulta intuitivo, veloz y libre de fricciones cognitivas.
 
 ### 3. Inspecciones de Software vs Pruebas Automáticas
-* **Diferencia:** La **Inspección de código** es un proceso estático y humano (ej. Code Reviews o Pull Requests) enfocado en evaluar la calidad del diseño, el cumplimiento de principios SOLID, la legibilidad y fallas lógicas complejas. La **Prueba automática** es un proceso dinámico y de máquina donde se ejecuta un fragmento de código con entradas predefinidas para validar si produce las salidas esperadas.
-* **Cuándo conviene cada una:**
-    * *Inspección:* Ideal en fases tempranas de codificación, al definir patrones arquitectónicos, o al evaluar código crítico de seguridad, ya que promueve la transferencia de conocimiento en el equipo.
-    * *Prueba Automática:* Indispensable para realizar **pruebas de regresión** masivas de forma rápida y repetitiva, asegurando que los nuevos cambios del sprint no rompan funcionalidades preexistentes de Spicy Tech.
+* **Diferencia Clave:** La **Inspección de código** es un proceso estático y humano (ej. *Code Reviews* a través de *Pull Requests*) enfocado en evaluar la calidad del diseño arquitectónico, legibilidad y mantenibilidad. La **Prueba automática** es un proceso dinámico y computacional donde se ejecuta un fragmento de código aislado con entradas y salidas predefinidas de forma repetitiva.
+* **Aplicación en Spicy Tech:**
+    * *Cuándo conviene Inspección:* Al diseñar la estructura de los middlewares de autenticación y los decoradores de **gestión de roles** en la API. Una revisión por pares humana es superior para detectar vulnerabilidades lógicas de seguridad (como saltos de permisos o IDOR) que las pruebas automáticas suelen pasar por alto.
+    * *Cuándo convienen Pruebas Automáticas:* Al realizar cambios en los modelos de datos o agregar nuevos tipos de membresías (ej. pase corporativo). Ejecutar tests automáticos nos permite hacer **pruebas de regresión** instantáneas para asegurar que el nuevo código no rompió la lógica de reservas básicas que ya funcionaba bien.
 
 ### 4. Análisis Estático Automatizado
-* **Herramienta de referencia:** `ESLint` (si el stack es JavaScript/React) o `Pylint` (para Python).
-* **Errores detectados:** Analiza el código fuente como texto sin necesidad de ejecutarlo. Detecta de forma temprana variables inicializadas pero nunca leídas (fugas latentes de memoria), bloques de captura de errores (`try/catch`) vacíos que silencian excepciones críticas, o código muerto (inaccesible), además de asegurar el estándar estilístico del proyecto.
+* **Herramienta de referencia:** `ESLint` (para el frontend en React) o `Pylint` (si se utiliza Python en el backend).
+* **Errores específicos en Spicy Tech:** Analiza el código fuente como texto plano sin ejecutar el programa. En nuestro sistema de coworking, esta herramienta detectaría tempranamente si un desarrollador importó un hook de conexión a la pasarela de pagos pero olvidó invocarlo (código muerto), si se dejaron bloques `try/catch` vacíos al intentar conectar con la base de datos (lo que silenciaría errores críticos de servidor), o si se instanció una variable de sesión de usuario que nunca se lee, optimizando la memoria antes del despliegue.
 
 ### 5. Métodos Formales de Verificación
-* **Imprescindibles en:** Sistemas de alta criticidad o misión crítica (médicos, aeroespaciales, bancarios core).
-* **Por qué no se generalizan:** Utilizan modelos matemáticos rigurosos y lógicas formales para probar la ausencia absoluta de fallos. Su aplicación requiere perfiles con alta formación matemática, los tiempos de desarrollo se incrementan exponencialmente y el costo financiero resultante es prohibitivo para aplicaciones de software comercial convencional como plataformas de coworking.
+* **Imprescindibles en:** Sistemas de misión crítica o vida crítica donde un fallo de software causa catástrofes físicas o financieras humanas (sistemas aeroespaciales, dispositivos médicos autónomos, algoritmos core de compensación bancaria masiva).
+* **Por qué no los usamos en Spicy Tech:** Los métodos formales se basan en demostraciones matemáticas lógicas extremadamente complejas para asegurar matemáticamente que un programa está 100% libre de fallas. Para una aplicación comercial de gestión de coworking como Spicy Tech, el costo financiero, la especialización requerida del equipo y el tiempo de desarrollo que demandaría aplicar estos métodos harían inviable el proyecto, superando drásticamente los beneficios comerciales de la plataforma.
 
 ### 6. Reuniones de Validación en Frameworks Ágiles (Scrum/XP)
-* **Rol del Product Owner (PO) en la Sprint Review:** El PO actúa como el validador supremo del incremento del producto. Su función consiste en evaluar si las funcionalidades construidas por el equipo de desarrollo cumplen con los criterios de aceptación y, principalmente, si entregan valor estratégico real al cliente del negocio.
-* **Relación con las Pruebas Automatizadas:** Las pruebas automatizadas actúan como un filtro de calidad previo (Verificación). Al asegurar de manera robótica que el sistema no posee fallos o bugs técnicos básicos en su infraestructura, le permiten al PO y a los Stakeholders centrar la discusión de la Sprint Review exclusivamente en la **validación** funcional y estratégica, optimizando los tiempos de feedback de negocio.
+* **Rol del Product Owner (PO) en la Sprint Review:** El PO actúa como el validador supremo del incremento de software. Su función en la demo de Spicy Tech no es evaluar el código, sino juzgar si las funcionalidades de reserva de salas construidas durante la semana cumplen con los criterios de aceptación y si realmente aportan el valor estratégico que el negocio del coworking necesita.
+* **Relación con las Pruebas Automatizadas:** Las pruebas automáticas actúan como un filtro higiénico de verificación técnica previa. Al garantizar robóticamente que el servidor de Spicy Tech es estable y que no va a colapsar por bugs básicos en plena presentación, le permiten al PO y a los stakeholders clave enfocar la discusión de la Sprint Review al 100% en la **validación funcional y usabilidad de negocio**, maximizando el valor del feedback recibido.
