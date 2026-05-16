@@ -1,6 +1,6 @@
 # Informe de Ingeniería de Software II: Estándares, Usabilidad y V&V
 
-## . Cuestionario de Verificación y Validación (V&V)
+##  Cuestionario de Verificación y Validación (V&V)
 
 ### 1. Verificación vs Validación
 * **Verificación (*¿Estamos construyendo el producto correctamente?*):** Proceso estático y dinámico enfocado en comprobar que el software cumple con las especificaciones técnicas, requisitos de diseño y buenas prácticas de desarrollo.
