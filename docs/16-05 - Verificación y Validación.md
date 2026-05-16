@@ -33,6 +33,8 @@ Este tipo de planificaciones son una sección estratégica donde se define cómo
 * **Relación con las Pruebas Automatizadas:** Las pruebas automáticas actúan como un filtro higiénico de verificación técnica previa. Al garantizar robóticamente que el servidor de Spicy Tech es estable y que no va a colapsar por bugs básicos en plena presentación, le permiten al PO y a los stakeholders clave enfocar la discusión de la Sprint Review al 100% en la **validación funcional y usabilidad de negocio**, maximizando el valor del feedback recibido.
 
 
+# SEGUNDA PARTE 
+
 ## 7. Plan de Verificación y Validación (V&V) a Escala — Spicy Tech
 
 ---
