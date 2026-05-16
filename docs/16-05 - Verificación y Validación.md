@@ -41,14 +41,14 @@ Este tipo de planificaciones son una sección estratégica donde se define cómo
 
 ### SECCIÓN 1: Verificación vs Validación
 
-1.  **Verificación actual en el proyecto:** Ejecutamos de manera automatizada una suite de pruebas unitarias sobre las funciones controladoras del backend para verificar que el cálculo del precio neto de una reserva de coworking (horas seleccionadas multiplicadas por la tarifa base del espacio) arroje el valor matemático exacto antes de impactar en la base de datos.
+1.  **Verificación actual en el proyecto:** Ejecutamos de manera automatizada una suite de pruebas unitarias(contenedor de pruebas) sobre las funciones controladoras del backend para verificar que el cálculo del precio neto de una reserva de coworking (horas seleccionadas multiplicadas por la tarifa base del espacio) arroje el valor matemático exacto antes de impactar en la base de datos.
 2.  **Validación planificada con el Product Owner:** Planificamos realizar una simulación interactiva junto al Product Owner utilizando un entorno de pruebas (*Staging*) recreando una situación de alta demanda simultánea, para validar si la interfaz de usuario de Spicy Tech responde de forma intuitiva, no genera confusión al mostrar los escritorios ocupados y cumple con las expectativas del negocio en tiempo real.
 
 ---
 
 ### SECCIÓN 2: Planificación de V&V (Cronograma de Sprints)
 
-A continuación se detalla la planificación de actividades de aseguramiento de la calidad para el ciclo actual y el subsiguiente:
+A continuación detallamos la planificación de actividades de aseguramiento de la calidad para el ciclo actual y el subsiguiente:
 
 | Sprint | Actividad de V&V | Técnica | Responsable | Herramienta |
 | :--- | :--- | :--- | :--- | :--- |
