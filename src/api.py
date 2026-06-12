@@ -9,20 +9,34 @@
 import os
 import uuid
 import time
-from flask import Flask, request, jsonify, send_from_directory
+import io
+import csv
+from flask import Flask, Response, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 
-from auth import (
-    AuthEventBus,
-    ConsoleLogger,
-    DatabaseObserver,
-    EmailNotifier,
-    SupabaseUserRepository,
-    AuthService,
-    BookingRepository,
-    SpaceRepository,
-)
+try:
+    from auth import (
+        AuthEventBus,
+        ConsoleLogger,
+        DatabaseObserver,
+        EmailNotifier,
+        SupabaseUserRepository,
+        AuthService,
+        BookingRepository,
+        SpaceRepository,
+    )
+except (ImportError, ValueError):
+    from auth import (
+        AuthEventBus,
+        ConsoleLogger,
+        DatabaseObserver,
+        EmailNotifier,
+        SupabaseUserRepository,
+        AuthService,
+        BookingRepository,
+        SpaceRepository,
+    )
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, static_folder=SRC_DIR, static_url_path="")
