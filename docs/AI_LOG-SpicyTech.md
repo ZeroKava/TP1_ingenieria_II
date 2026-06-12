@@ -166,10 +166,13 @@ No fue necesario descartar nada, ya que la salida se configuró para cumplir est
 
 **¿Qué descartamos y por qué?** Se descartaron sugerencias iniciales de usar herramientas de testing pagas o de alta complejidad (como Selenium o JMeter) en favor de opciones más ágiles y modernas como Cypress y Locust, priorizando la facilidad de mantenimiento y la curva de aprendizaje del equipo.
 
-Fecha: 01/05/2026
-Herramienta: Claude
-Responsable: Dev Lead — Matías Polcowñuk
-Eje temático: Pruebas Unitarias
+## Entrada 009 — Semana 6
+
+**Fecha:** 01/05/2026
+**Herramienta:** Claude
+**Responsable:** Dev Lead — Matías Polcowñuk
+**Eje temático:** Pruebas Unitarias
+
 
 ¿Para qué se usó? Crear las seis pruebas unitarias en pytest
 
@@ -179,4 +182,92 @@ Eje temático: Pruebas Unitarias
 
 ¿Qué modificamos y por qué? Nada.
 
-¿Qué descartamos y por qué? Nada.
+## Entrada 010 — Semana 7
+
+**Fecha:** 05/05/2026
+**Herramienta:** Figma (AI Design / HTML to Design)
+**Responsable:** UX Dev — Santiago Manrique
+**Eje temático:** Eje 1 / Desarrollo Front End y UI/UX
+
+**¿Para qué se usó?**
+Adaptar los archivos HTML maquetados a un entorno de Figma para asegurar que el sitio sea responsivo y generar un enlace de prototipo interactivo para el archivo `docs/tp2-ui-ux.md`.
+
+**¿Qué generó la IA?**
+1. Conversión de código HTML/CSS a capas de diseño en Figma con *Auto Layout*.
+2. Adaptaciones del layout para resoluciones Mobile, Tablet y Desktop.
+3. Creación de un enlace de visualización e interacción para el prototipo.
+
+**¿Qué aceptamos tal cual?**
+La estructura de los componentes en los diferentes marcos responsivos y la fidelidad visual respecto al código original.
+
+**¿Qué modificamos y por qué?**
+- **Interacciones:** Ajustamos manualmente el flujo de navegación entre pantallas para que coincida con la lógica de negocio del coworking.
+- **Breakpoints:** Refinamos márgenes en la versión mobile para evitar superposición de elementos en el menú.
+
+**¿Qué descartamos y por qué?**
+Descartamos la iconografía sugerida por la IA, manteniendo nuestros SVG originales para asegurar la consistencia con el desarrollo previo.
+
+## Entrada 011 — Semana 7
+Fecha: 06/05/2026
+
+Herramienta: Gemini
+
+Responsable: Scrum Master — Octavio García
+
+Eje temático: Gestión de Proyecto / Documentación Final TP2
+
+¿Para qué se usó?
+Consolidar toda la información técnica producida por los diferentes roles del equipo (Jesus, Matías y Manrique) en un informe final coherente. Se utilizó específicamente para estructurar el archivo docs/tp2-ui-ux.md y para definir el esqueleto del informe PDF que se sube al aula virtual, asegurando que ningún punto de la consigna (ISO, TDD, CI/CD) quedara fuera.
+
+¿Qué generó la IA?
+
+Estructura del Informe: Un índice detallado alineado con las consignas del TP2, organizando la Parte A (UI/UX) y la Parte B (Testing) de forma profesional.
+
+Sección de Auditoría ISO 9241-11: Redacción técnica de las métricas de eficacia y eficiencia basadas en las simulaciones realizadas sobre el prototipo de Figma.
+
+Justificación ISO 13407: Un párrafo argumentativo que vincula nuestro proceso de diseño iterativo con el estándar internacional de diseño centrado en el usuario.
+
+Guía de Solución de Entorno: Un borrador de los pasos de instalación de dependencias, adaptado a los problemas de compatibilidad detectados durante la semana.
+
+¿Qué aceptamos tal cual?
+
+La tabla de auditoría de usabilidad, ya que los criterios de "Tasa de éxito" (Eficacia) y "Tiempo en tarea" (Eficiencia) son los estándares que mejor se adaptan a nuestro sistema de reservas.
+
+La estructura jerárquica para el archivo tp2-ui-ux.md.
+
+¿Qué modificamos y por qué?
+
+Configuración del Entorno: Forzamos la redacción para especificar el uso de Python 3.13 y el comando py -3.13. La IA sugería inicialmente versiones genéricas, pero debido a los errores de "Build Tools" detectados en la práctica, ajustamos la documentación para que sea una guía de instalación infalible para el equipo y los evaluadores.
+
+Contexto de Usuario: Refinamos la descripción de los usuarios objetivo (Sección A2) para que coincida exactamente con el alcance de SpicyTech, eliminando generalidades sobre otros tipos de sistemas.
+
+¿Qué descartamos y por qué?
+
+Descartamos una propuesta de la IA para incluir métricas de "Satisfacción" mediante encuestas de escala Likert, ya que en esta fase de prototipo no contamos con usuarios reales suficientes para que el dato sea estadísticamente válido; decidimos priorizar Eficacia y Eficiencia que son medibles mediante observación técnica.
+
+## Entrada 012 — Semana 7
+
+**Fecha:** 06/05/2026
+**Herramienta:** Claude
+**Responsable:** Dev Lead / QA — Calamari Santino
+**Eje temático:** Eje 2 / Pruebas Unitarias y CI/CD
+
+**¿Para qué se usó?**
+Redactar la justificación técnica de los frameworks de testing en `docs/tp2-pruebas-unitarias.md`, configurar el pipeline de CI/CD en `.github/workflows/test.yml` para automatizar la ejecución de los tests unitarios en cada push y pull request a main, y preparar el guión y estructura del video de evidencia.
+
+**¿Qué generó la IA?**
+1. **Justificación de frameworks:** Redacción de la elección de pytest (backend), Cypress (frontend E2E) y unittest.mock + SQLite en memoria (integración), con argumentos técnicos concretos aplicados al stack real del proyecto (Python/Flask/Vanilla JS).
+2. **Archivo `test.yml`:** Configuración completa del workflow de GitHub Actions con los pasos de checkout, setup de Python 3.11, instalación de dependencias (pytest, bcrypt, PyJWT, flask, flask-sqlalchemy, supabase) y ejecución de `pytest tests/unit/tests.py -v`.
+3. **Documentación técnica:** Contenido del archivo `tests/unit/test.md` explicando cada clase de prueba, sus dependencias y las decisiones de diseño del módulo de tests.
+4. **Guión del video:** Estructura y texto para el video de evidencia de 2-3 minutos mostrando los tests corriendo en verde en la terminal y el pipeline exitoso en GitHub Actions.
+
+**¿Qué aceptamos tal cual?**
+La justificación de los tres frameworks y su relación con el stack tecnológico del proyecto. El archivo `test.yml` final (luego de resolver los errores de dependencias). La documentación técnica de `test.md`.
+
+**¿Qué modificamos y por qué?**
+- **Dependencias del workflow:** El `test.yml` requirió múltiples iteraciones para identificar todos los módulos necesarios (`bcrypt`, `PyJWT`, `supabase`), ya que el proyecto no tiene `requirements.txt`. Cada error del runner de GitHub Actions fue analizado y corregido manualmente hasta lograr el workflow verde.
+- **Guión del video:** Adaptamos el guión sugerido agregando las indicaciones exactas de qué mostrar en pantalla y qué comandos ejecutar en cada momento, para que la evidencia cubra todos los requisitos de la consigna.
+
+**¿Qué descartamos y por qué?**
+Descartamos la sugerencia de usar `supabase-py` como nombre del paquete pip, ya que no existe en el índice de PyPI. El nombre correcto es `supabase` y fue verificado empíricamente en el runner de GitHub Actions.
+
