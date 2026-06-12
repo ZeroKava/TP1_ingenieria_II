@@ -475,29 +475,42 @@ class AuthService:
         return AuthResult(True, "Inicio de sesión exitoso.", data={**user.to_dict(), "token": token})
 
 # ═══════════════════════════════════════════════════════════════
-# SECCIÓN 8 ─ REPOSITORIO DE RESERVAS
+# SECCIÓN 8 ─ REPOSITORIO DE RESERVAS Y ESPACIOS
 # ═══════════════════════════════════════════════════════════════
 
 class BookingRepository:
     """Repositorio para gestionar las reservas en Supabase."""
     
     def get_all(self) -> list[dict]:
-        """Obtiene todas las reservas del sistema (para el admin)."""
         response = supabase_client.table("bookings").select("*").execute()
         return response.data if response.data else []
 
     def get_by_username(self, username: str) -> list[dict]:
-        """Obtiene solo las reservas de un usuario específico."""
         response = supabase_client.table("bookings").select("*").eq("username", username).execute()
         return response.data if response.data else []
 
     def create(self, booking_data: dict) -> dict | None:
-        """Guarda una nueva reserva en la nube."""
         response = supabase_client.table("bookings").insert(booking_data).execute()
+        return response.data[0] if response.data else None
+        
+    def update_status(self, booking_id: str, new_status: str) -> dict | None:
+        """Actualiza el estado de una reserva (Aprobar/Rechazar)."""
+        response = supabase_client.table("bookings").update({"status": new_status}).eq("id", booking_id).execute()
         return response.data[0] if response.data else None
     
 class SpaceRepository:
-    """Repositorio para leer el catálogo de espacios en Supabase."""
+    """Repositorio para leer y modificar el catálogo de espacios en Supabase."""
+    
     def get_all(self) -> list[dict]:
         response = supabase_client.table("spaces").select("*").execute()
         return response.data if response.data else []
+        
+    def create(self, space_data: dict) -> dict | None:
+        """Crea un nuevo espacio en la base de datos."""
+        response = supabase_client.table("spaces").insert(space_data).execute()
+        return response.data[0] if response.data else None
+        
+    def update(self, space_id: str, space_data: dict) -> dict | None:
+        """Edita un espacio existente."""
+        response = supabase_client.table("spaces").update(space_data).eq("id", space_id).execute()
+        return response.data[0] if response.data else None

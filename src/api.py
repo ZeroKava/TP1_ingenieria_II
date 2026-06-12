@@ -10,6 +10,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+
 from auth import (
     AuthEventBus,
     ConsoleLogger,
@@ -23,7 +24,7 @@ from auth import (
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, static_folder=SRC_DIR, static_url_path="")
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]}})
 
 @app.get("/")
 def index():
@@ -45,6 +46,10 @@ def _require_json_fields(data: dict, *fields: str):
     if missing:
         return False, f"Campos requeridos: {', '.join(missing)}"
     return True, None
+
+
+def _json_payload():
+    return request.get_json(silent=True) or {}
 
 
 @app.post("/api/auth/signup")
@@ -88,45 +93,122 @@ def get_all_users():
     for u in users:
         u_dict = u.to_dict()
         users_data.append(u_dict)
-        
+
     return jsonify({
-        "success": True, 
+        "success": True,
         "data": users_data
     }), 200
 
+
+@app.patch("/api/users/<username>")
+def update_user(username):
+    """Actualiza campos administrativos de un usuario."""
+    data = _json_payload()
+    user = repository.find_by_username(username)
+    if not user:
+        return jsonify({"success": False, "message": "No se encontro el usuario"}), 404
+
+    if "is_active" in data:
+        user.is_active = bool(data["is_active"])
+
+    try:
+        repository.update(user)
+        return jsonify({"success": True, "data": user.to_dict()}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 # --- ENDPOINTS DE RESERVAS ---
-
-@app.post("/api/bookings")
-def create_booking():
-    data = request.get_json(silent=True) or {}
-    ok, err = _require_json_fields(data, "username", "space_name", "booking_date", "booking_time")
-    if not ok:
-        return jsonify({"success": False, "message": err}), 400
-
-    new_booking = {
-        "username": data["username"],
-        "space_name": data["space_name"],
-        "booking_date": data["booking_date"],
-        "booking_time": data["booking_time"],
-        "status": "activa"
-    }
-    
-    result = booking_repo.create(new_booking)
-    if result:
-        return jsonify({"success": True, "message": "Reserva confirmada.", "data": result}), 201
-    return jsonify({"success": False, "message": "Error al guardar en BD."}), 500
 
 @app.get("/api/bookings")
 def get_bookings():
-    username = request.args.get("username")
-    reservas = booking_repo.get_by_username(username) if username else booking_repo.get_all()
-    return jsonify({"success": True, "data": reservas}), 200
+    """Devuelve todas las reservas o las de un usuario puntual."""
+    try:
+        username = (request.args.get("username") or "").strip()
+        bookings = booking_repo.get_by_username(username) if username else booking_repo.get_all()
+        return jsonify({"success": True, "data": bookings}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e), "data": []}), 500
 
+
+@app.post("/api/bookings")
+def create_booking():
+    """Crea una solicitud de reserva pendiente de aprobacion."""
+    data = _json_payload()
+    ok, err = _require_json_fields(data, "username", "space_name", "booking_date", "booking_time")
+    if not ok:
+        return jsonify({"success": False, "message": err, "errors": [err]}), 400
+
+    booking_data = {
+        "username": data["username"].strip(),
+        "space_name": data["space_name"].strip(),
+        "booking_date": data["booking_date"],
+        "booking_time": data["booking_time"],
+        "status": data.get("status", "pendiente"),
+    }
+
+    try:
+        result = booking_repo.create(booking_data)
+        return jsonify({"success": True, "message": "Reserva creada correctamente.", "data": result}), 201
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# Usamos @app.route para evitar el bloqueo 405 de CORS
+@app.route("/api/bookings/<booking_id>", methods=["PATCH"])
+def update_booking_status(booking_id):
+    """Permite al administrador aprobar o rechazar una reserva."""
+    try:
+        new_status = _json_payload().get("status")
+        if not new_status:
+            return jsonify({"success": False, "message": "Falta el estado"}), 400
+
+        # ¡Usamos el método limpio del repositorio!
+        result = booking_repo.update_status(booking_id, new_status)
+
+        if result:
+            return jsonify({"success": True, "message": f"Reserva {new_status} con éxito"}), 200
+        return jsonify({"success": False, "message": "No se encontró la reserva"}), 404
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# --- ENDPOINTS PARA ESPACIOS (ABM) ---
 @app.get("/api/spaces")
 def get_spaces():
-    """Devuelve el catálogo dinámico de espacios desde Supabase."""
-    espacios = space_repo.get_all()
-    return jsonify({"success": True, "data": espacios}), 200
+    """Devuelve el catalogo de espacios."""
+    try:
+        return jsonify({"success": True, "data": space_repo.get_all()}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e), "data": []}), 500
+
+
+@app.post("/api/spaces")
+def create_space():
+    """Crea un nuevo espacio"""
+    data = _json_payload()
+    ok, err = _require_json_fields(data, "name", "type", "capacity", "price")
+    if not ok:
+        return jsonify({"success": False, "message": err, "errors": [err]}), 400
+
+    try:
+        # ¡Usamos el método limpio del repositorio!
+        result = space_repo.create(data)
+        return jsonify({"success": True, "data": result}), 201
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.put("/api/spaces/<space_id>")
+def edit_space(space_id):
+    """Edita un espacio existente"""
+    data = _json_payload()
+    if not data:
+        return jsonify({"success": False, "message": "No se recibieron datos para actualizar"}), 400
+
+    try:
+        # ¡Usamos el método limpio del repositorio!
+        result = space_repo.update(space_id, data)
+        return jsonify({"success": True, "data": result}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

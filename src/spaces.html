@@ -832,12 +832,16 @@ let DB_RESERVAS = []; // Acá vamos a guardar lo que venga de la API
 
 // Esta función ahora devuelve la lista real de la base de datos
 function getAllReservations() {
-  return DB_RESERVAS; 
+  return DB_RESERVAS;
 }
 
 // Ya no guardamos en localStorage, esta función la vaciamos
-function saveReservations(r) { 
-  console.log("Ya no usamos localStorage, todo va a la nube ☁️");
+function saveReservations(r) {
+  console.log('Reservas gestionadas por API/Supabase', r);
+}
+
+function isBlockingReservation(status) {
+  return ['pending', 'pendiente', 'confirmed', 'confirmada', 'activa'].includes((status || '').toLowerCase());
 }
 
 // Slots ocupados para un espacio+fecha (ahora lee de la API)
@@ -845,7 +849,7 @@ function getBusySlotsForDate(spaceId, dateStr) {
   const reservations = getAllReservations();
   const busy = [];
   reservations
-    .filter(r => r.spaceId === spaceId && r.date === dateStr && r.status !== 'cancelada' && r.status !== 'cancelled')
+    .filter(r => r.spaceId === spaceId && r.date === dateStr && isBlockingReservation(r.status))
     .forEach(r => { if (r.slots) r.slots.forEach(s => busy.push(s)); });
   return busy;
 }
@@ -855,7 +859,7 @@ function getDayStatus(spaceId, dateStr, allSlots) {
   if (allSlots.length === 0) {
     // Oficina mensual: avail siempre salvo que tenga reserva confirmada/pendiente ese mes
     const reservations = getAllReservations();
-    const hasMontly = reservations.some(r => r.spaceId === spaceId && r.date === dateStr && r.status !== 'cancelled');
+    const hasMontly = reservations.some(r => r.spaceId === spaceId && r.date === dateStr && isBlockingReservation(r.status));
     return hasMontly ? 'full' : 'avail';
   }
   const busy = getBusySlotsForDate(spaceId, dateStr, allSlots);
@@ -1264,7 +1268,7 @@ function renderTimeSlots() {
   grid.innerHTML = selectedSpace.timeSlots.map(t => {
     const isBusy = busySlots.includes(t);
     const isSel  = selectedSlots.includes(t);
-    return `<div class="time-slot ${isBusy ? 'busy' : isSel ? 'selected-slot' : 'free'}"
+    return `<div class="time-slot ${isBusy ? 'busy' : isSel ? 'sel' : 'free'}"
       ${!isBusy ? `onclick="toggleSlot('${t}')"` : ''}>
       ${t}${isBusy ? '<br><span style="font-size:9px;opacity:.7">Ocupado</span>' : ''}
     </div>`;
@@ -1403,10 +1407,10 @@ async function submitReserva() {
       });
       selectedSlots = [];
       selectedDay   = null;
-      
+
       // Recargamos las reservas desde la base de datos para actualizar el calendario
-      await loadBookingsFromAPI(); 
-      
+      await loadBookingsFromAPI();
+
     } else {
       alertEl.textContent = 'Error del servidor: ' + result.message;
       alertEl.className = 'rform-alert show err';
@@ -1496,7 +1500,7 @@ async function loadBookingsFromAPI() {
         spaceId: SPACES.find(s => s.name === r.space_name)?.id || '',
         date: r.booking_date,
         slots: r.booking_time === 'Mensual' ? [] : r.booking_time.split(', '),
-        status: r.status === 'activa' ? 'confirmed' : 'pending' 
+        status: ['confirmada', 'confirmed', 'activa'].includes((r.status || '').toLowerCase()) ? 'confirmed' : (r.status || 'pending').toLowerCase()
       }));
       renderCards(currentFilter); // Recarga visual de las tarjetas
       renderCalendar();           // Recarga visual del calendario

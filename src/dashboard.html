@@ -252,7 +252,7 @@
             <div class="card-hd"><div class="card-title">Alertas del sistema</div></div>
             <div class="alert-chip ac-warn" id="alert-pending"><span style="font-size:18px">⚠️</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--amber)" class="ac-count">Cargando…</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Requieren aprobación manual.</div></div><button class="btn-xs btn-xs-ghost" onclick="go('reservations')">Revisar</button></div>
             <div class="alert-chip ac-err" id="alert-conflicts" style="display:none"><span style="font-size:18px">⚠️</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--red)" class="cc-count">Conflictos detectados</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Reservas simultáneas del mismo espacio/horario. Requieren resolución.</div></div><button class="btn-xs btn-xs-ghost" onclick="go('reservations')">Ver</button></div>
-            <div class="alert-chip ac-ok"><span style="font-size:18px">✅</span><div><div style="font-size:13px;font-weight:600;color:var(--green)">Sistema operativo</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Datos guardados en localStorage · Todo OK</div></div></div>
+            <div class="alert-chip ac-ok"><span style="font-size:18px">✅</span><div><div style="font-size:13px;font-weight:600;color:var(--green)">Sistema operativo</div><div style="font-size:12px;color:var(--txt3);margin-top:2px">Datos sincronizados con Supabase · Todo OK</div></div></div>
           </div>
           <div class="card">
             <div class="card-hd"><div class="card-title">Acciones rápidas</div></div>
@@ -394,13 +394,35 @@ function doLogout(){localStorage.removeItem('nexo_token');localStorage.removeIte
    DATA — desde localStorage (reservas reales)
 ══════════════════════════════════════════════ */
 function getAllReservations() {
-  try { return JSON.parse(localStorage.getItem('nexo_reservations') || '[]'); } catch { return []; }
+  // Ahora devolvemos la variable global conectada a la API, mapeada para los filtros
+  return DB_RESERVAS.map(r => {
+    // Normalizamos el estado para que coincida con los botones del HTML
+    let s = (r.status || 'pending').toLowerCase();
+    if(s === 'pendiente' || s === 'activa') s = 'pending';
+    if(s === 'confirmada') s = 'confirmed';
+    if(s === 'rechazada' || s === 'cancelada') s = 'cancelled';
+
+    return {
+      id: r.id || 'N/A',
+      username: r.username,
+      user: r.username,
+      space: r.space_name,
+      spaceName: r.space_name,
+      date: r.booking_date,
+      time: r.booking_time,
+      status: s
+    };
+  });
 }
-function saveReservations(r) { localStorage.setItem('nexo_reservations', JSON.stringify(r)); }
+function saveReservations(r) { console.log('Reservas gestionadas por API/Supabase', r); }
 /* ── CONEXIÓN A LA API REAL PARA USUARIOS ── */
 
 const API_BASE = 'http://127.0.0.1:5000/api';
 let USRS = []; // Ahora es una variable que llenaremos desde la base de datos
+
+function getAllUsers() {
+  return USRS;
+}
 
 // Borramos la vieja función getAllUsers() y usamos esta asíncrona:
 /* ── CONEXIÓN A LA API REAL PARA USUARIOS ── */
@@ -416,13 +438,13 @@ async function fetchUsersFromAPI() {
         username: u.username,
         email: u.email,
         role: u.role,
-        bookings: 0, 
+        bookings: 0,
         created: new Date(u.created_at).toLocaleDateString('es-AR'),
         active: u.is_active
       }));
       console.log("3. Datos convertidos para la tabla:", USRS);
-      
-      renderUsr(USRS); 
+
+      renderUsr(USRS);
       // Si la función de abajo falla, la comentamos temporalmente
       try { updateStats(); } catch(e) { console.warn("updateStats falló, pero no importa ahora."); }
     }
@@ -438,20 +460,20 @@ async function fetchBookingsAPI() {
   try {
     const response = await fetch('http://127.0.0.1:5000/api/bookings');
     const result = await response.json();
-    
+
     if (result.success) {
       DB_RESERVAS = result.data; // Guardamos los datos puros de la BD
-      
+
       // Adaptamos la base de datos al formato visual de la tabla de reservas
       const reservasFront = DB_RESERVAS.map(r => ({
-        id: r.id || 'N/A', 
-        user: r.username, 
-        space: r.space_name, 
-        date: r.booking_date, 
-        time: r.booking_time, 
+        id: r.id || 'N/A',
+        user: r.username,
+        space: r.space_name,
+        date: r.booking_date,
+        time: r.booking_time,
         status: r.status || 'pending'
       }));
-      
+
       renderRes(reservasFront); // Dibujamos la tabla de reservas
     }
   } catch (error) {
@@ -465,7 +487,7 @@ async function fetchSpacesAPI() {
   try {
     const response = await fetch('http://127.0.0.1:5000/api/spaces');
     const result = await response.json();
-    
+
     if (result.success) {
       // Traducimos los datos al "idioma" que espera renderSp
       const espaciosFront = result.data.map(sp => ({
@@ -474,9 +496,9 @@ async function fetchSpacesAPI() {
         type: sp.type,
         cap: sp.capacity + ' pers.', // ¡ACÁ ESTABA EL DETALLE! Le agregamos ' pers.' para que quede más pro
         price: '$' + sp.price,
-        status: 'active' 
+        status: 'active'
       }));
-      
+
       renderSp(espaciosFront);
     }
   } catch (error) {
@@ -490,14 +512,14 @@ async function fetchSpacesAPI() {
 
 async function inicializarDashboard() {
   // Usamos await para que cargue paso a paso
-  await fetchUsersFromAPI(); 
+  await fetchUsersFromAPI();
   await fetchBookingsAPI();
   await fetchSpacesAPI();
 }
 
 inicializarDashboard();
 
-function saveUsers(u) { localStorage.setItem('nexo_users', JSON.stringify(u)); }
+function saveUsers(u) { console.log('Usuarios gestionados por API/Supabase', u); }
 
 const SPACES_INFO = [
   {id:'A1', name:'Sala Roja A1',       type:'sala',         cap:'12 personas',    price:'$800/hora'},
@@ -627,60 +649,86 @@ function updBadge() {
 ══════════════════════════════════════════════ */
 let _rSt = 'all';
 function renderRes(list) {
-  const tbody = document.getElementById('res-tbody');
-  if (!list || list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--txt3);font-size:13px;">No hay reservas para mostrar.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = list.map(r => {
-    const conflictBadge = r.hasConflict && r.status === 'pending'
-      ? '<span class="b" style="background:#FEF9C3;color:#854D0E;margin-left:6px;" title="Hay otra reserva simultánea para este espacio/horario">⚠️ Conflicto</span>'
-      : '';
+  document.getElementById('res-tbody').innerHTML = list.map(r => {
+    // Definimos cómo se va a ver el badge de estado
+    let badgeClass = 'b b-warn';
+    let statusText = 'Pendiente';
+
+    if (r.status === 'confirmada' || r.status === 'confirmed') {
+      badgeClass = 'b b-ok';
+      statusText = 'Confirmada';
+    } else if (r.status === 'rechazada' || r.status === 'cancelled' || r.status === 'cancelada') {
+      badgeClass = 'b b-full';
+      statusText = 'Rechazada';
+    }
+
+    // Si está pendiente, le damos herramientas al administrador
+    let accionesHtml = '—';
+    if (r.status === 'pending' || r.status === 'pendiente') {
+      accionesHtml = `
+        <button class="btn-xs" style="background:#2C7A5C; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer;" onclick="cambiarEstadoReserva('${r.id}', 'confirmada')">Aprobar</button>
+        <button class="btn-xs" style="background:#C0392B; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; margin-left:4px;" onclick="cambiarEstadoReserva('${r.id}', 'rechazada')">Rechazar</button>
+      `;
+    }
+
     return `
     <tr>
-      <td style="padding-left:20px;font-size:12px;color:var(--txt3);font-weight:600">${r.id.slice(-6)}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="av" style="background:${avc(r.username||r.nombre)};font-size:11px">${(r.username||r.nombre||'?')[0].toUpperCase()}</div>
-          <div>
-            <div style="font-weight:500">${r.username||'—'}</div>
-            <div style="font-size:11px;color:var(--txt3)">${r.nombre||''}</div>
-          </div>
-        </div>
-      </td>
-      <td>${r.spaceName||r.spaceId}</td>
-      <td style="font-size:13px;color:var(--txt2)">${fmtDate(r.date)}</td>
-      <td style="font-size:12.5px;color:var(--txt3)">${fmtSlots(r.slots)}</td>
-      <td style="font-weight:700">${r.total}</td>
-      <td>${bRes(r.status)}${conflictBadge}</td>
-      <td>
-        <div style="display:flex;gap:4px">
-          ${r.status==='pending'?`<button class="btn-xs btn-xs-green" onclick="confirmRes('${r.id}')">✓ Confirmar</button>`:''}
-          ${r.status!=='cancelled'?`<button class="btn-xs btn-xs-danger" onclick="cancelRes('${r.id}')">✗ Cancelar</button>`:''}
-        </div>
-      </td>
+      <td style="padding-left:20px; font-weight:600;">${r.id.substring(0,8)}...</td>
+      <td>${r.user}</td>
+      <td style="font-weight:500; color:var(--dark)">${r.space}</td>
+      <td>${r.date}</td>
+      <td><span style="font-size:12px; color:var(--txt2)">${r.time}</span></td>
+      <td><span class="${badgeClass}">${statusText}</span></td>
+      <td>${accionesHtml}</td>
     </tr>`;
   }).join('');
 }
+/* ── CAMBIAR ESTADO DE RESERVA DESDE EL DASHBOARD (PASO 1.3) ── */
+async function cambiarEstadoReserva(id, nuevoEstado) {
+  if (!confirm(`¿Estás seguro de que querés marcar esta reserva como ${nuevoEstado}?`)) return;
 
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/api/bookings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nuevoEstado })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Usamos el sistema de toasts que ya tiene tu plantilla para avisar el éxito
+      if (typeof toast === 'function') toast(`Reserva actualizada correctamente`, 'ok');
+      else alert(`✓ Reserva ${nuevoEstado} con éxito`);
+
+      // Volvemos a pedir las reservas actualizadas a la API para refrescar la pantalla
+      refreshAll();
+    } else {
+      alert("Error del servidor: " + result.message);
+    }
+  } catch (error) {
+    console.error("Error al actualizar la reserva:", error);
+    alert("No se pudo conectar con el servidor para actualizar la reserva.");
+  }
+}
 /* ══════════════════════════════════════════════
    RENDER SPACES
 ══════════════════════════════════════════════ */
 function renderSp(list) {
   // BORRAMOS: const res = getAllReservations();
   // USAMOS LA BASE DE DATOS REAL:
-  const res = DB_RESERVAS; 
+  const res = DB_RESERVAS;
 
   document.getElementById('sp-tbody').innerHTML = list.map(s => {
     // Filtramos comparando el nombre del espacio
     const bookings = res.filter(r => r.space_name === s.name && r.status !== 'cancelada').length;
-    
+
     const today = new Date().toISOString().split('T')[0];
     const todayRes = res.filter(r => r.space_name === s.name && r.booking_date === today && r.status !== 'cancelada');
-    
+
     // Simplificamos la lógica de estado para la demo
     const st = todayRes.length >= 3 ? 'full' : todayRes.length > 0 ? 'partial' : 'avail';
-    
+
     return `
     <tr>
       <td style="padding-left:20px;font-weight:600;color:var(--dark)">${s.name}</td>
@@ -787,44 +835,40 @@ function fSp(q) {
   renderSp(SPACES_INFO.filter(s => s.name.toLowerCase().includes(q.toLowerCase())));
 }
 
-function confirmRes(id) {
-  const res = getAllReservations();
-  const r = res.find(x => x.id === id);
-  if (!r) return;
-  r.status = 'confirmed';
-  r.hasConflict = false;
-  saveReservations(res);
-  refreshAll();
-  toast(`✓ Reserva de ${r.username} confirmada.`, 'ok');
+async function confirmRes(id) {
+  await cambiarEstadoReserva(id, 'confirmada');
 }
 
-function cancelRes(id) {
-  const res = getAllReservations();
-  const r = res.find(x => x.id === id);
-  if (!r) return;
-  r.status = 'cancelled';
-  saveReservations(res);
-  refreshAll();
-  toast(`Reserva ${id.slice(-6)} cancelada.`, 'ok');
+async function cancelRes(id) {
+  await cambiarEstadoReserva(id, 'cancelada');
 }
 
-function toggleUsr(un, act) {
-  const users = getAllUsers();
-  const u = users.find(x => x.username === un);
-  if (!u) return;
-  u.active = act;
-  saveUsers(users);
-  const filtered = _uRole === 'all' ? users : users.filter(x => x.role === _uRole);
-  renderUsr(filtered);
-  toast(`Usuario ${un} ${act ? 'activado' : 'bloqueado'}.`, 'ok');
+async function toggleUsr(un, act) {
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/api/users/${encodeURIComponent(un)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: act })
+    });
+    const result = await response.json();
+    if (!result.success) {
+      toast(result.message || 'No se pudo actualizar el usuario.', 'err');
+      return;
+    }
+    await fetchUsersFromAPI();
+    toast(`Usuario ${un} ${act ? 'activado' : 'bloqueado'}.`, 'ok');
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
+    toast('No se pudo conectar con el servidor.', 'err');
+  }
 }
 
 function refreshAll() {
-  fetchUsersFromAPI(); 
-  
+  fetchUsersFromAPI();
+
   // Usamos .then() para garantizar el orden: 1° Reservas, 2° Espacios
   fetchBookingsAPI().then(() => {
-    fetchSpacesAPI(); 
+    fetchSpacesAPI();
   });
 }
 
@@ -832,60 +876,108 @@ function refreshAll() {
    MODALS
 ══════════════════════════════════════════════ */
 const MTPL = {
-  'new-reservation': `<div class="mtitle">Nueva reserva</div><div class="msub">Creá una reserva manualmente en nombre de un usuario.</div>
+  'new-reservation': `<div class="mtitle">Nueva reserva</div><div class="msub">Creá una reserva manualmente.</div>
     <div class="mfield"><label class="mlabel">Usuario</label><input class="minput" id="m-user" placeholder="Nombre de usuario"></div>
-    <div class="mfield"><label class="mlabel">Espacio</label><select class="mselect" id="m-space">${SPACES_INFO.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-    <div class="mfield"><label class="mlabel">Fecha</label><input class="minput" type="date" id="m-date" min="${new Date().toISOString().split('T')[0]}"></div>
-    <div class="mfield"><label class="mlabel">Horarios (ej: 10:00,11:00)</label><input class="minput" id="m-slots" placeholder="10:00,11:00,12:00"></div>
-    <div class="mactions">
-      <button class="mbtn-c" onclick="closeModal()">Cancelar</button>
-      <button class="mbtn-p" onclick="createManualRes()">Crear reserva</button>
-    </div>`,
+    <div class="mfield"><label class="mlabel">Espacio</label><input class="minput" id="m-space" placeholder="Ej: Sala Roja A1"></div>
+    <div class="mfield"><label class="mlabel">Fecha</label><input class="minput" type="date" id="m-date"></div>
+    <div class="mfield"><label class="mlabel">Horarios</label><input class="minput" id="m-slots" placeholder="10:00,11:00"></div>
+    <div class="mactions"><button class="mbtn-c" onclick="closeModal()">Cancelar</button><button class="mbtn-p" onclick="createManualRes()">Crear</button></div>`,
   'new-user': `<div class="mtitle">Nuevo usuario</div><div class="msub">Registrá un usuario manualmente.</div>
-    <div class="mfield"><label class="mlabel">Nombre de usuario</label><input class="minput" id="m-username" placeholder="mi_usuario"></div>
-    <div class="mfield"><label class="mlabel">Email</label><input class="minput" id="m-email" type="email" placeholder="usuario@mail.com"></div>
-    <div class="mfield"><label class="mlabel">Contraseña</label><input class="minput" id="m-pw" type="password" placeholder="••••••••"></div>
-    <div class="mactions">
-      <button class="mbtn-c" onclick="closeModal()">Cancelar</button>
-      <button class="mbtn-p" onclick="createManualUser()">Crear usuario</button>
-    </div>`,
+    <div class="mfield"><label class="mlabel">Nombre de usuario</label><input class="minput" id="m-username"></div>
+    <div class="mfield"><label class="mlabel">Email</label><input class="minput" id="m-email" type="email"></div>
+    <div class="mfield"><label class="mlabel">Contraseña</label><input class="minput" id="m-pw" type="password"></div>
+    <div class="mactions"><button class="mbtn-c" onclick="closeModal()">Cancelar</button><button class="mbtn-p" onclick="createManualUser()">Crear</button></div>`,
+  'new-space': `<div class="mtitle">Agregar / Editar Espacio</div><div class="msub">Gestioná los espacios del coworking.</div>
+    <div class="mfield"><label class="mlabel">Nombre del espacio</label><input class="minput" id="sp-name" placeholder="Ej: Sala Azul B3"></div>
+    <div class="mfield"><label class="mlabel">Tipo</label><select class="mselect" id="sp-type"><option value="sala">Sala de reunión</option><option value="privada">Oficina privada</option><option value="capacitacion">Capacitación</option></select></div>
+    <div class="mfield"><label class="mlabel">Capacidad (personas)</label><input class="minput" id="sp-cap" type="number" placeholder="Ej: 10"></div>
+    <div class="mfield"><label class="mlabel">Precio</label><input class="minput" id="sp-price" type="number" placeholder="Ej: 800"></div>
+    <div class="mactions"><button class="mbtn-c" onclick="closeModal()">Cancelar</button><button class="mbtn-p" onclick="saveSpaceAPI()">Guardar Espacio</button></div>`
 };
 
-function createManualRes() {
-  const user  = document.getElementById('m-user')?.value.trim();
-  const space = document.getElementById('m-space')?.value;
-  const date  = document.getElementById('m-date')?.value;
-  const slotsRaw = document.getElementById('m-slots')?.value.trim();
-  if (!user || !space || !date) { toast('Completá usuario, espacio y fecha.','err'); return; }
-  const sp = SPACES_INFO.find(s => s.id === space);
-  const slots = slotsRaw ? slotsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
-  const newRes = {
-    id: 'R-' + Date.now(),
-    username: user, nombre: user, email: '',
-    spaceId: space, spaceName: sp?.name || space,
-    date, slots, total: sp?.price || '—',
-    status: 'confirmed', createdAt: new Date().toISOString(), hasConflict: false,
+// Función para guardar espacios en Supabase
+async function saveSpaceAPI() {
+  const data = {
+    name: document.getElementById('sp-name').value,
+    type: document.getElementById('sp-type').value,
+    capacity: document.getElementById('sp-cap').value,
+    price: document.getElementById('sp-price').value
   };
-  const res = getAllReservations();
-  res.push(newRes);
-  saveReservations(res);
-  closeModal();
-  refreshAll();
-  toast('Reserva creada y confirmada exitosamente.', 'ok');
+  try {
+    await fetch('http://127.0.0.1:5000/api/spaces', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    toast('Espacio guardado en la base de datos', 'ok');
+    closeModal();
+    fetchSpacesAPI(); // Recarga la tabla de espacios
+  } catch(e) { toast('Error al guardar espacio', 'err'); }
 }
 
-function createManualUser() {
+async function createManualRes() {
+  const user  = document.getElementById('m-user')?.value.trim();
+  const space = document.getElementById('m-space')?.value.trim();
+  const date  = document.getElementById('m-date')?.value;
+  const slotsRaw = document.getElementById('m-slots')?.value.trim();
+  if (!user || !space || !date) { toast('Complet� usuario, espacio y fecha.','err'); return; }
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: user,
+        space_name: space,
+        booking_date: date,
+        booking_time: slotsRaw || 'Mensual',
+        status: 'confirmada'
+      })
+    });
+    const result = await response.json();
+    if (!result.success) {
+      toast(result.message || 'No se pudo crear la reserva.', 'err');
+      return;
+    }
+    closeModal();
+    refreshAll();
+    toast('Reserva creada y confirmada en Supabase.', 'ok');
+  } catch (error) {
+    console.error('Error al crear reserva:', error);
+    toast('No se pudo conectar con el servidor.', 'err');
+  }
+}
+
+async function createManualUser() {
   const un = document.getElementById('m-username')?.value.trim();
-  const em = document.getElementById('m-email')?.value.trim();
+  const em = document.getElementById('m-email')?.value.trim().toLowerCase();
   const pw = document.getElementById('m-pw')?.value;
-  if (!un || !em || !pw) { toast('Completá todos los campos.','err'); return; }
-  const users = getAllUsers();
-  if (users.find(u => u.username.toLowerCase() === un.toLowerCase())) { toast('Usuario ya existe.','err'); return; }
-  users.push({ username: un, email: em, password: pw, role: 'member', created: new Date().toLocaleDateString('es-AR'), active: true });
-  saveUsers(users);
-  closeModal();
-  refreshAll();
-  toast('Usuario creado correctamente.', 'ok');
+  if (!un || !em || !pw) { toast('Complet� todos los campos.','err'); return; }
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: un,
+        email: em,
+        password: pw,
+        confirm_password: pw,
+        role: 'member'
+      })
+    });
+    const result = await response.json();
+    if (!result.success) {
+      toast((result.errors && result.errors.join(' ')) || result.message || 'No se pudo crear el usuario.', 'err');
+      return;
+    }
+    closeModal();
+    await fetchUsersFromAPI();
+    toast('Usuario creado en Supabase.', 'ok');
+  } catch (error) {
+    console.error('Error al crear usuario:', error);
+    toast('No se pudo conectar con el servidor.', 'err');
+  }
 }
 
 function openModal(t) {
