@@ -260,7 +260,7 @@
               <button class="qa-btn" onclick="openModal('new-reservation')"><div style="font-size:22px;margin-bottom:5px">📅</div><div style="font-size:13px;font-weight:600;color:var(--dark)">Nueva reserva</div><div style="font-size:11px;color:var(--txt3);margin-top:1px">Reservar manualmente</div></button>
               <button class="qa-btn" onclick="openModal('new-space')"><div style="font-size:22px;margin-bottom:5px">🏢</div><div style="font-size:13px;font-weight:600;color:var(--dark)">Agregar espacio</div><div style="font-size:11px;color:var(--txt3);margin-top:1px">Alta de espacio</div></button>
               <button class="qa-btn" onclick="openModal('new-user')"><div style="font-size:22px;margin-bottom:5px">👤</div><div style="font-size:13px;font-weight:600;color:var(--dark)">Nuevo usuario</div><div style="font-size:11px;color:var(--txt3);margin-top:1px">Registrar manualmente</div></button>
-              <button class="qa-btn" onclick="toast('Reporte CSV generado.','ok')"><div style="font-size:22px;margin-bottom:5px">📊</div><div style="font-size:13px;font-weight:600;color:var(--dark)">Exportar reporte</div><div style="font-size:11px;color:var(--txt3);margin-top:1px">CSV del mes actual</div></button>
+              <button class="qa-btn" onclick="window.open('http://127.0.0.1:5000/api/export/estadistica', '_blank')"><div style="font-size:22px;margin-bottom:5px">📊</div><div style="font-size:13px;font-weight:600;color:var(--dark)">Exportar reporte (CSV)</div><div style="font-size:11px;color:var(--txt3);margin-top:1px">CSV del mes actual</div></button>
             </div>
           </div>
         </div>
@@ -403,7 +403,7 @@ function getAllReservations() {
     if(s === 'rechazada' || s === 'cancelada') s = 'cancelled';
 
     return {
-      id: r.id || 'N/A',
+      id: (r.id !== null && r.id !== undefined) ? String(r.id) : null,
       username: r.username,
       user: r.username,
       space: r.space_name,
@@ -466,15 +466,16 @@ async function fetchBookingsAPI() {
 
       // Adaptamos la base de datos al formato visual de la tabla de reservas
       const reservasFront = DB_RESERVAS.map(r => ({
-        id: r.id || 'N/A',
+        id: (r.id !== null && r.id !== undefined) ? String(r.id) : null,
         user: r.username,
         space: r.space_name,
         date: r.booking_date,
         time: r.booking_time,
-        status: r.status || 'pending'
+        status: r.status || 'pendiente'
       }));
 
       renderRes(reservasFront); // Dibujamos la tabla de reservas
+      renderOv();                // Dibujamos la tabla de últimas reservas en overview
     }
   } catch (error) {
     console.error("Error obteniendo las reservas:", error);
@@ -489,17 +490,18 @@ async function fetchSpacesAPI() {
     const result = await response.json();
 
     if (result.success) {
-      // Traducimos los datos al "idioma" que espera renderSp
-      const espaciosFront = result.data.map(sp => ({
-        id: sp.id,
-        name: sp.name,
-        type: sp.type,
-        cap: sp.capacity + ' pers.', // ¡ACÁ ESTABA EL DETALLE! Le agregamos ' pers.' para que quede más pro
-        price: '$' + sp.price,
+      // CORREGIDO: actualizamos SPACES_INFO global para que el buscador y saveSpaceAPI sean consistentes
+      SPACES_INFO.length = 0; // vaciamos sin romper referencias
+      result.data.forEach(sp => SPACES_INFO.push({
+        id:     sp.id,
+        name:   sp.name,
+        type:   sp.type,
+        cap:    sp.capacity + ' pers.',
+        price:  '$' + sp.price,
         status: 'active'
       }));
-
-      renderSp(espaciosFront);
+      document.getElementById('stat-spaces').textContent = SPACES_INFO.length;
+      renderSp(SPACES_INFO);
     }
   } catch (error) {
     console.error("Error obteniendo los espacios de la API:", error);
@@ -535,10 +537,14 @@ const SPACES_INFO = [
 ══════════════════════════════════════════════ */
 const avc = u => {const c=['#C0392B','#2C7A5C','#4338CA','#B45309','#7A3B8C','#1E6B8C'];return c[(u||'?').charCodeAt(0)%c.length];};
 const bRes = s => ({
-  confirmed: '<span class="b b-ok">✓ Confirmada</span>',
-  pending:   '<span class="b b-warn">⏳ Pendiente</span>',
-  cancelled: '<span class="b b-off">✗ Cancelada</span>'
-}[s] || s);
+  confirmed:  '<span class="b b-ok">✓ Confirmada</span>',
+  confirmada: '<span class="b b-ok">✓ Confirmada</span>',
+  pending:    '<span class="b b-warn">⏳ Pendiente</span>',
+  pendiente:  '<span class="b b-warn">⏳ Pendiente</span>',
+  cancelled:  '<span class="b b-off">✗ Cancelada</span>',
+  cancelada:  '<span class="b b-off">✗ Cancelada</span>',
+  rechazada:  '<span class="b b-off">✗ Rechazada</span>',
+}[s] || '<span class="b b-warn">⏳ Pendiente</span>');
 const bRole = r => ({
   admin:  '<span class="b b-adm">⚙️ Admin</span>',
   member: '<span class="b b-mem">🪑 Miembro</span>',
@@ -573,12 +579,12 @@ function fmtSlots(slots) {
 ══════════════════════════════════════════════ */
 function updateStats() {
   const res   = getAllReservations();
-  const users = fetchUsersFromAPI();
-  const pending   = res.filter(r => r.status === 'pending').length;
-  const confirmed = res.filter(r => r.status === 'confirmed').length;
+  // CORREGIDO: la BD guarda 'pendiente'/'confirmada', no 'pending'/'confirmed'
+  const pending   = res.filter(r => r.status === 'pending'   || r.status === 'pendiente').length;
+  const confirmed = res.filter(r => r.status === 'confirmed' || r.status === 'confirmada').length;
 
   document.getElementById('stat-res-active').textContent = confirmed;
-  document.getElementById('stat-users').textContent      = users.filter(u => u.role === 'member').length;
+  document.getElementById('stat-users').textContent      = USRS.filter(u => u.role === 'member').length; // CORREGIDO: usar USRS en vez de Promise
   document.getElementById('stat-pending-n').textContent  = pending;
   const ss = document.getElementById('stat-spaces'); if(ss) ss.textContent = SPACES_INFO.length;
 
@@ -587,7 +593,7 @@ function updateStats() {
   if (alertChip) alertChip.querySelector('.ac-count').textContent = pending + ' reserva' + (pending!==1?'s':'') + ' pendiente' + (pending!==1?'s':'') + ' de confirmación';
 
   // Conflictos
-  const conflicts = res.filter(r => r.hasConflict && r.status === 'pending');
+  const conflicts = res.filter(r => r.hasConflict && (r.status === 'pending' || r.status === 'pendiente'));
   const conflictChip = document.getElementById('alert-conflicts');
   if (conflictChip) {
     conflictChip.style.display = conflicts.length ? '' : 'none';
@@ -639,7 +645,7 @@ function updateStats() {
 
 function updBadge() {
   const res = getAllReservations();
-  const p = res.filter(r => r.status === 'pending').length;
+  const p = res.filter(r => r.status === 'pending' || r.status === 'pendiente').length; // CORREGIDO
   const b = document.getElementById('badge-p');
   if (b) { b.textContent = p; b.style.display = p ? '' : 'none'; }
 }
@@ -648,6 +654,28 @@ function updBadge() {
    RENDER RESERVAS
 ══════════════════════════════════════════════ */
 let _rSt = 'all';
+
+// Helper: calcular horas de una reserva (ej: "10:00,11:00" → "1 hora")
+function calculateHours(timeStr) {
+  if (!timeStr || typeof timeStr !== 'string') return '—';
+  const parts = timeStr.split(',');
+  if (parts.length !== 2) return timeStr;
+  try {
+    const [startH, startM] = parts[0].trim().split(':').map(Number);
+    const [endH, endM] = parts[1].trim().split(':').map(Number);
+    const startMins = startH * 60 + startM;
+    const endMins = endH * 60 + endM;
+    const totalMins = endMins - startMins;
+    const hours = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    if (hours === 0) return mins + ' min';
+    if (mins === 0) return hours + ' h';
+    return hours + 'h ' + mins + 'm';
+  } catch(_) {
+    return timeStr;
+  }
+}
+
 function renderRes(list) {
   document.getElementById('res-tbody').innerHTML = list.map(r => {
     // Definimos cómo se va a ver el badge de estado
@@ -665,19 +693,26 @@ function renderRes(list) {
     // Si está pendiente, le damos herramientas al administrador
     let accionesHtml = '—';
     if (r.status === 'pending' || r.status === 'pendiente') {
-      accionesHtml = `
-        <button class="btn-xs" style="background:#2C7A5C; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer;" onclick="cambiarEstadoReserva('${r.id}', 'confirmada')">Aprobar</button>
-        <button class="btn-xs" style="background:#C0392B; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; margin-left:4px;" onclick="cambiarEstadoReserva('${r.id}', 'rechazada')">Rechazar</button>
-      `;
+      if (r.id) {
+        accionesHtml = `
+          <button class="btn-xs" style="background:#2C7A5C; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer;" onclick="cambiarEstadoReserva('${r.id}', 'confirmada')">Aprobar</button>
+          <button class="btn-xs" style="background:#C0392B; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; margin-left:4px;" onclick="cambiarEstadoReserva('${r.id}', 'rechazada')">Rechazar</button>
+        `;
+      } else {
+        accionesHtml = '<span style="font-size:11px;color:#C0392B;">⚠️ Sin ID</span>';
+      }
     }
+
+    const totalHours = calculateHours(r.time);
 
     return `
     <tr>
-      <td style="padding-left:20px; font-weight:600;">${r.id.substring(0,8)}...</td>
+      <td style="padding-left:20px; font-weight:600;">${r.id ? r.id.toString().substring(0,8) + '...' : '—'}</td>
       <td>${r.user}</td>
       <td style="font-weight:500; color:var(--dark)">${r.space}</td>
       <td>${r.date}</td>
       <td><span style="font-size:12px; color:var(--txt2)">${r.time}</span></td>
+      <td style="font-size:12px; color:var(--txt3); font-weight:500">${totalHours}</td>
       <td><span class="${badgeClass}">${statusText}</span></td>
       <td>${accionesHtml}</td>
     </tr>`;
@@ -685,30 +720,35 @@ function renderRes(list) {
 }
 /* ── CAMBIAR ESTADO DE RESERVA DESDE EL DASHBOARD (PASO 1.3) ── */
 async function cambiarEstadoReserva(id, nuevoEstado) {
+  if (!id) { toast('Esta reserva no tiene ID válido. No se puede actualizar.', 'err'); return; }
   if (!confirm(`¿Estás seguro de que querés marcar esta reserva como ${nuevoEstado}?`)) return;
 
   try {
-    const response = await fetch(`http://127.0.0.1:5000/api/bookings/${id}`, {
+    // Codificamos el id para que enteros o UUIDs no rompan la URL
+    const url = `http://127.0.0.1:5000/api/bookings/${encodeURIComponent(id)}`;
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: nuevoEstado })
     });
 
-    const result = await response.json();
+    // Intentamos parsear la respuesta — si Flask devuelve HTML (404/500) esto lanza
+    let result;
+    const text = await response.text();
+    try { result = JSON.parse(text); }
+    catch(_) { result = { success: false, message: `Error ${response.status}: ${text.substring(0,120)}` }; }
 
     if (result.success) {
-      // Usamos el sistema de toasts que ya tiene tu plantilla para avisar el éxito
-      if (typeof toast === 'function') toast(`Reserva actualizada correctamente`, 'ok');
-      else alert(`✓ Reserva ${nuevoEstado} con éxito`);
-
-      // Volvemos a pedir las reservas actualizadas a la API para refrescar la pantalla
-      refreshAll();
+      toast(`Reserva ${nuevoEstado} correctamente ✓`, 'ok');
+      await fetchBookingsAPI(); // recarga la tabla
+      updateStats();            // actualiza contadores
     } else {
-      alert("Error del servidor: " + result.message);
+      toast('Error: ' + (result.message || 'respuesta inesperada del servidor'), 'err');
+      console.error('cambiarEstadoReserva error:', result);
     }
   } catch (error) {
-    console.error("Error al actualizar la reserva:", error);
-    alert("No se pudo conectar con el servidor para actualizar la reserva.");
+    console.error('cambiarEstadoReserva network error:', error);
+    toast('No se pudo conectar con el servidor (¿está Flask corriendo en puerto 5000?)', 'err');
   }
 }
 /* ══════════════════════════════════════════════
@@ -785,8 +825,8 @@ function renderOv() {
     : last5.map(r => `
     <tr>
       <td style="padding-left:20px;font-weight:500">${r.username||'—'}</td>
-      <td style="font-size:13px">${r.spaceName||r.spaceId}</td>
-      <td style="font-size:12px;color:var(--txt3)">${fmtDate(r.date)}</td>
+      <td style="font-size:13px">${r.space_name||r.spaceName||r.spaceId||'—'}</td>
+      <td style="font-size:12px;color:var(--txt3)">${fmtDate(r.booking_date||r.date)}</td>
       <td>${bRes(r.status)}</td>
     </tr>`).join('');
 }
@@ -812,7 +852,10 @@ function fResSt(s, btn) {
   document.querySelectorAll('#view-reservations .fpill').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   const res = getAllReservations();
-  renderRes(s === 'all' ? res : res.filter(r => r.status === s));
+  // CORREGIDO: mapeamos status español/inglés al filtrar
+  const statusMap = { 'pending': ['pending','pendiente'], 'confirmed': ['confirmed','confirmada'], 'cancelled': ['cancelled','cancelada','rechazada'] };
+  const allowed = statusMap[s] || [s];
+  renderRes(s === 'all' ? res : res.filter(r => allowed.includes(r.status)));
 }
 function fRes(q) {
   const ql = q.toLowerCase();
@@ -898,53 +941,85 @@ const MTPL = {
 // Función para guardar espacios en Supabase
 async function saveSpaceAPI() {
   const data = {
-    name: document.getElementById('sp-name').value,
-    type: document.getElementById('sp-type').value,
+    name:     document.getElementById('sp-name').value.trim(),
+    type:     document.getElementById('sp-type').value,
     capacity: document.getElementById('sp-cap').value,
-    price: document.getElementById('sp-price').value
+    price:    document.getElementById('sp-price').value
   };
+  if (!data.name || !data.type || !data.capacity || !data.price) {
+    toast('Completá todos los campos del espacio.', 'err'); return;
+  }
   try {
-    await fetch('http://127.0.0.1:5000/api/spaces', {
+    const resp = await fetch('http://127.0.0.1:5000/api/spaces', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    toast('Espacio guardado en la base de datos', 'ok');
+    const result = await resp.json();
+    if (!result.success) { toast(result.message || 'Error al guardar espacio', 'err'); return; }
+
+    // CORREGIDO: actualizamos SPACES_INFO para que el buscador y el contador reflejen el nuevo espacio
+    const newSp = result.data || data;
+    SPACES_INFO.push({
+      id:    newSp.id    || data.name,
+      name:  newSp.name  || data.name,
+      type:  newSp.type  || data.type,
+      cap:   (newSp.capacity || data.capacity) + ' pers.',
+      price: '$' + (newSp.price || data.price)
+    });
+    document.getElementById('stat-spaces').textContent = SPACES_INFO.length;
+
     closeModal();
-    fetchSpacesAPI(); // Recarga la tabla de espacios
-  } catch(e) { toast('Error al guardar espacio', 'err'); }
+    await fetchSpacesAPI(); // Recarga la tabla desde la BD para tener el ID real
+    toast('Espacio guardado en la base de datos ✓', 'ok');
+  } catch(e) { toast('Error al guardar espacio: ' + e.message, 'err'); }
 }
 
 async function createManualRes() {
-  const user  = document.getElementById('m-user')?.value.trim();
-  const space = document.getElementById('m-space')?.value.trim();
-  const date  = document.getElementById('m-date')?.value;
-  const slotsRaw = document.getElementById('m-slots')?.value.trim();
-  if (!user || !space || !date) { toast('Complet� usuario, espacio y fecha.','err'); return; }
+  const user = document.getElementById('m-user').value.trim();
+  
+  // Obtenemos el nombre del espacio seleccionado
+  const spaceElement = document.getElementById('m-space');
+  const space = spaceElement.options ? spaceElement.options[spaceElement.selectedIndex].text : spaceElement.value;
+  
+  const date = document.getElementById('m-date').value;
+  const slots = document.getElementById('m-slots').value.trim();
+
+  if (!user || !space || !date || !slots) {
+    toast('Completá todos los campos.', 'err');
+    return;
+  }
+
+  // Armamos el paquete de datos para Python (SIN el ID, porque lo crea Supabase)
+  const payload = {
+    username: user,
+    space_name: space,
+    booking_date: date,
+    booking_time: slots
+  };
 
   try {
     const response = await fetch('http://127.0.0.1:5000/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: user,
-        space_name: space,
-        booking_date: date,
-        booking_time: slotsRaw || 'Mensual',
-        status: 'confirmada'
-      })
+      body: JSON.stringify(payload)
     });
+    
     const result = await response.json();
-    if (!result.success) {
-      toast(result.message || 'No se pudo crear la reserva.', 'err');
-      return;
+    
+    if (result.success) {
+      toast('Reserva guardada en Supabase', 'ok');
+      closeModal();
+      
+      // ¡LA MAGIA!: Volvemos a pedirle los datos a Python para que nos traiga el ID real
+      await fetchBookingsAPI(); 
+      updateStats();
+    } else {
+      toast('Error: ' + result.message, 'err');
     }
-    closeModal();
-    refreshAll();
-    toast('Reserva creada y confirmada en Supabase.', 'ok');
   } catch (error) {
-    console.error('Error al crear reserva:', error);
-    toast('No se pudo conectar con el servidor.', 'err');
+    console.error(error);
+    toast('Error al conectar con la base de datos', 'err');
   }
 }
 
@@ -952,7 +1027,7 @@ async function createManualUser() {
   const un = document.getElementById('m-username')?.value.trim();
   const em = document.getElementById('m-email')?.value.trim().toLowerCase();
   const pw = document.getElementById('m-pw')?.value;
-  if (!un || !em || !pw) { toast('Complet� todos los campos.','err'); return; }
+  if (!un || !em || !pw) { toast('Complet� todos los campos.','err'); return; }
 
   try {
     const response = await fetch('http://127.0.0.1:5000/api/auth/signup', {
@@ -1004,6 +1079,54 @@ function toast(msg, type='ok') {
    INIT
 ══════════════════════════════════════════════ */
 refreshAll();
+
+/* ══════════════════════════════════════════════
+   EXPORTAR REPORTE CSV
+══════════════════════════════════════════════ */
+function exportCSV() {
+  const res = getAllReservations();
+  if (!res || res.length === 0) {
+    toast('No hay reservas para exportar.', 'err'); return;
+  }
+
+  // Filtrar el mes actual
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+
+  const mesActual = res.filter(r => {
+    const fecha = new Date(r.booking_date || r.date || r.created_at || '');
+    return !isNaN(fecha) && fecha.getFullYear() === year && fecha.getMonth() === month;
+  });
+
+  const filas = mesActual.length > 0 ? mesActual : res; // si no hay del mes, exportamos todas
+  const label = mesActual.length > 0 ? `${year}-${String(month+1).padStart(2,'0')}` : 'todas';
+
+  const headers = ['ID','Usuario','Espacio','Fecha','Horario','Estado'];
+  const rows = filas.map(r => [
+    (r.id || '').toString().slice(0, 8),
+    r.username  || r.user  || '—',
+    r.space_name|| r.space || r.spaceName || '—',
+    r.booking_date || r.date  || '—',
+    r.booking_time || r.time  || '—',
+    r.status || '—'
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+
+  const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href     = url;
+  link.download = `reporte_reservas_${label}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  toast(`Reporte CSV generado (${filas.length} reservas) ✓`, 'ok');
+}
 </script>
 </body>
 </html>

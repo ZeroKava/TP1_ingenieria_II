@@ -1009,7 +1009,7 @@
       Espacios modernos, comunidad vibrante y todo lo que necesitás para trabajar, crear y crecer. Sin ataduras, sin excusas.
     </p>
     <div class="hero-cta-group">
-      <a href="login.html#signup" class="btn-hero">
+      <a href="login.html#signup" class="btn-hero" id="hero-cta-btn">
         Reservá tu lugar
         <span>→</span>
       </a>
@@ -1141,7 +1141,7 @@
         <h2 class="section-title">Elegí el espacio <em>ideal</em> para vos</h2>
         <p class="section-desc">Desde escritorios compartidos hasta oficinas privadas. Flexibilidad total según tus necesidades.</p>
         <br><br>
-        <a href="login.html#signup" class="btn-hero" style="display:inline-flex;">Reservar ahora →</a>
+        <a href="login.html#signup" class="btn-hero" id="hero-cta-btn2" style="display:inline-flex;">Reservar ahora →</a>
       </div>
 
       <div class="spaces-grid reveal">
@@ -1428,6 +1428,14 @@
         <button onclick="doLogout()" class="btn-ghost" style="cursor:pointer;">Cerrar sesión</button>
       `;
     }
+
+    // CORREGIDO: si ya está logueado, el botón "Reservá tu lugar" va a spaces.html, no al signup
+    const ctaBtn  = document.getElementById('hero-cta-btn');
+    const ctaBtn2 = document.getElementById('hero-cta-btn2');
+    const ctaTarget = role === 'admin' ? 'dashboard.html' : 'spaces.html';
+    const ctaText   = role === 'admin' ? 'Ir al panel ⚙️' : 'Reservá tu lugar →';
+    if (ctaBtn)  { ctaBtn.href  = ctaTarget; ctaBtn.innerHTML  = ctaText; }
+    if (ctaBtn2) { ctaBtn2.href = ctaTarget; ctaBtn2.innerHTML = role === 'admin' ? 'Panel admin →' : 'Reservar ahora →'; }
 
     // Mostrar acceso admin en nav-links si existe
     const navAdmin = document.getElementById('nav-admin');

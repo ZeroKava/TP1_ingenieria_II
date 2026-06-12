@@ -7,6 +7,8 @@
 """
 
 import os
+import uuid
+import time
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
@@ -84,7 +86,6 @@ def login():
     status_code = 200 if result.success else 401
     return jsonify(result.to_dict()), status_code
 @app.get("/api/users")
-
 def get_all_users():
     """Endpoint para que el Dashboard obtenga la lista real de usuarios."""
     users = repository.get_all()
@@ -132,43 +133,69 @@ def get_bookings():
 
 @app.post("/api/bookings")
 def create_booking():
-    """Crea una solicitud de reserva pendiente de aprobacion."""
-    data = _json_payload()
-    ok, err = _require_json_fields(data, "username", "space_name", "booking_date", "booking_time")
-    if not ok:
-        return jsonify({"success": False, "message": err, "errors": [err]}), 400
+    """Crea una nueva reserva con un ID auto-generado (timestamp-based)."""
+    data = request.json
+    
+    # Validamos que estén los datos necesarios
+    if not all([data.get("username"), data.get("space_name"), data.get("booking_date"), data.get("booking_time")]):
+        return jsonify({"success": False, "message": "Faltan datos para la reserva"}), 400
 
-    booking_data = {
-        "username": data["username"].strip(),
-        "space_name": data["space_name"].strip(),
+    # Generamos un ID numérico usando timestamp en milisegundos + aleatorio
+    # Esto garantiza unicidad sin depender de secuencias de BD
+    booking_id = int(time.time() * 1000) + int(uuid.uuid4().int % 10000)
+
+    # Armamos el diccionario CON el campo 'id' generado
+    new_booking = {
+        "id": booking_id,
+        "username": data["username"],
+        "space_name": data["space_name"],
         "booking_date": data["booking_date"],
         "booking_time": data["booking_time"],
-        "status": data.get("status", "pendiente"),
+        "status": "pendiente"
     }
-
+    
     try:
-        result = booking_repo.create(booking_data)
-        return jsonify({"success": True, "message": "Reserva creada correctamente.", "data": result}), 201
+        # Usamos el método limpio del repositorio
+        result = booking_repo.create(new_booking)
+        return jsonify({"success": True, "message": "Reserva guardada", "data": result}), 201
     except Exception as e:
+        print(f"Error al crear reserva: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
 
 # Usamos @app.route para evitar el bloqueo 405 de CORS
-@app.route("/api/bookings/<booking_id>", methods=["PATCH"])
+@app.route("/api/bookings/<booking_id>", methods=["PATCH", "OPTIONS"])
 def update_booking_status(booking_id):
     """Permite al administrador aprobar o rechazar una reserva."""
+    # Responder al preflight CORS manualmente por si flask-cors no lo captura
+    if request.method == "OPTIONS":
+        from flask import make_response
+        resp = make_response("", 204)
+        resp.headers["Access-Control-Allow-Origin"]  = "*"
+        resp.headers["Access-Control-Allow-Methods"] = "PATCH, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return resp
+
     try:
         new_status = _json_payload().get("status")
         if not new_status:
-            return jsonify({"success": False, "message": "Falta el estado"}), 400
+            return jsonify({"success": False, "message": "Falta el campo 'status'"}), 400
 
-        # ¡Usamos el método limpio del repositorio!
-        result = booking_repo.update_status(booking_id, new_status)
+        # Intentamos convertir a entero si es posible (tabla con PK entera)
+        try:
+            booking_id_typed = int(booking_id)
+        except (ValueError, TypeError):
+            booking_id_typed = booking_id  # UUID o string
+
+        result = booking_repo.update_status(booking_id_typed, new_status)
 
         if result:
-            return jsonify({"success": True, "message": f"Reserva {new_status} con éxito"}), 200
-        return jsonify({"success": False, "message": "No se encontró la reserva"}), 404
+            return jsonify({"success": True, "message": f"Reserva actualizada a '{new_status}'", "data": result}), 200
+        # Si Supabase no devuelve data, igual puede haber actualizado (0 rows afectadas = 404)
+        return jsonify({"success": False, "message": f"No se encontró la reserva con id={booking_id}"}), 404
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
 # --- ENDPOINTS PARA ESPACIOS (ABM) ---
@@ -183,13 +210,17 @@ def get_spaces():
 
 @app.post("/api/spaces")
 def create_space():
-    """Crea un nuevo espacio"""
+    """Crea un nuevo espacio con un ID auto-generado"""
     data = _json_payload()
     ok, err = _require_json_fields(data, "name", "type", "capacity", "price")
     if not ok:
         return jsonify({"success": False, "message": err, "errors": [err]}), 400
 
     try:
+        # Generamos un ID numérico para el espacio si no lo proporciona
+        if not data.get("id"):
+            data["id"] = int(time.time() * 1000) + int(uuid.uuid4().int % 10000)
+        
         # ¡Usamos el método limpio del repositorio!
         result = space_repo.create(data)
         return jsonify({"success": True, "data": result}), 201
@@ -207,6 +238,62 @@ def edit_space(space_id):
         # ¡Usamos el método limpio del repositorio!
         result = space_repo.update(space_id, data)
         return jsonify({"success": True, "data": result}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.get("/api/export/estadistica")
+def export_estadistica():
+    try:
+        # a) Obtén todas las reservas activas.
+        all_bookings = booking_repo.get_all()
+        # Se consideran activas aquellas que no están canceladas o rechazadas
+        active_bookings = [
+            b for b in all_bookings 
+            if b.get("status", "").lower() not in ["cancelada", "rechazada", "cancelled"]
+        ]
+
+        # Necesitamos los costos de los espacios
+        spaces = space_repo.get_all()
+        space_prices = {}
+        for sp in spaces:
+            try:
+                space_prices[sp["name"]] = float(sp.get("price", 0))
+            except (ValueError, TypeError):
+                space_prices[sp["name"]] = 0.0
+
+        si = io.StringIO()
+        cw = csv.writer(si)
+        
+        # Columnas solicitadas: ID_Reserva, Usuario, Espacio, Fecha, Horas_Reservadas, Ingreso_Estimado_ARS, Estado
+        cw.writerow(["ID_Reserva", "Usuario", "Espacio", "Fecha", "Horas_Reservadas", "Ingreso_Estimado_ARS", "Estado"])
+
+        for b in active_bookings:
+            # b) Calcula "Horas_Reservadas" contando la cantidad de slots horarios
+            time_str = b.get("booking_time", "")
+            horas = len(time_str.split(",")) if time_str else 0
+            
+            # c) Calcula "Ingreso_Estimado_ARS" multiplicando las horas por el costo del espacio
+            costo_espacio = space_prices.get(b.get("space_name"), 0.0)
+            ingreso = horas * costo_espacio
+
+            cw.writerow([
+                b.get("id", ""),
+                b.get("username", ""),
+                b.get("space_name", ""),
+                b.get("booking_date", ""),
+                horas,
+                ingreso,
+                b.get("status", "")
+            ])
+
+        output = si.getvalue()
+        si.close()
+
+        return Response(
+            output,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=SpicyTech_Estadistica_2026.csv"}
+        )
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
