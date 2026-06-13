@@ -277,7 +277,7 @@
           <button class="btn-red-sm" onclick="openModal('new-reservation')" style="margin-left:auto">+ Nueva</button>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table class="tbl"><thead><tr><th style="padding-left:20px">#</th><th>Usuario</th><th>Espacio</th><th>Fecha</th><th>Horario</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <table class="tbl"><thead><tr><th style="padding-left:20px">#</th><th>Usuario</th><th>Espacio</th><th>Fecha</th><th>Horario</th><th>Total</th><th>Estado</th><th>Acciones</th><th>Detalle</th></tr></thead>
           <tbody id="res-tbody"></tbody></table>
         </div>
       </div>
@@ -715,13 +715,21 @@ function renderRes(list) {
       <td style="font-size:12px; color:var(--txt3); font-weight:500">${totalHours}</td>
       <td><span class="${badgeClass}">${statusText}</span></td>
       <td>${accionesHtml}</td>
+      <td><button class="btn-xs btn-xs-ghost" onclick="showBookingDetail('${r.id}')" title="Ver información del cliente">📋 Info</button></td>
     </tr>`;
   }).join('');
 }
 /* ── CAMBIAR ESTADO DE RESERVA DESDE EL DASHBOARD (PASO 1.3) ── */
 async function cambiarEstadoReserva(id, nuevoEstado) {
   if (!id) { toast('Esta reserva no tiene ID válido. No se puede actualizar.', 'err'); return; }
-  if (!confirm(`¿Estás seguro de que querés marcar esta reserva como ${nuevoEstado}?`)) return;
+
+  // Mensaje contextual según la acción (Integración SMTP + QR)
+  const accionLabel = nuevoEstado === 'confirmada' ? 'APROBAR' : 'RECHAZAR';
+  const accionTexto = nuevoEstado === 'confirmada'
+    ? 'Al aprobar, se generará un Pase de Acceso QR único y se enviará un email de confirmación al cliente automáticamente.'
+    : 'Al rechazar, se enviará un email de notificación al cliente automáticamente.';
+
+  if (!confirm(`¿Estás seguro de que querés ${accionLabel} esta reserva?\n\n${accionTexto}`)) return;
 
   try {
     // Codificamos el id para que enteros o UUIDs no rompan la URL
@@ -739,7 +747,10 @@ async function cambiarEstadoReserva(id, nuevoEstado) {
     catch(_) { result = { success: false, message: `Error ${response.status}: ${text.substring(0,120)}` }; }
 
     if (result.success) {
-      toast(`Reserva ${nuevoEstado} correctamente ✓`, 'ok');
+      // El backend ahora devuelve mensajes descriptivos con info de email enviado y QR generado
+      const displayMsg = result.message || `Reserva ${nuevoEstado} correctamente ✓`;
+      toast(displayMsg, 'ok');
+      console.log(`[Admin] ${displayMsg}`, result.data);
       await fetchBookingsAPI(); // recarga la tabla
       updateStats();            // actualiza contadores
     } else {
@@ -1079,6 +1090,77 @@ function toast(msg, type='ok') {
    INIT
 ══════════════════════════════════════════════ */
 refreshAll();
+
+/* ══════════════════════════════════════════════
+   DETALLE DE RESERVA — INFORMACION DEL CLIENTE
+══════════════════════════════════════════════ */
+function showBookingDetail(bookingId) {
+  // Buscamos la reserva en los datos crudos de la BD
+  const booking = DB_RESERVAS.find(r => String(r.id) === String(bookingId));
+  if (!booking) { toast('No se encontro la reserva.', 'err'); return; }
+
+  // Intentamos parsear la informacion adicional del cliente
+  let ai = {};
+  try {
+    if (booking.additional_info) {
+      ai = typeof booking.additional_info === 'string'
+        ? JSON.parse(booking.additional_info)
+        : booking.additional_info;
+    }
+  } catch(_) { ai = {}; }
+
+  const hasExtra = ai.nombre || ai.email || ai.telefono || ai.notas;
+
+  // Badge de estado
+  let stColor = 'var(--amber)'; let stText = 'Pendiente';
+  if (booking.status === 'confirmada' || booking.status === 'confirmed') { stColor = 'var(--green)'; stText = 'Confirmada'; }
+  if (booking.status === 'rechazada' || booking.status === 'cancelada') { stColor = 'var(--red)'; stText = 'Rechazada / Cancelada'; }
+
+  const content = `
+    <div class="mtitle">📋 Detalle de Reserva</div>
+    <div class="msub" style="font-family:monospace;font-size:11px;letter-spacing:.04em">ID: ${booking.id || '—'}</div>
+
+    <div style="display:grid;gap:12px;margin:16px 0;">
+
+      <div style="background:var(--cream);border-radius:12px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:10px;">🏢 Datos de la Reserva</div>
+        <div style="display:grid;gap:7px;font-size:13.5px;">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Usuario</span><strong>${booking.username || '—'}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Espacio</span><strong>${booking.space_name || '—'}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Fecha</span><strong>${fmtDate(booking.booking_date) || '—'}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Horario</span><strong>${booking.booking_time || '—'}</strong></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--txt3)">Estado</span><strong style="color:${stColor}">${stText}</strong></div>
+        </div>
+      </div>
+
+      ${hasExtra ? `
+      <div style="background:#F0FBF4;border:1px solid rgba(46,125,82,.15);border-radius:12px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:10px;">👤 Datos del Cliente</div>
+        <div style="display:grid;gap:7px;font-size:13.5px;">
+          ${ai.nombre ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Nombre</span><strong>${ai.nombre} ${ai.apellido || ''}</strong></div>` : ''}
+          ${ai.email ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Email</span><span style="font-weight:500;color:var(--dark)">${ai.email}</span></div>` : ''}
+          ${ai.telefono ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--txt3)">Teléfono</span><strong>${ai.telefono}</strong></div>` : ''}
+          ${ai.notas ? `<div style="margin-top:4px"><div style="color:var(--txt3);margin-bottom:4px;font-size:12px;">Notas / Requerimientos</div><div style="background:white;border-radius:8px;padding:10px;font-size:13px;line-height:1.5;color:var(--txt)">${ai.notas}</div></div>` : ''}
+        </div>
+      </div>` : `
+      <div style="text-align:center;padding:16px;background:var(--cream-dark);border-radius:12px;">
+        <div style="font-size:18px;margin-bottom:4px">📝</div>
+        <div style="font-size:12.5px;color:var(--txt3)">Sin información adicional del cliente.<br><span style="font-size:11px;">Los datos aparecen aquí si el cliente completa el formulario en la web.</span></div>
+      </div>`}
+    </div>
+
+    <div class="mactions">
+      ${booking.status === 'pending' || booking.status === 'pendiente' ? `
+        <button class="mbtn-p" style="background:var(--green)" onclick="closeModal();cambiarEstadoReserva('${booking.id}','confirmada')">✓ Aprobar</button>
+        <button class="mbtn-p" style="background:var(--red)" onclick="closeModal();cambiarEstadoReserva('${booking.id}','rechazada')">✗ Rechazar</button>
+      ` : ''}
+      <button class="mbtn-c" onclick="closeModal()">Cerrar</button>
+    </div>
+  `;
+
+  document.getElementById('mcontent').innerHTML = content;
+  document.getElementById('mbg').classList.add('show');
+}
 
 /* ══════════════════════════════════════════════
    EXPORTAR REPORTE CSV

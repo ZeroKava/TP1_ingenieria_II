@@ -3,6 +3,7 @@
   COWORKING SPACE — API REST de Autenticación
   Módulo: api.py
   Framework: Flask
+  + SMTP Notifications + QR Access Passes + BI Export
 =============================================================
 """
 
@@ -11,7 +12,8 @@ import uuid
 import time
 import io
 import csv
-from flask import Flask, Response, request, jsonify, send_from_directory
+import base64
+from flask import Flask, Response, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 
 
@@ -25,6 +27,8 @@ try:
         AuthService,
         BookingRepository,
         SpaceRepository,
+        QRCodeGenerator,
+        AuthEvent,
     )
 except (ImportError, ValueError):
     from auth import (
@@ -36,6 +40,8 @@ except (ImportError, ValueError):
         AuthService,
         BookingRepository,
         SpaceRepository,
+        QRCodeGenerator,
+        AuthEvent,
     )
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -99,6 +105,7 @@ def login():
     )
     status_code = 200 if result.success else 401
     return jsonify(result.to_dict()), status_code
+
 @app.get("/api/users")
 def get_all_users():
     """Endpoint para que el Dashboard obtenga la lista real de usuarios."""
@@ -167,7 +174,17 @@ def create_booking():
         "booking_time": data["booking_time"],
         "status": "pendiente"
     }
-    
+
+    # Información adicional del cliente (nombre, apellido, email, tel, notas)
+    # Se guarda como JSON string en la columna 'additional_info' (opcional)
+    import json as _json
+    if data.get("additional_info"):
+        try:
+            ai = data["additional_info"]
+            new_booking["additional_info"] = _json.dumps(ai) if isinstance(ai, dict) else str(ai)
+        except Exception:
+            pass  # si falla, seguimos sin el campo adicional
+
     try:
         # Usamos el método limpio del repositorio
         result = booking_repo.create(new_booking)
@@ -179,7 +196,9 @@ def create_booking():
 # Usamos @app.route para evitar el bloqueo 405 de CORS
 @app.route("/api/bookings/<booking_id>", methods=["PATCH", "OPTIONS"])
 def update_booking_status(booking_id):
-    """Permite al administrador aprobar o rechazar una reserva."""
+    """Permite al administrador aprobar o rechazar una reserva.
+    Al confirmar: genera QR + envía email de aprobación.
+    Al rechazar: envía email de rechazo."""
     # Responder al preflight CORS manualmente por si flask-cors no lo captura
     if request.method == "OPTIONS":
         from flask import make_response
@@ -200,10 +219,75 @@ def update_booking_status(booking_id):
         except (ValueError, TypeError):
             booking_id_typed = booking_id  # UUID o string
 
+        # 1) Obtenemos la reserva actual para tener datos del usuario
+        booking = booking_repo.get_by_id(booking_id_typed)
+        if not booking:
+            return jsonify({"success": False, "message": f"No se encontró la reserva con id={booking_id}"}), 404
+
+        # 2) Actualizamos el estado
         result = booking_repo.update_status(booking_id_typed, new_status)
 
+        # 3) SI la actualización fue exitosa, disparamos email + QR
         if result:
-            return jsonify({"success": True, "message": f"Reserva actualizada a '{new_status}'", "data": result}), 200
+            username = booking.get("username")
+            user = repository.find_by_username(username) if username else None
+            user_email = user.email if user else None
+
+            status_lower = new_status.lower()
+
+            if status_lower in ("confirmada", "confirmed"):
+                # ── GENERAR QR ──
+                qr_token = QRCodeGenerator.generate_token(booking_id_typed, username or "")
+                # Guardamos el token en la BD (silencioso si la columna aun no existe en Supabase)
+                booking_repo.update_qr_token(booking_id_typed, qr_token)
+                qr_bytes = QRCodeGenerator.generate_image(booking_id_typed, username or "")
+
+                # ── DISPARAR EMAIL DE CONFIRMACIÓN (async) ──
+                event_bus.publish(AuthEvent(AuthEvent.BOOKING_CONFIRMED, {
+                    "booking_id":     str(booking_id_typed),
+                    "username":       username,
+                    "email":          user_email,
+                    "space_name":     booking.get("space_name"),
+                    "booking_date":   booking.get("booking_date"),
+                    "booking_time":   booking.get("booking_time"),
+                    "qr_token":       qr_token,
+                    "qr_image_bytes": qr_bytes,  # EmailNotifier lo adjuntará
+                }))
+
+                # Devolvemos la reserva actualizada con datos del QR
+                result["qr_token"] = qr_token
+                result["qr_data_uri"] = QRCodeGenerator.generate_data_uri(booking_id_typed, username or "")
+
+                return jsonify({
+                    "success": True,
+                    "message": f"Reserva confirmada. Se envió email de notificación al cliente.",
+                    "data": result
+                }), 200
+
+            elif status_lower in ("rechazada", "rechazado", "cancelada", "cancelled"):
+                # ── DISPARAR EMAIL DE RECHAZO (async) ──
+                event_bus.publish(AuthEvent(AuthEvent.BOOKING_REJECTED, {
+                    "booking_id":   str(booking_id_typed),
+                    "username":     username,
+                    "email":        user_email,
+                    "space_name":   booking.get("space_name"),
+                    "booking_date": booking.get("booking_date"),
+                    "booking_time": booking.get("booking_time"),
+                }))
+
+                return jsonify({
+                    "success": True,
+                    "message": f"Reserva rechazada. Se notificó al cliente vía email.",
+                    "data": result
+                }), 200
+
+            else:
+                return jsonify({
+                    "success": True,
+                    "message": f"Reserva actualizada a '{new_status}'",
+                    "data": result
+                }), 200
+
         # Si Supabase no devuelve data, igual puede haber actualizado (0 rows afectadas = 404)
         return jsonify({"success": False, "message": f"No se encontró la reserva con id={booking_id}"}), 404
 
@@ -211,6 +295,66 @@ def update_booking_status(booking_id):
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.get("/api/bookings/<booking_id>/qr")
+def get_booking_qr(booking_id):
+    """Devuelve la imagen PNG del QR de acceso para una reserva confirmada."""
+    try:
+        try:
+            booking_id_typed = int(booking_id)
+        except (ValueError, TypeError):
+            booking_id_typed = booking_id
+
+        booking = booking_repo.get_by_id(booking_id_typed)
+        if not booking:
+            return jsonify({"success": False, "message": "Reserva no encontrada"}), 404
+
+        status = (booking.get("status") or "").lower()
+        if status not in ("confirmada", "confirmed"):
+            return jsonify({"success": False, "message": "La reserva no está confirmada"}), 400
+
+        username = booking.get("username", "")
+        qr_bytes = QRCodeGenerator.generate_image(booking_id_typed, username)
+        
+        return send_file(
+            io.BytesIO(qr_bytes),
+            mimetype="image/png",
+            as_filename=f"pase_acceso_{booking_id}.png"
+        )
+       
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.get("/api/bookings/<booking_id>/qr-datauri")
+def get_booking_qr_datauri(booking_id):
+    """Devuelve el QR como Data URI (base64) para embeber en HTML."""
+    try:
+        try:
+            booking_id_typed = int(booking_id)
+        except (ValueError, TypeError):
+            booking_id_typed = booking_id
+
+        booking = booking_repo.get_by_id(booking_id_typed)
+        if not booking:
+            return jsonify({"success": False, "message": "Reserva no encontrada"}), 404
+
+        status = (booking.get("status") or "").lower()
+        if status not in ("confirmada", "confirmed"):
+            return jsonify({"success": False, "message": "La reserva no está confirmada"}), 400
+
+        username = booking.get("username", "")
+        data_uri = QRCodeGenerator.generate_data_uri(booking_id_typed, username)
+
+        return jsonify({"success": True, "data": {"qr_data_uri": data_uri, "qr_token": booking.get("qr_token", "")}}), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "message": str(e)}), 500
+
 
 # --- ENDPOINTS PARA ESPACIOS (ABM) ---
 @app.get("/api/spaces")
@@ -255,8 +399,17 @@ def edit_space(space_id):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ═══════════════════════════════════════════════════════════════
+# MÓDULO DE INTELIGENCIA DE NEGOCIOS — EXPORTACIÓN CSV
+# ═══════════════════════════════════════════════════════════════
+
 @app.get("/api/export/estadistica")
 def export_estadistica():
+    """
+    Exporta un reporte CSV estructurado con todas las reservas activas,
+    calculando horas reservadas e ingresos estimados por espacio.
+    Filtros opcionales: ?month=MM&year=YYYY
+    """
     try:
         # a) Obtén todas las reservas activas.
         all_bookings = booking_repo.get_all()
@@ -265,6 +418,19 @@ def export_estadistica():
             b for b in all_bookings 
             if b.get("status", "").lower() not in ["cancelada", "rechazada", "cancelled"]
         ]
+
+        # Filtros opcionales por mes y año
+        month_filter = request.args.get("month", "")
+        year_filter  = request.args.get("year", "")
+        if month_filter and year_filter:
+            try:
+                m, y = int(month_filter), int(year_filter)
+                active_bookings = [
+                    b for b in active_bookings
+                    if _extract_month_year(b.get("booking_date", ""), y, m)
+                ]
+            except ValueError:
+                pass  # ignorar filtros inválidos
 
         # Necesitamos los costos de los espacios
         spaces = space_repo.get_all()
@@ -278,7 +444,7 @@ def export_estadistica():
         si = io.StringIO()
         cw = csv.writer(si)
         
-        # Columnas solicitadas: ID_Reserva, Usuario, Espacio, Fecha, Horas_Reservadas, Ingreso_Estimado_ARS, Estado
+        # Columnas: ID_Reserva, Usuario, Espacio, Fecha, Horas_Reservadas, Ingreso_Estimado_ARS, Estado
         cw.writerow(["ID_Reserva", "Usuario", "Espacio", "Fecha", "Horas_Reservadas", "Ingreso_Estimado_ARS", "Estado"])
 
         for b in active_bookings:
@@ -303,13 +469,30 @@ def export_estadistica():
         output = si.getvalue()
         si.close()
 
+        # Nombre de archivo dinámico según filtros
+        filename = "SpicyTech_Estadistica_2026.csv"
+        if month_filter and year_filter:
+            filename = f"SpicyTech_Estadistica_{year_filter}{int(month_filter):02d}.csv"
+
         return Response(
             output,
             mimetype="text/csv",
-            headers={"Content-Disposition": "attachment; filename=SpicyTech_Estadistica_2026.csv"}
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+def _extract_month_year(date_str: str, year: int, month: int) -> bool:
+    """Helper: verifica si una fecha ISO (yyyy-mm-dd) coincide con año/mes dados."""
+    if not date_str or len(date_str) < 7:
+        return False
+    try:
+        parts = date_str.split("-")
+        return int(parts[0]) == year and int(parts[1]) == month
+    except (ValueError, IndexError):
+        return False
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

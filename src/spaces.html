@@ -1378,6 +1378,15 @@ async function submitReserva() {
 
   try {
     // 🚀 ENVIAMOS A FLASK
+    // Recopilamos informacion adicional del formulario del cliente
+    const additionalInfo = {
+      nombre:    (document.getElementById('rf-nombre')?.value || '').trim(),
+      apellido:  (document.getElementById('rf-apellido')?.value || '').trim(),
+      email:     (document.getElementById('rf-email')?.value || '').trim(),
+      telefono:  (document.getElementById('rf-tel')?.value || '').trim(),
+      notas:     (document.getElementById('rf-notas')?.value || '').trim()
+    };
+
     const response = await fetch('http://127.0.0.1:5000/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1385,7 +1394,8 @@ async function submitReserva() {
         username: username,
         space_name: selectedSpace.name,
         booking_date: dateStr,
-        booking_time: timeToSend
+        booking_time: timeToSend,
+        additional_info: additionalInfo
       })
     });
 

@@ -65,6 +65,19 @@
     .rdi-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);margin-bottom:3px;}
     .rdi-val{font-size:13.5px;color:var(--txt);font-weight:500;}
     .res-footer{background:var(--cream);border-top:1px solid var(--cream-mid);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+    /* ── QR ACCESS PASS SECTION ── */
+    .qr-section{background:linear-gradient(135deg, var(--green-pale) 0%, #E8F5E9 100%);border-top:1px solid rgba(46,125,82,0.15);padding:20px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+    .qr-info{flex:1;min-width:200px;}
+    .qr-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+    .qr-desc{font-size:12px;color:var(--txt2);line-height:1.5;}
+    .qr-wrap{background:var(--white);border-radius:12px;padding:10px;border:2px solid rgba(46,125,82,0.2);box-shadow:0 4px 12px rgba(46,125,82,0.1);flex-shrink:0;}
+    .qr-wrap img{width:130px;height:130px;display:block;border-radius:6px;}
+    .qr-actions{display:flex;gap:8px;margin-top:10px;}
+    .btn-qr-sm{padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent;}
+    .btn-qr-primary{background:var(--green);color:#fff;border-color:var(--green);}
+    .btn-qr-primary:hover{background:#256E46;}
+    .btn-qr-ghost{background:transparent;border-color:var(--cream-mid);color:var(--txt2);}
+    .btn-qr-ghost:hover{border-color:var(--green);color:var(--green);background:var(--green-pale);}
     /* ── CANCEL MODAL ── */
     .modal-bg{position:fixed;inset:0;background:rgba(28,18,9,.55);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
     .modal-bg.show{display:flex;}
@@ -90,7 +103,7 @@
     .auth-wall-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--dark);margin-bottom:10px;}
     .auth-wall-desc{font-size:14px;color:var(--txt2);line-height:1.6;margin-bottom:28px;}
     .auth-wall-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-    @media(max-width:700px){.res-body{grid-template-columns:1fr 1fr;}.nav-links{display:none;}}
+    @media(max-width:700px){.res-body{grid-template-columns:1fr 1fr;}.qr-section{flex-direction:column;text-align:center;}.qr-wrap{margin:0 auto;}.nav-links{display:none;}}
     @media(max-width:480px){.res-body{grid-template-columns:1fr;}}
   </style>
 </head>
@@ -142,6 +155,7 @@ function initNavbar(){
 }
 
 let MY_RESERVAS = []; // Guardamos las reservas de la BD
+let QR_CACHE = {};    // Cache de QRs ya pedidos { bookingId: dataUri }
 let _filter='all';
 
 // 1. CARGAMOS LOS DATOS DESDE LA API
@@ -163,12 +177,37 @@ async function fetchMyBookings() {
         date: r.booking_date,
         slots: r.booking_time === 'Mensual' ? [] : r.booking_time.split(', '),
         status: r.status, // "pendiente", "confirmada", "cancelada"
-        username: r.username
+        username: r.username,
+        qrToken: r.qr_token || null
       }));
       renderPage();
+      // Precargamos los QR para reservas confirmadas
+      preloadQRs();
     }
   } catch (error) {
     console.error("Error al cargar reservas:", error);
+  }
+}
+
+// 2. PRECARGAR QRs en paralelo
+async function preloadQRs() {
+  const confirmed = MY_RESERVAS.filter(r => {
+    const s = r.status.toLowerCase();
+    return s === 'confirmada' || s === 'confirmed';
+  });
+  for (const r of confirmed) {
+    if (!QR_CACHE[r.id]) {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/bookings/${r.id}/qr-datauri`);
+        const data = await res.json();
+        if (data.success) {
+          QR_CACHE[r.id] = data.data.qr_data_uri;
+          // Actualizamos el QR en el DOM si ya existe
+          const img = document.getElementById(`qr-img-${r.id}`);
+          if (img) img.src = data.data.qr_data_uri;
+        }
+      } catch (e) { console.warn("No se pudo cargar QR para", r.id); }
+    }
   }
 }
 
@@ -181,7 +220,7 @@ function renderPage(){
   content.innerHTML=`
     <div class="page-eyebrow">Panel de usuario</div>
     <h1 class="page-title">Mis <em>reservas</em></h1>
-    <p class="page-sub">Seguí el estado de todas tus solicitudes.</p>
+    <p class="page-sub">Seguí el estado de todas tus solicitudes. Las reservas confirmadas incluyen tu <strong>Pase de Acceso QR</strong>.</p>
     <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
       <div style="flex:1;min-width:120px;background:var(--white);border:1.5px solid var(--cream-mid);border-radius:12px;padding:16px 18px;"><div style="font-size:24px;font-weight:800;color:var(--amber)">${pending}</div><div style="font-size:12px;color:var(--txt3);margin-top:2px;">⏳ Pendientes</div></div>
       <div style="flex:1;min-width:120px;background:var(--white);border:1.5px solid var(--cream-mid);border-radius:12px;padding:16px 18px;"><div style="font-size:24px;font-weight:800;color:var(--green)">${confirmed}</div><div style="font-size:12px;color:var(--txt3);margin-top:2px;">✅ Confirmadas</div></div>
@@ -222,6 +261,27 @@ function renderList(){
   list.innerHTML=filtered.map(r=>{
     const bCls={confirmed:'badge-confirmed',pending:'badge-pending',cancelled:'badge-cancelled'}[r.nStatus]||'badge-cancelled';
     const bTxt={confirmed:'✓ Confirmada',pending:'⏳ Pendiente',cancelled:'✗ Cancelada'}[r.nStatus]||r.status;
+    
+    // Sección QR solo para confirmadas
+    let qrHtml = '';
+    if (r.nStatus === 'confirmed') {
+      const cachedUri = QR_CACHE[r.id] || '';
+      qrHtml = `
+        <div class="qr-section">
+          <div class="qr-info">
+            <div class="qr-title">🎫 Pase de Acceso Inteligente</div>
+            <div class="qr-desc">Mostrá este código QR en recepción al llegar al edificio. No necesitás imprimirlo — podés mostrarlo desde tu celular.</div>
+            <div class="qr-actions">
+              <button class="btn-qr-sm btn-qr-primary" onclick="downloadQR('${r.id}', '${r.spaceName}')">⬇️ Descargar pase</button>
+              <a href="http://127.0.0.1:5000/api/bookings/${r.id}/qr" target="_blank" class="btn-qr-sm btn-qr-ghost" style="text-decoration:none;display:inline-flex;align-items:center;">🔍 Ver en grande</a>
+            </div>
+          </div>
+          <div class="qr-wrap">
+            <img id="qr-img-${r.id}" src="${cachedUri || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22130%22 height=%22130%22%3E%3Crect width=%22130%22 height=%22130%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2265%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ECargando...%3C/text%3E%3C/svg%3E'}" alt="Pase de acceso QR" title="Pase de acceso - ${r.spaceName}">
+          </div>
+        </div>`;
+    }
+    
     return`<div class="res-card status-${r.nStatus}">
       <div class="res-header">
         <div>
@@ -233,12 +293,33 @@ function renderList(){
         </div>
         <span class="res-badge ${bCls}">${bTxt}</span>
       </div>
+      <div class="res-body">
+        <div><div class="rdi-label">Estado</div><div class="rdi-val">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</div></div>
+        <div><div class="rdi-label">Horario</div><div class="rdi-val">${r.slots.length ? r.slots[0] + '–' + r.slots[r.slots.length-1] + ' hs' : 'Mensual'}</div></div>
+        <div><div class="rdi-label">ID Reserva</div><div class="rdi-val" style="font-family:monospace;font-size:12px;">${r.id.toString().slice(0,10)}...</div></div>
+      </div>
+      ${qrHtml}
       <div class="res-footer">
-        <span class="res-id">ID: ${r.id.substring(0,8)}...</span>
+        <span class="res-id">ID: ${r.id.toString().slice(0,8)}...</span>
         ${r.nStatus!=='cancelled'?`<button class="btn-cancel-res" onclick="askCancel('${r.id}','${r.spaceName}')">✕ Cancelar reserva</button>`:''}
       </div>
     </div>`;
   }).join('');
+}
+
+// Descargar QR como imagen PNG
+function downloadQR(bookingId, spaceName) {
+  const uri = QR_CACHE[bookingId];
+  if (!uri) {
+    alert('El código QR aún se está cargando. Intentá en unos segundos.');
+    return;
+  }
+  const link = document.createElement('a');
+  link.href = uri;
+  link.download = `Pase_SpicyTech_${spaceName.replace(/\s+/g,'_')}_${bookingId}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 let _pendingCancelId = null;
